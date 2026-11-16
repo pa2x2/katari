@@ -1,5 +1,40 @@
 # Desktop Changelog
 
+## [1.1.0] - 2026-11-16
+
+### ✨ Added
+
+- The player plays at any speed from 0.25x to 4x.
+- Extra dim makes the picture darker than the screen's own brightness. Set it in the player's settings, with Shift+↑ and Shift+↓, or with Shift and the scroll wheel.
+
+### 🔄 Changed
+
+- The AppImage carries Chromium again, so WebView, site checks and source pages work from the first start. There is no Set up WebView step, download or WebView engine settings page any more.
+- Clear WebView data is back in Settings › Advanced › Network.
+- Holding the video plays it at twice the speed you chose, instead of always at 2x. Holding Space does the same, and a short press still plays or pauses.
+- Manga, anime and books have new type icons: a comic page, a TV and an open book.
+- A full resync waits for an unmetered network when changes do, unless Use metered networks for changes is on.
+
+### 🧩 Improved
+
+- Changes made offline sync as soon as the network is back.
+- Disconnecting from sync takes effect at once, even offline. Your other devices stop listing this one once the server can be reached.
+- Changes made while syncing is paused, or while they wait for an unmetered network, count as unsent when you disconnect, and the warning says how to send them first.
+- The sync page says when synced changes wait because a device's clock is off. Setting the time automatically on every device fixes it.
+- The sync page lists covers and fonts another device added that never reached the server.
+
+### 🐛 Fixed
+
+- If Chromium doesn't start within 30 seconds, the page waiting for it closes instead of the app crashing.
+- Reading on a device whose clock is behind no longer loses to an older position synced from another device. At the first sync, the position read last is kept.
+- An entry you add back, or migrate back to, after migrating away from it stays in the library on your other devices too.
+- When two devices answer the same migration question differently, the later answer decides on every device.
+- Changed on other devices lists a setting for 14 days after it reaches this device, even when the change itself is older.
+- Keep mine is no longer offered for a setting you changed here after another device's change arrived.
+- A chapter or episode renamed by its source or on another device keeps its download.
+- The library's download badge counts only downloads of chapters and episodes the entry still has.
+- Badges that don't fit beside a cover's unread count move to a second line instead of covering it.
+
 ## [1.0.2] - 2026-11-15
 
 ### 🐛 Fixed
@@ -393,7 +428,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.2...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.0...HEAD
+[1.1.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.0
 [1.0.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.2
 [1.0.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.1
 [1.0.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0

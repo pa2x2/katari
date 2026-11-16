@@ -15,7 +15,6 @@ import tachiyomi.i18n.*
 data class EntryTypePresentation(
     val displayNameLabel: StringResource,
     val badgeIcon: ImageVector,
-    val coverOverlayIcon: ImageVector?,
     val markAsConsumedLabel: StringResource,
     val markAsUnconsumedLabel: StringResource,
     val markPreviousAsConsumedLabel: StringResource,
@@ -119,7 +118,6 @@ interface EntryTypePresentationFeature {
 val genericEntryTypePresentation = EntryTypePresentation(
     displayNameLabel = MR.strings.entry_type_generic,
     badgeIcon = MaterialSymbols.Rounded.Info,
-    coverOverlayIcon = MaterialSymbols.Rounded.Info,
     markAsConsumedLabel = MR.strings.action_mark_as_seen,
     markAsUnconsumedLabel = MR.strings.action_mark_as_unseen,
     markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_seen,

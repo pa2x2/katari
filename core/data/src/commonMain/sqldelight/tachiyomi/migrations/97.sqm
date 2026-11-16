@@ -1,0 +1,3 @@
+-- A setting another device changed is kept 14 days from when it arrived here, so the other device's edit time goes
+-- (app/katari/sync/data/sync_arrived_settings.sq).
+ALTER TABLE sync_arrived_settings DROP COLUMN changed_at;

@@ -8,6 +8,7 @@ import app.katari.sync.client.library
 import app.katari.sync.client.question.Question
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -93,6 +94,58 @@ class MigrationQuestionTest {
                         """["entry","default","aniyomi",999,"/there2","anime",0,0,null,"Old notes",0,0,0]"""
                     a.library() shouldContain
                         """["entry","default","aniyomi",888,"/here2","anime",1,100,null,"Old notes",0,0,0]"""
+                }
+            }
+        }
+
+    @Test
+    fun `answered differently on two devices before they sync, the later answer decides the library`(): Unit =
+        runBlocking {
+            val exchange = RecordExchange()
+            SyncTestDevice(directory.resolve("a.db")).use { a ->
+                SyncTestDevice(directory.resolve("b.db")).use { b ->
+                    a.startSync(deviceId = 1)
+                    b.startSync(deviceId = 2)
+                    a.sql(
+                        """
+                        INSERT INTO source_identities(local_key, id_scheme, external_id)
+                        VALUES (-2, 'aniyomi', 777), (-3, 'aniyomi', 888), (-4, 'aniyomi', 999)
+                        """,
+                        """
+                        INSERT INTO entries(source, url, title, favorite, type, date_added, notes)
+                        VALUES (-2, '/old', 'Show', 1, 'anime', 100, 'Old notes')
+                        """,
+                    )
+                    b.sql(
+                        "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-4, 'aniyomi', 999)",
+                        // In the library with notes of its own, which turning B's migration down puts back
+                        """
+                        INSERT INTO entries(source, url, title, favorite, type, date_added, notes)
+                        VALUES (-4, '/there', 'Show', 1, 'anime', 500, 'Mine')
+                        """,
+                    )
+                    exchange.settle(listOf(a, b))
+                    a.migrate(from = "/old", source = -3, url = "/here")
+                    delay(5)
+                    b.migrate(from = "/old", source = -4, url = "/there")
+                    exchange.settle(listOf(a, b))
+                    val question = a.questions.open().first().single().shouldBeInstanceOf<Question.Migration>()
+                    val earlier = question.targets.map { it.value }.first { it != question.provisional }
+
+                    // A keeps its own migration, then B, before hearing of that, keeps its own
+                    a.questions.keepMigration(question.from, earlier)
+                    delay(5)
+                    b.questions.keepMigration(question.from, question.provisional)
+                    exchange.settle(listOf(a, b))
+
+                    a.questions.open().first().shouldBeEmpty()
+                    b.questions.open().first().shouldBeEmpty()
+                    a.library() shouldBe b.library()
+                    a.migratedTo(question.from) shouldBe question.provisional
+                    a.library() shouldContainAll listOf(
+                        """["entry","default","aniyomi",999,"/there","anime",1,100,null,"Old notes",0,0,0]""",
+                        """["entry","default","aniyomi",888,"/here","anime",0,0,null,"Old notes",0,0,0]""",
+                    )
                 }
             }
         }

@@ -3,7 +3,7 @@ package app.katari.gradle.chromium
 import java.io.File
 
 /**
- * The entries of the desktop app's licences screen for what the Chromium download is made of, in the folder of library
+ * The entries of the desktop app's licences screen for what the runtime's Chromium is made of, in the folder of library
  * definitions AboutLibraries reads. Each names the version of its project, which only the runtime's release knows.
  */
 internal class ChromiumLicenceEntries(private val libraries: File) {

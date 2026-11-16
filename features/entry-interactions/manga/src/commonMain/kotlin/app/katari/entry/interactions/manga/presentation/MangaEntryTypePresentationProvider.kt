@@ -6,6 +6,8 @@ import app.katari.entry.interactions.presentation.EntryPartialProgressPresentati
 import app.katari.entry.interactions.presentation.EntryTypePresentation
 import app.katari.entry.interactions.presentation.EntryUpdateNotificationVocabulary
 import app.katari.entry.interactions.runtime.EntryTypePresentationProvider
+import app.katari.icons.custommaterialsymbols.CustomMaterialSymbols
+import app.katari.icons.custommaterialsymbols.rounded.ComicPage
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.automirroredrounded.MenuBook
 import tachiyomi.i18n.*
@@ -13,8 +15,7 @@ import tachiyomi.i18n.*
 internal object MangaEntryTypePresentationProvider : EntryTypePresentationProvider {
     override val presentation = EntryTypePresentation(
         displayNameLabel = MR.strings.entry_type_manga,
-        badgeIcon = MaterialSymbols.AutoMirroredRounded.MenuBook,
-        coverOverlayIcon = null,
+        badgeIcon = CustomMaterialSymbols.Rounded.ComicPage,
         markAsConsumedLabel = MR.strings.action_mark_as_read,
         markAsUnconsumedLabel = MR.strings.action_mark_as_unread,
         markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_read,

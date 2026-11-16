@@ -43,6 +43,7 @@ class EntryDownloadRuntimeFeatureTest {
         return DefaultEntryDownloadRuntimeFeature(
             applicableTypes = setOf(EntryType.BOOK),
             interaction = DefaultEntryInteractions(downloadProcessors = mapOf(EntryType.BOOK to processor)).download,
+            chapterRepository = mockk(),
             scope = scope,
         )
     }

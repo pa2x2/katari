@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import app.katari.presentation.kit.feedback.rememberScreenMessages
 import app.katari.presentation.kit.sheet.PopoverAnchor
 import app.katari.sync.client.downloadrequest.ChapterToRequest
+import app.katari.sync.client.downloadrequest.DownloadRequestMessage
 import app.katari.sync.client.downloadrequest.DownloadTarget
 import app.katari.sync.client.downloadrequest.DownloadTargetReadiness
 import app.katari.sync.protocol.device.DeviceId
@@ -22,6 +23,7 @@ import app.katari.sync.protocol.device.LinkedDevice
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** The screen's [DownloadElsewhere], or null on a screen that doesn't offer it. */
@@ -162,12 +164,13 @@ fun ProvideDownloadElsewhere(content: @Composable () -> Unit) {
     val syncing = viewModel.syncing.collectAsStateWithLifecycle()
     val elsewhere = remember(viewModel) { DownloadElsewhere(viewModel, devices, syncing) }
     val messages = rememberScreenMessages()
+    val lifetimeDays = DownloadRequestMessage.LIFETIME.inWholeDays.toInt()
     val sentMessages = devices.value.associate { target ->
         val name = target.device.description.name
         target.device.id to if (target.device.connected) {
             stringResource(MR.strings.sync_download_requested, name)
         } else {
-            stringResource(MR.strings.sync_download_requested_later, name)
+            pluralStringResource(MR.plurals.sync_download_requested_later, lifetimeDays, name, lifetimeDays)
         }
     }
     SideEffect {

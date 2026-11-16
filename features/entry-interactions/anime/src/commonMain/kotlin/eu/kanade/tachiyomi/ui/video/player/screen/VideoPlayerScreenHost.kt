@@ -36,8 +36,13 @@ internal class VideoPlayerScreenHost(
     val volumeControl: VideoPlayerVolumeControl?,
     /** The window's full screen, for the controls' full-screen button; null where windows have none, as on Android. */
     val fullScreen: WindowFullScreen?,
-    /** Null where the player can't change the screen's brightness, as on desktop. */
-    val brightness: VideoPlayerBrightness?,
+    val brightness: VideoPlayerBrightness,
+    /**
+     * Whether the settings panel offers a slider for the [brightness]'s extra dim: on desktop, where it is otherwise
+     * set only by Shift with the wheel or the arrows, which nothing on the screen shows; Android's swipe is found as
+     * its brightness is.
+     */
+    val extraDimInSettings: Boolean,
     /** Null where the window doesn't turn, as on desktop, which leaves out the rotate button. */
     val orientation: VideoPlayerOrientationRequests?,
     /** Whether the controls can be locked against stray touches; desktop has nothing to lock them against (D008). */

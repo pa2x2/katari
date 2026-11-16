@@ -29,9 +29,7 @@ import kotlin.time.TimeSource
 internal object Chromium {
     /**
      * Starts Chromium with [switches] of the runtime's own and completes [started] once it runs. [lost] is called if
-     * the server ends before the app shuts it down. Which Chromium it is, the runtime's or one installed for the app,
-     * was settled as JCEF's classes loaded: its server is where the system property JCEF read then names it, and
-     * Chromium finds its other files beside its server. JCEF passes on no setting that would name them.
+     * the server ends before the app shuts it down.
      */
     fun start(
         switches: (List<String>) -> List<String>,

@@ -468,7 +468,7 @@ class LibraryViewModel(
         }
     }
 
-    private fun List<LibraryItem>.enrichEntryItems(): List<LibraryItem> {
+    private suspend fun List<LibraryItem>.enrichEntryItems(): List<LibraryItem> {
         val downloadCounts = downloadRuntime.downloadCounts(flatMap(LibraryItem::memberEntries))
         return map { item ->
             val singleSourceId = item.sources.singleOrNull()?.id

@@ -34,9 +34,11 @@ class FieldStamps internal constructor() {
      */
     fun <T> field(number: Int, value: T, previous: Stamped<T>?): Stamped<T> {
         if (previous != null && previous.value == value) return previous
-        val edited = newer(byField[number], everyField)
-        return Stamped(value, edited ?: previous?.at ?: Stamped.UNKNOWN_EDIT)
+        return Stamped(value, editedAt(number) ?: previous?.at ?: Stamped.UNKNOWN_EDIT)
     }
+
+    /** The newest edit that touched field [number], whether or not it left the value changed; null for none. */
+    fun editedAt(number: Int): HybridTimestamp? = newer(byField[number], everyField)
 
     /**
      * [field] for a value whose row keeps the time it was last changed, [editedAtMillis] (0 for none), as reading
@@ -53,10 +55,28 @@ class FieldStamps internal constructor() {
         device: DeviceId,
     ): Stamped<T> {
         val stamped = field(number, value, previous)
-        val captured = newer(byField[number], everyField)
+        val captured = editedAt(number)
         if (captured == null || stamped === previous || editedAtMillis <= 0) return stamped
         val edited = Stamped(value, HybridTimestamp(editedAtMillis, 0, device))
         return if (previous != null && previous.at > edited.at) previous else edited
+    }
+
+    /**
+     * [fieldEditedAt] for a reading position, which also dates by [editedAtMillis] a position no device saw read
+     * while syncing, such as one read before sync was set up: two devices that read in one resource before their first
+     * sync keep the position read last, instead of tying. Completion keeps tying there, so that a chapter read on
+     * either device stays read ([app.katari.sync.client.merge.latest]).
+     */
+    fun <T> positionEditedAt(
+        number: Int,
+        value: T,
+        previous: Stamped<T>?,
+        editedAtMillis: Long,
+        device: DeviceId,
+    ): Stamped<T> {
+        val stamped = fieldEditedAt(number, value, previous, editedAtMillis, device)
+        if (stamped === previous || stamped.at != Stamped.UNKNOWN_EDIT || editedAtMillis <= 0) return stamped
+        return Stamped(value, HybridTimestamp(editedAtMillis, 0, device))
     }
 
     private fun newer(a: HybridTimestamp?, b: HybridTimestamp?): HybridTimestamp? = when {

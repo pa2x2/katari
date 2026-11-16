@@ -35,7 +35,8 @@ internal interface VideoPlayerInputTarget {
 
     fun sideGestureLevel(type: VideoPlayerSideGestureType): Int
 
-    fun sideGestureMaxLevel(type: VideoPlayerSideGestureType): Int
+    /** The levels a side gesture moves through; a drag the player's whole height crosses all of them. */
+    fun sideGestureLevels(type: VideoPlayerSideGestureType): IntRange
 
     fun applySideGestureLevel(type: VideoPlayerSideGestureType, level: Int)
 
@@ -83,7 +84,7 @@ internal interface VideoPlayerInputTarget {
     /** Mutes or unmutes the player's own volume, where the controls set it. */
     fun toggleMute()
 
-    /** Moves to the next speed the settings offer, faster or slower. */
+    /** Moves the speed one step faster or slower, showing it a moment. */
     fun stepSpeed(faster: Boolean)
 
     /** True while paused with a player that steps frames. */

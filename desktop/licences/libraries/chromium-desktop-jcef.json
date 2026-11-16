@@ -2,7 +2,7 @@
   "uniqueId": "app.katari.chromium:jcef",
   "artifactVersion": "150.0.14.1233",
   "name": "JCEF",
-  "description": "JetBrains' Java bindings for the Chromium Embedded Framework, whose server and helper programs are part of the Chromium download.",
+  "description": "JetBrains' Java bindings for the Chromium Embedded Framework, whose server and helper programs run the desktop web view's Chromium.",
   "website": "https://github.com/JetBrains/jcef",
   "licenses": [
     "chromium-desktop-jcef"

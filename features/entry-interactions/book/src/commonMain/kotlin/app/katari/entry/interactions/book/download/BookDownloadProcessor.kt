@@ -125,12 +125,21 @@ internal class BookDownloadProcessor(
         return manager.deleteEntryDownloads(entry)
     }
 
-    override fun hasDownloads(entry: Entry): Boolean = getDownloadCount(entry) > 0
-
-    override fun getDownloadCount(entry: Entry): Int {
+    override fun hasDownloads(entry: Entry): Boolean {
         entry.requireBook()
-        return cache.getDownloadCount(entry)
+        return cache.getDownloadCount(entry) > 0
     }
+
+    override fun getDownloadedChapterIds(entry: Entry, chapters: List<EntryChapter>): Set<Long> {
+        entry.requireBook()
+        return chapters
+            .filter { cache.find(entry.source, it.url, entry.title) != null }
+            .mapTo(HashSet(), EntryChapter::id)
+    }
+
+    // A package is found by the chapter URL its verified manifest names, so moving it to a new URL means rewriting the
+    // manifest and its index entry, which book downloads can't do yet
+    override suspend fun moveRenamedDownload(entry: Entry, former: EntryChapter, chapter: EntryChapter) = Unit
 
     override fun getTotalDownloadCount(): Int = cache.getTotalDownloadCount()
 

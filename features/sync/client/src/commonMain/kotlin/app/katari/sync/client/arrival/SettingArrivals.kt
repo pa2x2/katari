@@ -19,9 +19,9 @@ import tachiyomi.data.DatabaseHandler
 import kotlin.time.Clock
 
 /**
- * The settings other devices changed here in the last 14 days, and Keep mine: it keeps the setting on this device,
- * then puts back the value it had. Kept here first, the value written back is held back like any edit of a setting
- * this device doesn't sync, and switching the setting on again later asks whose value it keeps.
+ * The settings other devices changed that arrived here in the last 14 days, and Keep mine: it keeps the setting on
+ * this device, then puts back the value it had. Kept here first, the value written back is held back like any edit of
+ * a setting this device doesn't sync, and switching the setting on again later asks whose value it keeps.
  *
  * A setting of a menu ([ArrivedSetting.menu]) is kept with the rest of its menu that the same sync changed, as its
  * settings sync or stay as one.
@@ -35,14 +35,14 @@ class SettingArrivals(
     private val settings: SettingWrites,
     private val batches: ArrivedBatches,
 ) {
-    /** Every setting changed here in the last 14 days, newest first, as this device's choices stand. */
+    /** Every setting that arrived in the last 14 days, latest arrival first, as this device's choices stand. */
     fun changes(): Flow<List<ArrivedSetting>> = combine(
         handler.subscribeToList { sync_arrived_settingsQueries.all() },
         preferences.choicesChanges(),
     ) { rows, choices ->
         val since = now() - ArrivalNotes.KEPT_FOR.inWholeMilliseconds
         val names = directory.listed()
-        rows.filter { it.changed_at >= since }.map { it.arrived(names, choices) }
+        rows.filter { it.batch >= since }.map { it.arrived(names, choices) }
     }
 
     /** The settings each sync changes here from now on, as that sync is committed. */
@@ -63,6 +63,11 @@ class SettingArrivals(
         keep(handler.await { sync_arrived_settingsQueries.inBatch(batch).awaitAsList() })
     }
 
+    /**
+     * Keeps [rows]' settings here, then puts back their values. The choices' writes take in this device's edits first,
+     * and a setting changed here since it arrived keeps that value ([app.katari.sync.client.outbox.OutboxDrain]). The
+     * rows are marked kept before the values are written back, so that writing isn't taken for such an edit.
+     */
     private suspend fun keep(rows: List<Sync_arrived_settings>) {
         if (rows.isEmpty()) return
         val menus = rows.mapNotNull { it.arrivedMenu }.toSet()
@@ -70,7 +75,10 @@ class SettingArrivals(
         rows.filter { it.arrivedMenu == null }.map { it.setting_key }.toSet().forEach {
             choices.syncSetting(it, on = false)
         }
-        rows.forEach { row ->
+        val waiting = handler.await { sync_arrived_settingsQueries.byIds(rows.map { it._id }).awaitAsList() }
+            .filter { !it.kept }
+        handler.await { sync_arrived_settingsQueries.markKept(waiting.map { it._id }) }
+        waiting.forEach { row ->
             val previous = ProtoBuf.decodeFromByteArray(SettingValue.serializer(), row.previous).stored
             val profileId = row.profile_id
             if (profileId == null) {
@@ -79,7 +87,6 @@ class SettingArrivals(
                 settings.writeProfileValue(profileId, row.setting_key, previous)
             }
         }
-        handler.await { sync_arrived_settingsQueries.markKept(rows.map { it._id }) }
     }
 
     private val Sync_arrived_settings.arrivedMenu
@@ -90,7 +97,6 @@ class SettingArrivals(
         profileId = profile_id,
         key = setting_key,
         from = names[DeviceId(from_device_id)],
-        changedAt = changed_at,
         batch = batch,
         keepMine = when {
             !kept -> KeepMine.OFFERED

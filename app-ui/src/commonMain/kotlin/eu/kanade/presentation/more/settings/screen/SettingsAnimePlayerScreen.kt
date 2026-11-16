@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import app.katari.entry.interactions.player.PlaybackSpeed
 import app.katari.entry.interactions.settings.AnimeMarkerSkipMode
 import app.katari.entry.interactions.settings.AnimePlayerOrientation
 import app.katari.entry.interactions.settings.AnimePlayerPreferences
@@ -12,6 +13,7 @@ import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.window.currentWindowLayout
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.widget.ListTypedEntry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -104,10 +106,20 @@ class SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
             ),
             Preference.PreferenceItem.ListPreference(
                 preference = defaultSpeed,
-                entries = AnimePlayerPreferences.DEFAULT_PLAYBACK_SPEED_PERCENT_OPTIONS.associateWith {
-                    "${(it / 100f).toString().removeSuffix(".0")}x"
-                },
+                entries = PlaybackSpeed.PRESETS.associate { it.hundredths to it.label },
                 title = stringResource(MR.strings.pref_anime_default_speed),
+                subtitleProvider = { value, _ -> PlaybackSpeed(value).label },
+                typedEntry = ListTypedEntry(
+                    label = stringResource(MR.strings.anime_playback_speed_custom),
+                    suffix = "x",
+                    text = { PlaybackSpeed(it).number },
+                    parse = { PlaybackSpeed.parse(it)?.hundredths },
+                    invalid = stringResource(
+                        MR.strings.anime_playback_speed_invalid,
+                        PlaybackSpeed(PlaybackSpeed.RANGE.first).label,
+                        PlaybackSpeed(PlaybackSpeed.RANGE.last).label,
+                    ),
+                ),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = autoPlayNext,

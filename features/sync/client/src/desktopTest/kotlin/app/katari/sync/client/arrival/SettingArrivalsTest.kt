@@ -46,6 +46,24 @@ class SettingArrivalsTest {
         }
 
     @Test
+    fun `a setting changed here after it arrived is no longer offered, and keeping its sync's settings leaves it`():
+        Unit = runBlocking {
+        synced { a, b ->
+            b.animationSpeed().set(750)
+            b.sync() shouldBe SyncOutcome.SYNCED
+            a.sync() shouldBe SyncOutcome.SYNCED
+            val arrived = a.arrived(ANIMATION_SPEED).single()
+
+            a.animationSpeed().set(300)
+            a.sync() shouldBe SyncOutcome.SYNCED
+            a.arrived(ANIMATION_SPEED).shouldBeEmpty()
+            a.arrivals.keepMine(arrived.batch)
+            a.animationSpeed().get() shouldBe 300
+            a.preferences.choices() shouldBe ChoiceSet()
+        }
+    }
+
+    @Test
     fun `Keep mine on a menu's setting keeps the rest of the menu its sync changed`(): Unit = runBlocking {
         synced { a, b ->
             b.filter(DOWNLOADED).set(1)

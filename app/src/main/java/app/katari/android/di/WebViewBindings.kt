@@ -16,17 +16,12 @@ import eu.kanade.tachiyomi.network.interceptor.WebViewInterceptorMessages
 import eu.kanade.tachiyomi.source.entry.webpage.WebPages
 import eu.kanade.tachiyomi.ui.webview.browser.AndroidBrowserView
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserView
-import eu.kanade.tachiyomi.ui.webview.setup.SystemWebViewSetup
-import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetup
 import kotlinx.coroutines.CoroutineScope
 
 @BindingContainer
 interface WebViewBindings {
     @Binds
     val AndroidBrowserView.browserView: BrowserView
-
-    @Binds
-    val SystemWebViewSetup.webViewSetup: WebViewSetup
 
     companion object {
         // A phone's memory holds three pages of the weight of a browser tab; all of them share one renderer process

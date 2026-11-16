@@ -223,6 +223,31 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
+    fun `a bookmark processor with constructor default values may persist bookmarks`() {
+        createBaseFixture(
+            additionalFiles = mapOf(
+                "features/entry-interactions/manga/src/main/java/app/katari/entry/interactions/manga/state/" +
+                    "MangaBookmarkProcessor.kt" to
+                    """
+                        package app.katari.entry.interactions.manga.state
+
+                        internal class MangaBookmarkProcessor(
+                            private val repository: EntryChapterRepository,
+                            private val now: () -> Long = System::currentTimeMillis,
+                            private val onSaved: () -> Unit = {},
+                        ) : EntryBookmarkProcessor {
+                            suspend fun setBookmarked(chapters: List<EntryChapter>, bookmarked: Boolean) {
+                                repository.updateAll(chapters.map { it.copy(bookmark = bookmarked) })
+                            }
+                        }
+                    """.trimIndent(),
+            ),
+        )
+
+        runBoundaryCheck()
+    }
+
+    @Test
     fun `unrelated feature and application api cannot borrow Migration host ports`() {
         createBaseFixture(
             additionalFiles = mapOf(

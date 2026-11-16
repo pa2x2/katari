@@ -143,8 +143,9 @@ class SyncViewModel(
         viewModelScope.launchIO { account.renameThisDevice(name) }
     }
 
+    /** In the app's scope, so leaving the page doesn't keep the device from leaving its account. */
     fun disconnect() {
-        viewModelScope.launchIO {
+        appScope.launchIO {
             account.disconnect()
             listingFailed.value = false
         }

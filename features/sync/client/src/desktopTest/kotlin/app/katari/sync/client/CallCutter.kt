@@ -17,6 +17,10 @@ import java.util.concurrent.atomic.AtomicInteger
  * server.
  */
 internal class CallCutter : Interceptor {
+    /** While set, every call fails without reaching the server, as on a network with no way to it. */
+    @Volatile
+    var unreachable = false
+
     /** Pulls left before the next one fails without reaching the server; null lets every pull through. */
     @Volatile
     var pullsBeforeCut: Int? = null
@@ -44,6 +48,7 @@ internal class CallCutter : Interceptor {
     val client: OkHttpClient = OkHttpClient.Builder().addInterceptor(this).build()
 
     override fun intercept(chain: Interceptor.Chain): Response {
+        if (unreachable) throw IOException("No route to the server")
         val path = chain.request().url.encodedPath
         held?.takeIf { path.endsWith(it.first) }?.let { (_, latch) ->
             held = null

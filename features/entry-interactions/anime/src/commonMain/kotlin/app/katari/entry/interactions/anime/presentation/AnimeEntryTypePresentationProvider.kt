@@ -7,14 +7,14 @@ import app.katari.entry.interactions.presentation.EntryTypePresentation
 import app.katari.entry.interactions.presentation.EntryUpdateNotificationVocabulary
 import app.katari.entry.interactions.runtime.EntryTypePresentationProvider
 import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.LiveTv
 import app.katari.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
 
 internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvider {
     override val presentation = EntryTypePresentation(
         displayNameLabel = MR.strings.entry_type_anime,
-        badgeIcon = MaterialSymbols.RoundedFilled.PlayArrow,
-        coverOverlayIcon = MaterialSymbols.RoundedFilled.PlayArrow,
+        badgeIcon = MaterialSymbols.Rounded.LiveTv,
         markAsConsumedLabel = MR.strings.action_mark_as_watched,
         markAsUnconsumedLabel = MR.strings.action_mark_as_unwatched,
         markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_watched,

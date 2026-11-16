@@ -1,5 +1,6 @@
 package app.katari.entry.interactions.settings
 
+import app.katari.entry.interactions.player.PlaybackSpeed
 import app.katari.entry.viewer.settings.ViewerSettingCodecs
 import app.katari.entry.viewer.settings.ViewerSettingDefinition
 import app.katari.entry.viewer.settings.ViewerSettingId
@@ -42,8 +43,6 @@ class AnimePlayerPreferences(
         /** Video heights a series starts at until one is picked in the player; 0 asks for the highest offered. */
         val PREFERRED_QUALITY_HEIGHT_OPTIONS = listOf(0, 1080, 720, 480, 360)
 
-        val DEFAULT_PLAYBACK_SPEED_PERCENT_OPTIONS = listOf(50, 75, 100, 125, 150, 200)
-
         /** The steps the seek buttons and double tap offer; each has its own rewind and forward icon. */
         val SEEK_STEP_SECONDS_OPTIONS = listOf(5, 10, 30)
     }
@@ -82,7 +81,11 @@ class AnimePlayerPreferences(
 
     val preferredQualityHeight: Preference<Int> = preferenceStore.getInt(PREFERRED_QUALITY_HEIGHT_KEY, 0)
 
-    val defaultPlaybackSpeedPercent: Preference<Int> = preferenceStore.getInt(DEFAULT_PLAYBACK_SPEED_PERCENT_KEY, 100)
+    /** A [PlaybackSpeed]'s hundredths. */
+    val defaultPlaybackSpeedPercent: Preference<Int> = preferenceStore.getInt(
+        DEFAULT_PLAYBACK_SPEED_PERCENT_KEY,
+        PlaybackSpeed.NORMAL.hundredths,
+    )
 
     val gestureGuideShown: Preference<Boolean> = preferenceStore.getBoolean(GESTURE_GUIDE_SHOWN_KEY, false)
 
@@ -195,10 +198,10 @@ class AnimePlayerPreferences(
     val defaultPlaybackSpeedPercentSetting = ViewerSettingDefinition(
         id = ViewerSettingId(PROVIDER_ID, DEFAULT_PLAYBACK_SPEED_PERCENT_KEY),
         scope = ViewerSettingScope.PROFILE_ONLY,
-        processorDefault = 100,
+        processorDefault = PlaybackSpeed.NORMAL.hundredths,
         profilePreference = defaultPlaybackSpeedPercent,
         codec = ViewerSettingCodecs.Int,
-        validate = { it in DEFAULT_PLAYBACK_SPEED_PERCENT_OPTIONS },
+        validate = PlaybackSpeed::isValid,
     )
 
     override val settings: List<ViewerSettingDefinition<*>> = listOf(

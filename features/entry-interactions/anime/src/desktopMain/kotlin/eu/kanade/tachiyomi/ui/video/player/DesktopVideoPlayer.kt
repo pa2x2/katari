@@ -18,6 +18,7 @@ import app.katari.entry.interactions.player.AnimePlayerNavigation
 import app.katari.entry.interactions.player.AnimePlayerPictureInPictureWindow
 import app.katari.entry.interactions.player.AnimePlayerPlacement
 import app.katari.entry.interactions.player.AnimePlayerRequest
+import app.katari.entry.interactions.player.PlaybackSpeed
 import app.katari.entry.interactions.settings.AnimePlayerDevicePreferences
 import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.entry.interactions.source.EntryChildWebViewAction
@@ -27,6 +28,7 @@ import app.katari.presentation.kit.window.ReportScreenTitle
 import app.katari.video.engine.spi.VideoEngine
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import eu.kanade.tachiyomi.ui.video.player.brightness.PlayerOwnBrightness
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerWindowTitle
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngines
 import eu.kanade.tachiyomi.ui.video.player.gesture.PointerVideoPlayerInput
@@ -51,8 +53,8 @@ import tachiyomi.presentation.core.i18n.stringResource
  * The desktop's [AnimePlayer]. It plays in mpv, the desktop's one engine, takes the mouse on its picture and the
  * keyboard ([PointerVideoPlayerInput]), sets the player's own volume, offers the window's full screen and moves into a
  * picture-in-picture window of its own ([WindowPictureInPicture]) and shows in the desktop's media controls
- * ([DesktopMediaControls]) while it is open; there is no lock, rotation or brightness. Like Android's player activity it
- * owns what outlives each episode's composition, and the screen itself is the shared [VideoPlayerScreen]. While a screen it opened covers it, it stays composed and paused.
+ * ([DesktopMediaControls]) while it is open; there is no lock or rotation, and its brightness only dims the picture
+ * ([PlayerOwnBrightness]). Like Android's player activity it owns what outlives each episode's composition, and the screen itself is the shared [VideoPlayerScreen]. While a screen it opened covers it, it stays composed and paused.
  * The main window's title names the series and episode while the player fills it.
  */
 @Inject
@@ -84,7 +86,9 @@ internal class DesktopVideoPlayer(
                 ownerEntryId = request.ownerEntryId,
                 bypassMerge = request.bypassMerge,
                 startPositionMs = request.startPositionMs,
-                defaultPlaybackSpeed = settings.defaultPlaybackSpeedPercent.resolveProfile().effectiveValue / 100f,
+                defaultPlaybackSpeed = PlaybackSpeed(
+                    settings.defaultPlaybackSpeedPercent.resolveProfile().effectiveValue,
+                ),
             )
         }
         val scope = rememberCoroutineScope()
@@ -134,6 +138,7 @@ internal class DesktopVideoPlayer(
         val fullScreen = LocalWindowFullScreen.current
         val host = remember(playback, fullScreen) {
             val volume = PlayerOwnVolume(devicePreferences)
+            val brightness = PlayerOwnBrightness(devicePreferences)
             VideoPlayerScreenHost(
                 engines = VideoPlayerEngines(builtIn = videoEngine, mpvAddon = null),
                 preferences = preferences,
@@ -151,7 +156,8 @@ internal class DesktopVideoPlayer(
                 volume = volume,
                 volumeControl = volume,
                 fullScreen = fullScreen,
-                brightness = null,
+                brightness = brightness,
+                extraDimInSettings = true,
                 orientation = null,
                 locksControls = false,
                 clipboard = clipboard,

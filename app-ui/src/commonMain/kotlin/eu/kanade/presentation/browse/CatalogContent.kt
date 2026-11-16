@@ -16,13 +16,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import app.katari.core.platform.currentPlatformContext
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.OpenInBrowser
-import app.katari.icons.materialsymbols.rounded.Public
 import app.katari.icons.materialsymbols.rounded.Refresh
 import app.katari.icons.materialsymbols.rounded.Settings
 import app.katari.presentation.kit.feedback.EmptyScreen
@@ -48,7 +46,6 @@ import eu.kanade.presentation.library.components.EntryComfortableGridItem
 import eu.kanade.presentation.library.components.EntryCompactGridItem
 import eu.kanade.presentation.library.components.EntryListItem
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
-import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetupState
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import tachiyomi.domain.library.model.CoverSize
@@ -104,10 +101,6 @@ fun CatalogContent(
     }
 
     if (catalogList.itemCount == 0) {
-        val webViewSetup = LocalAppUiGraph.current.webViewSetup
-        val webViewNeeded by webViewSetup.wasNeeded.collectAsStateWithLifecycle()
-        val webViewState by webViewSetup.state.collectAsStateWithLifecycle()
-        val awaitsWebViewSetup = webViewNeeded && webViewState == WebViewSetupState.NotSetUp
         EmptyScreen(
             modifier = Modifier.padding(contentPadding),
             message = when (errorState) {
@@ -122,16 +115,6 @@ fun CatalogContent(
                         onClick = catalogList::refresh,
                     ),
                 )
-                // The source may have failed for the web view it needed, which only waits to be set up
-                if (awaitsWebViewSetup) {
-                    add(
-                        EmptyScreenAction(
-                            stringRes = MR.strings.webview_setup_title,
-                            icon = MaterialSymbols.Rounded.Public,
-                            onClick = webViewSetup::request,
-                        ),
-                    )
-                }
                 onWebViewClick?.let {
                     add(
                         EmptyScreenAction(

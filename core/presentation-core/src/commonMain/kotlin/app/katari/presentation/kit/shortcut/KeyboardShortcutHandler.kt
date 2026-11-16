@@ -10,21 +10,28 @@ import androidx.compose.runtime.remember
 /**
  * Runs [onTrigger] on [shortcut]'s keys while this is composed and [enabled], in a window that has keyboard shortcuts.
  * Declare it beside the control that runs the same action, so both stay one action.
+ *
+ * With [onHoldChange], a key held down until the keyboard repeats it calls it with true, and with false when the key
+ * comes up, such as the player's Space playing faster while held; [onTrigger] then runs on a tap, as the key comes up.
  */
 @Composable
 fun KeyboardShortcutHandler(
     shortcut: KeyboardShortcut,
     enabled: Boolean = true,
+    onHoldChange: ((held: Boolean) -> Unit)? = null,
     onTrigger: () -> Unit,
 ) {
     val registry = LocalKeyboardShortcuts.current ?: return
     val layer = LocalShortcutLayer.current ?: registry.rootLayer
     val active = enabled && LocalShortcutsActive.current
-    val registration = remember(registry, layer) { ShortcutRegistration(layer, shortcut, active, onTrigger) }
+    val registration = remember(registry, layer) {
+        ShortcutRegistration(layer, shortcut, active, onTrigger, onHoldChange)
+    }
     SideEffect {
         registration.shortcut = shortcut
         registration.enabled = active
         registration.action = onTrigger
+        registration.onHoldChange = onHoldChange
     }
     DisposableEffect(registration) {
         registry.register(registration)

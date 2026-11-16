@@ -21,10 +21,13 @@ import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.isSoftKeyboardVisible
 
 /**
  * The title row of an [OverlayDrawer], with an optional overflow [menu] before the close button. A page opened inside
  * the drawer passes [onBack], whose button takes the place of [icon].
+ * While the on-screen keyboard is open the row steps aside: on a phone in landscape the keyboard leaves the drawer less
+ * room than the row and one row of content, and the field being typed in needs it. It is back once the keyboard closes.
  */
 @Composable
 fun OverlayDrawerHeader(
@@ -35,6 +38,7 @@ fun OverlayDrawerHeader(
     menu: (@Composable ColumnScope.(close: () -> Unit) -> Unit)? = null,
     onBack: (() -> Unit)? = null,
 ) {
+    if (isSoftKeyboardVisible()) return
     val spacing = KatariTheme.spacing
     Row(
         modifier = Modifier

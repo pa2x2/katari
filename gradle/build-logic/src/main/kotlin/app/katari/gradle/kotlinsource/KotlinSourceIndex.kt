@@ -402,8 +402,10 @@ private fun List<KotlinToken>.superTypeNamesAfter(keywordIndex: Int): Set<String
             KotlinTokenType.LPAR -> parenDepth += 1
             KotlinTokenType.RPAR -> parenDepth = (parenDepth - 1).coerceAtLeast(0)
             KotlinTokenType.COLON -> if (parenDepth == 0) inSuperTypes = true
-            KotlinTokenType.LBRACE, KotlinTokenType.EQ, KotlinTokenType.WHERE_KEYWORD -> return superTypeNames
-            KotlinTokenType.IDENTIFIER -> if (inSuperTypes) superTypeNames += token.text.toSimpleTypeName()
+            KotlinTokenType.LBRACE, KotlinTokenType.EQ, KotlinTokenType.WHERE_KEYWORD ->
+                if (parenDepth == 0) return superTypeNames
+            KotlinTokenType.IDENTIFIER ->
+                if (inSuperTypes && parenDepth == 0) superTypeNames += token.text.toSimpleTypeName()
             else -> Unit
         }
     }

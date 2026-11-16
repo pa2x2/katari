@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.player.PlaybackSpeed
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.RestartAlt
 import app.katari.icons.materialsymbols.rounded.Settings
@@ -24,6 +25,7 @@ import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.ui.video.player.VideoAdaptiveQualityPreference
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
+import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
 import eu.kanade.tachiyomi.ui.video.player.defaultSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.engine.MpvTrackPick
 import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
@@ -31,7 +33,6 @@ import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSourceChoice
 import eu.kanade.tachiyomi.ui.video.player.resolvePreviewSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
-import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedOptions
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.i18n.*
@@ -59,8 +60,10 @@ internal fun VideoPlayerSettingsContent(
     playback: VideoPlaybackUiState,
     initialSection: VideoPlayerSettingsSection?,
     onDismissRequest: () -> Unit,
-    onSelectSpeed: (Float) -> Unit,
+    onSelectSpeed: (PlaybackSpeed) -> Unit,
     onSelectPicture: (PictureFraming) -> Unit,
+    /** The brightness whose extra dim a slider sets; null where the panel leaves it to a swipe, as on Android. */
+    extraDim: VideoPlayerBrightness?,
     onSelectAdaptiveQuality: (VideoAdaptiveQualityPreference) -> Unit,
     onSelectSubtitle: (VideoPlayerSubtitleSelection) -> Unit,
     onSelectAudioTrack: (String) -> Unit,
@@ -132,6 +135,7 @@ internal fun VideoPlayerSettingsContent(
         if (playback.showsAdaptiveQualitySelector) add(QUALITY_ITEM)
         add(SPEED_ITEM)
         add(PICTURE_ITEM)
+        if (extraDim != null) add(EXTRA_DIM_ITEM)
         if (showAudioTracks) add(AUDIO_ITEM)
         if (showSubtitles) add(SUBTITLES_ITEM)
         if (chapters.isNotEmpty()) addAll(videoPlayerChapterItemKeys(chapters))
@@ -232,19 +236,17 @@ internal fun VideoPlayerSettingsContent(
             }
 
             item(key = SPEED_ITEM) {
-                ChipsRow(title = stringResource(MR.strings.anime_playback_speed)) {
-                    videoPlaybackSpeedOptions.forEach { option ->
-                        FilterChip(
-                            label = option.label,
-                            selected = option.speed == playback.sessionPlaybackSpeed,
-                            onClick = { onSelectSpeed(option.speed) },
-                        )
-                    }
-                }
+                VideoPlayerSpeedRows(speed = playback.sessionPlaybackSpeed, onSelect = onSelectSpeed)
             }
 
             item(key = PICTURE_ITEM) {
                 VideoPlayerPictureRow(framing = playback.pictureFraming, onSelect = onSelectPicture)
+            }
+
+            if (extraDim != null) {
+                item(key = EXTRA_DIM_ITEM) {
+                    VideoPlayerExtraDimRow(brightness = extraDim)
+                }
             }
 
             if (showAudioTracks) {
@@ -307,6 +309,7 @@ internal fun VideoPlayerSettingsContent(
 private const val QUALITY_ITEM = "quality"
 private const val SPEED_ITEM = "speed"
 private const val PICTURE_ITEM = "picture"
+private const val EXTRA_DIM_ITEM = "extraDim"
 private const val AUDIO_ITEM = "audio"
 private const val SUBTITLES_ITEM = "subtitles"
 private const val MARKER_SKIP_ITEM = "marker_skip"

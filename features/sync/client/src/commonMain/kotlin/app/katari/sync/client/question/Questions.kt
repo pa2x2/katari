@@ -11,6 +11,7 @@ import app.katari.sync.client.kind.question.ProfileDeletionAnswer
 import app.katari.sync.client.kind.question.ProfileDeletionQuestionKind
 import app.katari.sync.client.kind.question.QuestionKind
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
+import app.katari.sync.client.kind.replacement.withMigrationKept
 import app.katari.sync.client.kind.replacement.withoutMigration
 import app.katari.sync.client.merge.RecordState
 import app.katari.sync.client.payload.Stamped
@@ -58,7 +59,12 @@ class Questions(
 
     /**
      * Keeps the migration of [from] to [target], one of the question's targets. Each other target is left in the
-     * library as if its migration had never been made ([withoutMigration]).
+     * library as if its migration had never been made ([withoutMigration]), and the kept one as its migration left it
+     * ([withMigrationKept]).
+     *
+     * Every write of the answer carries the answer's stamp, the replacement too when it already went to [target]: when
+     * two devices answer differently before they sync, the later answer wins on each record, and
+     * [app.katari.sync.client.kind.question.QuestionDetection] tells its writes from new conflicts.
      */
     suspend fun keepMigration(from: String, target: String) = writing.write { session ->
         val key = EntryReplacementKind.key(from)
@@ -66,21 +72,29 @@ class Questions(
         val question = session.stored(MigrationQuestionKind, MigrationQuestionKind.key(from)) ?: return@write
         val kept = question.targets.value.firstOrNull { it.to == target }
         require(kept != null) { "Not one of the question's targets" }
-        if (stored.replacement.value != kept.replacement()) {
-            session.change(
-                EntryReplacementKind,
-                key,
-                stored.copy(replacement = Stamped(kept.replacement(), session.newEdit())),
-            )
+        val at = session.newEdit()
+        // How the migration carried chapters belongs to it, so it stays only when the kept one is the stored one
+        val chapters = stored.migratedChapters?.takeIf { stored.replacement.value == kept.replacement() }
+        session.change(
+            EntryReplacementKind,
+            key,
+            stored.copy(replacement = Stamped(kept.replacement(), at), chapters = chapters?.let { Stamped(it, at) }),
+        )
+        question.targets.value.forEach { migration ->
+            val before = migration.targetBefore ?: return@forEach
+            val entry = session.live(migration.to)?.let(EntryKind::decode) ?: return@forEach
+            val answered = if (migration.to == target) {
+                entry.withMigrationKept(before, at)
+            } else {
+                entry.withoutMigration(before, at)
+            }
+            if (answered != entry) session.change(EntryKind, migration.to, answered)
         }
-        question.targets.value.filter { it.to != target }.forEach { turnedDown ->
-            val before = turnedDown.targetBefore ?: return@forEach
-            val entry = session.live(turnedDown.to)?.let(EntryKind::decode) ?: return@forEach
-            val restored = entry.withoutMigration(before, session.newEdit())
-            if (restored != entry) session.change(EntryKind, turnedDown.to, restored)
-        }
-        val answer = question.copy(answer = Stamped(target, session.newEdit()))
-        session.change(MigrationQuestionKind, MigrationQuestionKind.key(from), answer)
+        session.change(
+            MigrationQuestionKind,
+            MigrationQuestionKind.key(from),
+            question.copy(answer = Stamped(target, at)),
+        )
     }
 
     /** Keeps [notes] on [entryKey], one of the question's versions or the person's own merge of them. */

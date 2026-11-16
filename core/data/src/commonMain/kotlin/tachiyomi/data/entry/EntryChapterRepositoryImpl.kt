@@ -19,6 +19,7 @@ import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryChapterSummary
+import tachiyomi.domain.entry.model.RenamedChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -290,6 +291,28 @@ class EntryChapterRepositoryImpl(
     override suspend fun getChapterByUrlAndEntryId(url: String, entryId: Long): EntryChapter? {
         return handler.awaitOneOrNull {
             chaptersQueries.getChapterByUrlAndEntryId(url, entryId, EntryMapper::mapChapter)
+        }
+    }
+
+    override fun subscribeRenamedChapters(): Flow<List<RenamedChapter>> {
+        return handler.subscribeToList {
+            chapters_renamedQueries.pending { id, chapterId, entryId, profileId, name, scanlator, url ->
+                RenamedChapter(
+                    id = id,
+                    chapterId = chapterId,
+                    entryId = entryId,
+                    profileId = profileId,
+                    formerName = name,
+                    formerScanlator = scanlator,
+                    formerUrl = url,
+                )
+            }
+        }
+    }
+
+    override suspend fun removeRenamedChapters(ids: Collection<Long>) {
+        handler.await(inTransaction = true) {
+            ids.distinct().chunkedForSqlQuery().forEach { chunk -> chapters_renamedQueries.remove(chunk) }
         }
     }
 }

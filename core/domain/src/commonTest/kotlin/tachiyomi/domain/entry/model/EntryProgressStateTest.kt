@@ -42,6 +42,31 @@ class EntryProgressStateTest {
         tiedCurrent.mergeWith(tiedIncoming) shouldBe tiedCurrent
     }
 
+    @Test
+    fun `reading saved after a position dated ahead of this device's clock arrived replaces it, dated after it`() {
+        // Synced from a device whose clock is ahead: read at 5000 there, while it is 4000 here
+        val held = state(
+            locator = EntryProgressLocator(kind = "page", position = 30),
+            completed = false,
+            locatorUpdatedAt = 5_000,
+            completionUpdatedAt = 5_000,
+        )
+        val reading = state(
+            locator = EntryProgressLocator(kind = "page", position = 45),
+            completed = true,
+            locatorUpdatedAt = 4_000,
+            completionUpdatedAt = 0,
+        )
+
+        val edited = held.withEdit(reading)
+
+        edited.locator.position shouldBe 45
+        edited.locatorUpdatedAt shouldBe 5_001
+        // The reading didn't set completion, so what is held stays
+        edited.completed shouldBe false
+        edited.completionUpdatedAt shouldBe 5_000
+    }
+
     private fun state(
         locator: EntryProgressLocator,
         completed: Boolean,

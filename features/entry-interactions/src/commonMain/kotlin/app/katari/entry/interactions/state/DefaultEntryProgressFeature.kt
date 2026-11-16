@@ -28,12 +28,12 @@ internal class DefaultEntryProgressFeature(
     ): EntryProgressRecordingResult {
         val incoming = event.progress.withPreservedLocatorExtensionsIfNeeded(event)
         val current = repository.get(incoming.entryId, incoming.contentKey, incoming.resourceKey)
-        val merged = repository.mergeAndSyncChild(incoming)
-        val completedNow = merged.completed && current?.completed != true
+        val recorded = repository.editAndSyncChild(incoming)
+        val completedNow = recorded.completed && current?.completed != true
         if (completedNow && event.completeEquivalentChildrenByNumber && duplicateCompletionEnabled()) {
-            completeEquivalentChildren(event, merged.completionUpdatedAt)
+            completeEquivalentChildren(event, recorded.completionUpdatedAt)
         }
-        return EntryProgressRecordingResult(merged, completedNow)
+        return EntryProgressRecordingResult(recorded, completedNow)
     }
 
     override suspend fun snapshot(entry: Entry): EntryProgressSnapshotResult {
@@ -126,6 +126,7 @@ internal class DefaultEntryProgressFeature(
                 val state = current?.copy(
                     chapterId = child.id,
                     completed = true,
+                    locatorUpdatedAt = 0L,
                     completionUpdatedAt = completionTimestamp,
                 ) ?: EntryProgressState(
                     entryId = child.entryId,
@@ -140,7 +141,7 @@ internal class DefaultEntryProgressFeature(
                     completed = true,
                     completionUpdatedAt = completionTimestamp,
                 )
-                repository.mergeAndSyncChild(state)
+                repository.editAndSyncChild(state)
             }
     }
 }

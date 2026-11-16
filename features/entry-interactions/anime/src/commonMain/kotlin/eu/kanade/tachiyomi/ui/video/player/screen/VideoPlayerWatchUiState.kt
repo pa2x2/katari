@@ -39,6 +39,9 @@ internal class VideoPlayerWatchUiState(
 
     /** How many times a key has stepped the subtitle timing, each showing the timing a moment. */
     var subtitleTimingKeySteps by mutableIntStateOf(0)
+
+    /** How many times a key has stepped the speed, each showing the speed a moment. */
+    var speedKeySteps by mutableIntStateOf(0)
     var subtitleEditorDraft by mutableStateOf(subtitleAppearance)
     var subtitleEditorKeepsInPicture by mutableStateOf(false)
     var resumePlaybackAfterSubtitleEditor by mutableStateOf(false)
@@ -104,16 +107,16 @@ internal class VideoPlayerWatchUiState(
     fun triggerSideGestureFeedback(
         type: VideoPlayerSideGestureType,
         level: Int,
-        maxLevel: Int,
-        boostFromLevel: Int? = null,
+        levels: IntRange,
+        normalLevels: IntRange,
         boostPercent: Int? = null,
     ) {
         sideGestureFeedbackSequence += 1L
         sideGestureFeedbackState = VideoPlayerSideGestureFeedbackState(
             type = type,
             level = level,
-            maxLevel = maxLevel,
-            boostFromLevel = boostFromLevel,
+            levels = levels,
+            normalLevels = normalLevels,
             boostPercent = boostPercent,
             sequence = sideGestureFeedbackSequence,
         )

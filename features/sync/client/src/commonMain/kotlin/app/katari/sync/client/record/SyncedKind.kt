@@ -8,6 +8,7 @@ import app.katari.sync.client.part.ChoiceSet
 import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.part.ViewerSettingPreferences
 import app.katari.sync.client.payload.UnknownFields
+import app.katari.sync.client.setting.read.LocalPreference
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.scope.SettingsArea
 import app.katari.sync.protocol.file.FileReference
@@ -113,6 +114,9 @@ abstract class SyncedKind<P : Any>(
 
     /** The key of the app preference a setting record holds; null for a record that holds none. */
     internal open fun settingKey(payload: P): String? = null
+
+    /** The preference the row [ref] locates, for a kind whose rows are app preferences; null for any other. */
+    internal open fun localPreference(ref: LocalRef): LocalPreference? = null
 
     /** The Settings area of a setting record; null for a record that is no setting. */
     internal open fun settingsArea(payload: P): SettingsArea? = settingKey(payload)?.let(PreferenceScopes::markOf)?.area

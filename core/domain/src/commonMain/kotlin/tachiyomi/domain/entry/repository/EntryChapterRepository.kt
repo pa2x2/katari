@@ -3,6 +3,7 @@ package tachiyomi.domain.entry.repository
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryChapterSummary
+import tachiyomi.domain.entry.model.RenamedChapter
 
 interface EntryChapterRepository {
 
@@ -68,4 +69,9 @@ interface EntryChapterRepository {
     fun getScanlatorsByEntryIdAsFlow(entryId: Long): Flow<List<String>>
 
     suspend fun getChapterByUrlAndEntryId(url: String, entryId: Long): EntryChapter?
+
+    /** The renames whose downloads are still to be moved, oldest first, emitted again whenever a chapter is renamed. */
+    fun subscribeRenamedChapters(): Flow<List<RenamedChapter>>
+
+    suspend fun removeRenamedChapters(ids: Collection<Long>)
 }

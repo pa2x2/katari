@@ -14,7 +14,9 @@ import tachiyomi.data.DatabaseHandler
  * trigger would have captured, had sync been on when it was written, goes into the outbox the way the trigger writes
  * it, but touching no field ([app.katari.sync.client.record.FieldStamps]). The drain then stores each as a record
  * whose fields carry no edit time ([app.katari.sync.client.payload.Stamped.UNKNOWN_EDIT]): it fills in what the
- * account lacks and gives way to every edit made anywhere, which is how values from before sync merge.
+ * account lacks and gives way to every edit made anywhere, which is how values from before sync merge. Reading
+ * positions are the exception, as their rows keep when they were read
+ * ([app.katari.sync.client.record.FieldStamps.positionEditedAt]).
  *
  * Entry replacements are left out. They are events of a migration made here before sync, whose old entry is gone
  * from this device; replayed on another device they would migrate entries the person kept there.

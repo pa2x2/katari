@@ -1,6 +1,7 @@
 package app.katari.entry.interactions.download
 
 import app.katari.core.metro.AppCoroutineScope
+import app.katari.core.metro.StartupWarmup
 import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.entry.interactions.download.configuration.backup.DefaultEntryDownloadConfigurationBackupFeature
 import app.katari.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupFeature
@@ -30,6 +31,7 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
+import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
@@ -42,12 +44,33 @@ object EntryDownloadBindings {
     internal fun runtimeCoordinator(
         downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
         interactions: EntryInteractions,
+        chapterRepository: EntryChapterRepository,
         @AppCoroutineScope scope: CoroutineScope,
     ): EntryDownloadRuntimeCoordinator = DefaultEntryDownloadRuntimeFeature(
         applicableTypes = downloadProcessors.keys,
         interaction = interactions.download,
+        chapterRepository = chapterRepository,
         scope = scope + Dispatchers.Default,
     )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun renamedChapterDownloads(
+        interactions: EntryInteractions,
+        chapterRepository: EntryChapterRepository,
+        entryRepository: EntryRepository,
+        @AppCoroutineScope scope: CoroutineScope,
+    ): RenamedChapterDownloads = RenamedChapterDownloads(
+        chapterRepository = chapterRepository,
+        entryRepository = entryRepository,
+        downloads = interactions.download,
+        scope = scope,
+    )
+
+    @Provides
+    @IntoSet
+    internal fun renamedChapterDownloadsWarmup(moves: () -> RenamedChapterDownloads): StartupWarmup =
+        StartupWarmup { moves().start() }
 
     @Provides
     internal fun runtimeFeature(coordinator: EntryDownloadRuntimeCoordinator): EntryDownloadRuntimeFeature =

@@ -1,7 +1,6 @@
 package app.katari.sync.client.kind.replacement.carry
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
-import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.kind.category.CategoryMembershipKind
 import app.katari.sync.client.kind.category.CategoryMembershipPayload
@@ -21,7 +20,9 @@ import app.katari.sync.client.kind.history.HistoryKind
 import app.katari.sync.client.kind.history.HistoryPayload
 import app.katari.sync.client.kind.progress.ProgressKind
 import app.katari.sync.client.kind.progress.ProgressPayload
-import app.katari.sync.client.kind.replacement.EntryReplacementKind
+import app.katari.sync.client.kind.replacement.StandingReplacement
+import app.katari.sync.client.kind.replacement.movedTo
+import app.katari.sync.client.kind.replacement.standingReplacement
 import app.katari.sync.client.kind.subtitletiming.SubtitleTimingKind
 import app.katari.sync.client.kind.subtitletiming.SubtitleTimingPayload
 import app.katari.sync.client.record.RecordGroups
@@ -38,7 +39,8 @@ import app.katari.sync.client.record.fillRecordGroups
  * migrating here. A season folding into the entry its merged entry migrated to carries only its chapter state, as the
  * new entry's place in the library and the choices about it are the merged entry's. A move to another profile is the
  * same entry in a new place, so everything follows it but its category links, which a local move drops too. Each device
- * carries the same edits to the same records, so the changes it pushes merge into one.
+ * carries the same edits to the same records, so the changes it pushes merge into one. Nothing carries once the person
+ * brought the old entry back ([StandingReplacement]); an edit a device carried before it heard of that stays carried.
  */
 internal class ReplacedEntryEdits(private val writes: LocalWrites) {
 
@@ -99,10 +101,10 @@ internal class ReplacedEntryEdits(private val writes: LocalWrites) {
         }
     }
 
+    /** The replacement of [from] while it holds: once the entry is back, its edits are its own again. */
     private suspend fun carryFor(from: String): ReplacementCarry? {
-        val stored = writes.database.sync_recordsQueries.getByKey(EntryReplacementKind.key(from)).awaitAsOneOrNull()
-        if (stored == null || stored.deleted) return null
-        return ReplacementCarry(writes, EntryReplacementKind.decode(stored.payload))
+        val standing = writes.database.standingReplacement(from)?.takeIf { it.holds } ?: return null
+        return ReplacementCarry(writes, standing.payload)
     }
 
     private companion object {

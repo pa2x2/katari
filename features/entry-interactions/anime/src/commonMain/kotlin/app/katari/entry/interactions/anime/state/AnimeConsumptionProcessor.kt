@@ -12,6 +12,7 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 internal class AnimeConsumptionProcessor(
     private val entryProgressRepository: EntryProgressRepository,
+    private val now: () -> Long = System::currentTimeMillis,
 ) : EntryConsumptionProcessor {
 
     override suspend fun setConsumed(
@@ -27,41 +28,36 @@ internal class AnimeConsumptionProcessor(
                 consumed,
             )
         }
+        val timestamp = now()
         chaptersToUpdate.forEach { chapter ->
-            val current = entryProgressRepository.get(chapter.entryId, "", chapter.progressResourceKey)
-            val updated = if (consumed) {
-                current?.copy(
-                    chapterId = chapter.id,
-                    completed = true,
-                ) ?: animeProgressState(
+            val held = entryProgressRepository.get(chapter.entryId, "", chapter.progressResourceKey)
+                ?: animeProgressState(
                     entryId = chapter.entryId,
                     chapterId = chapter.id,
                     resourceKey = chapter.progressResourceKey,
                     positionMs = 0L,
                     durationMs = 0L,
-                    completed = true,
+                    completed = false,
                     locatorUpdatedAt = 0L,
                     completionUpdatedAt = 0L,
                 )
+            val edit = if (consumed) {
+                held.copy(
+                    chapterId = chapter.id,
+                    completed = true,
+                    locatorUpdatedAt = 0L,
+                    completionUpdatedAt = timestamp,
+                )
             } else {
-                (
-                    current ?: animeProgressState(
-                        entryId = chapter.entryId,
-                        chapterId = chapter.id,
-                        resourceKey = chapter.progressResourceKey,
-                        positionMs = 0L,
-                        durationMs = 0L,
-                        completed = false,
-                        locatorUpdatedAt = 0L,
-                        completionUpdatedAt = 0L,
-                    )
-                    ).copy(
+                held.copy(
                     chapterId = chapter.id,
                     locator = EntryProgressLocator(kind = ANIME_PROGRESS_LOCATOR_KIND),
                     completed = false,
+                    locatorUpdatedAt = timestamp,
+                    completionUpdatedAt = timestamp,
                 )
             }
-            entryProgressRepository.upsertAndSyncChild(updated)
+            entryProgressRepository.editAndSyncChild(edit)
         }
         return chaptersToUpdate
     }

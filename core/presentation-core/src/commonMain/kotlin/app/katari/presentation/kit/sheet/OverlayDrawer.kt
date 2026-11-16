@@ -71,8 +71,10 @@ fun OverlayDrawer(
         Row(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .fillMaxHeight(0.94f)
+                // The drawer's insets, the keyboard among them, are taken from the window's edges first: a share of
+                // the whole window taken before them would count the window's bottom edge again above the keyboard
                 .then(drawerModifier)
+                .fillMaxHeight(0.94f)
                 .padding(end = spacing.m, top = spacing.m, bottom = spacing.m),
             verticalAlignment = Alignment.CenterVertically,
         ) {

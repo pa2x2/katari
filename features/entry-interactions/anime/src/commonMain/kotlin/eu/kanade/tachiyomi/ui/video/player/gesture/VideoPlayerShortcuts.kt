@@ -18,6 +18,9 @@ internal object VideoPlayerShortcuts {
     /** How far [VolumeUp] and [VolumeDown], and the wheel over a volume control, step the volume, in percent. */
     const val VOLUME_STEP_PERCENT = 5
 
+    /** How many extra dim levels [DimMore] and [DimLess] step, so ten presses reach the deepest. */
+    const val DIM_STEP_LEVELS = 5
+
     val PlayPause: KeyboardShortcut
         @Composable get() = shortcut(
             "player.playPause",
@@ -54,6 +57,20 @@ internal object VideoPlayerShortcuts {
             "player.volumeDown",
             stringResource(MR.strings.anime_shortcut_volume_down),
             ShortcutKeys.Chord(Key.DirectionDown, "↓"),
+        )
+
+    val DimLess: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.dimLess",
+            stringResource(MR.strings.anime_shortcut_dim_less),
+            ShortcutKeys.Chord(Key.DirectionUp, "↑", shift = true),
+        )
+
+    val DimMore: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.dimMore",
+            stringResource(MR.strings.anime_shortcut_dim_more),
+            ShortcutKeys.Chord(Key.DirectionDown, "↓", shift = true),
         )
 
     val Mute: KeyboardShortcut

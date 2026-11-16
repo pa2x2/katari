@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.shareIn
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.repository.EntryChapterRepository
 
 internal interface EntryDownloadRuntimeCoordinator : EntryDownloadRuntimeFeature {
     fun events(): Flow<EntryDownloadEvent>
@@ -21,6 +22,7 @@ internal interface EntryDownloadRuntimeCoordinator : EntryDownloadRuntimeFeature
 internal class DefaultEntryDownloadRuntimeFeature(
     private val applicableTypes: Set<EntryType>,
     private val interaction: EntryDownloadInteraction,
+    private val chapterRepository: EntryChapterRepository,
     private val scope: CoroutineScope,
 ) : EntryDownloadRuntimeCoordinator {
     override val changes: Flow<Unit> = interaction.changes
@@ -77,13 +79,14 @@ internal class DefaultEntryDownloadRuntimeFeature(
         return interaction.cancelQueuedDownload(type, childId)
     }
 
-    override fun downloadCount(entry: Entry): Int {
-        if (!isApplicable(entry.type)) return 0
-        return interaction.getDownloadCount(entry)
-    }
-
-    override fun downloadCounts(entries: List<Entry>): Map<Long, Int> {
-        return interaction.getDownloadCounts(entries.filter { isApplicable(it.type) })
+    override suspend fun downloadCounts(entries: List<Entry>): Map<Long, Int> {
+        val withDownloads = interaction.filterWithDownloads(entries.filter { isApplicable(it.type) })
+        if (withDownloads.isEmpty()) return emptyMap()
+        val chaptersByEntryId = chapterRepository.getChaptersByEntryIdsAwait(withDownloads.map(Entry::id))
+            .groupBy(EntryChapter::entryId)
+        return withDownloads.associate { entry ->
+            entry.id to interaction.getDownloadedChapterIds(entry, chaptersByEntryId[entry.id].orEmpty()).size
+        }
     }
 
     override fun totalDownloadCount(): Int = interaction.getTotalDownloadCount()

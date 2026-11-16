@@ -7,20 +7,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
 import app.katari.presentation.kit.theme.PageOverlayColors
-import kotlin.math.abs
 
-/** [brightness] runs from -100 to 100, and below 0 dims the picture by that share; [color] is an ARGB filter. */
+/** [dim] is the share of the picture's light a dark layer takes away, 0 for none; [color] is an ARGB filter. */
 @Composable
 internal fun VideoPlayerContentOverlay(
-    brightness: Int,
+    dim: Float,
     color: Int?,
     colorBlendMode: BlendMode?,
     modifier: Modifier = Modifier,
 ) {
-    if (brightness < 0) {
-        val dim = remember(brightness) { PageOverlayColors.dim(abs(brightness) / 100f) }
+    if (dim > 0f) {
+        val layer = remember(dim) { PageOverlayColors.dim(dim) }
         Canvas(modifier = modifier.fillMaxSize()) {
-            drawRect(dim)
+            drawRect(layer)
         }
     }
 

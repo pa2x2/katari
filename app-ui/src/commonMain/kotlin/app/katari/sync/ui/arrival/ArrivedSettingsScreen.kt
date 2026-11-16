@@ -53,7 +53,7 @@ private fun arrivedPreferences(
 ): List<Preference> {
     val rows = changes.groupBy { setting -> setting.menu?.let { it to setting.batch } ?: setting.id }.values
     val days = rows.groupBy { row ->
-        Instant.fromEpochMilliseconds(row.first().changedAt).toLocalDateTime(TimeZone.currentSystemDefault()).date
+        Instant.fromEpochMilliseconds(row.first().batch).toLocalDateTime(TimeZone.currentSystemDefault()).date
     }
     return listOf(Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.sync_arrived_note))) +
         days.map { (day, dayRows) ->

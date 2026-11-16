@@ -54,6 +54,14 @@ data class PlatformPresentation(
     /** Follows a count of unsent changes. */
     val syncUnsentWaitingNote: StringResource,
     val syncFilesWaitingPlural: PluralsResource,
+    /** Says how to send changes that wait for Wi-Fi, before disconnecting drops them. */
+    val syncDisconnectWaitingNote: StringResource,
+    /**
+     * Names the background sync switch: on Android the periodic sync runs while the app is closed; a desktop app syncs
+     * only while it runs, and there the switch adds the periodic sync to its live updates.
+     */
+    val syncInBackgroundLabel: StringResource,
+    val syncInBackgroundSummary: StringResource,
     /** Names the action that hands over the crash logs: sharing them, or saving them to a file. */
     val dumpCrashLogsLabel: StringResource,
     val syncFailedHelp: StringResource,

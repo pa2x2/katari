@@ -254,6 +254,37 @@ internal class AnimeDownloadManager(
         }
     }
 
+    /**
+     * Moves [episode]'s download stored under the name [former] gives it, the episode as it was before its name or URL
+     * changed, to the name it has now. When it is also downloaded under the new name, as when it was downloaded again
+     * after the change, that download stays and the former one is deleted.
+     */
+    suspend fun moveRenamedEpisode(anime: Entry, former: EntryChapter, episode: EntryChapter) {
+        withIOContext {
+            val source = sourceManager.getOrStub(anime.source)
+            val animeDir = provider.findAnimeDir(anime.downloadFolderTitle, source) ?: return@withIOContext
+            val formerDownload = provider.getValidEpisodeDirNames(former.name, former.url)
+                .firstNotNullOfOrNull(animeDir::findFile)
+                ?: return@withIOContext
+            val formerName = checkNotNull(formerDownload.name) { "Episode download has no name" }
+            val currentNames = provider.getValidEpisodeDirNames(episode.name, episode.url)
+            if (formerName in currentNames) return@withIOContext
+
+            if (currentNames.any { animeDir.findFile(it) != null }) {
+                if (formerDownload.delete()) cache.removeEpisodeDirs(setOf(formerName), anime)
+                return@withIOContext
+            }
+
+            val name = provider.getEpisodeDirName(episode.name, episode.url)
+            if (!provider.renameEpisodePackage(animeDir, formerName, name)) {
+                logcat(LogPriority.ERROR) { "Failed to move renamed episode download: $formerName" }
+                return@withIOContext
+            }
+            cache.removeEpisodeDirs(setOf(formerName), anime)
+            cache.addEpisode(name, animeDir, anime)
+        }
+    }
+
     fun isEpisodeDownloaded(
         episodeName: String,
         episodeUrl: String,
@@ -282,12 +313,12 @@ internal class AnimeDownloadManager(
         return queue.associateBy { it.episode.id }.also { queueIndex = QueueIndex(queue, it) }
     }
 
-    fun getDownloadCount(anime: Entry): Int {
-        return cache.getDownloadCount(anime)
+    fun hasDownloads(anime: Entry): Boolean {
+        return cache.hasDownloads(anime)
     }
 
-    fun getDownloadCounts(animes: List<Entry>): Map<Long, Int> {
-        return cache.getDownloadCounts(animes)
+    fun filterWithDownloads(animes: List<Entry>): List<Entry> {
+        return cache.filterWithDownloads(animes)
     }
 
     fun getTotalDownloadCount(): Int {

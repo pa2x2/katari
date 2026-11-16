@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.katari.presentation.kit.theme.KatariTheme
 
-/** Badges laid side by side, such as on library covers. */
+/** Badges laid side by side, such as on a list row. */
 @Composable
 fun BadgeGroup(
     modifier: Modifier = Modifier,

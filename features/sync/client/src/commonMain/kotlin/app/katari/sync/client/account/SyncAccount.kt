@@ -11,7 +11,6 @@ import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.firstsync.ProfileChoice
 import app.katari.sync.client.firstsync.ProfilePairing
 import app.katari.sync.client.resync.FullResync
-import app.katari.sync.client.run.SyncRequest
 import app.katari.sync.client.run.SyncRuns
 import app.katari.sync.client.server.ServerAddress
 import app.katari.sync.client.server.SyncFailure
@@ -27,12 +26,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import okhttp3.HttpUrl
 import tachiyomi.core.common.util.system.logcat
 import java.io.IOException
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * What the Sync screens ask of sync (D027, D030, D050): checking a server, joining an account by password, link
@@ -139,6 +136,8 @@ class SyncAccount(
             return JoinResult.ServerNotReady(ServerCheck.NotASyncServer)
         }
         val choicesWaiting = runs.exclusive {
+            // Registering anew replaces the token a registration left earlier still needs, so the server is told now
+            disconnection.tellServer()
             val previous = connection.state()
             start(check.server, registered, previous)
             val client = clients.of(check.server, registered.token)
@@ -262,31 +261,13 @@ class SyncAccount(
     }
 
     /**
-     * Leaves the account (D030): what is waiting to be sent goes first, the server forgets this device when it can be
-     * reached, and the device keeps all its data, standalone again.
+     * Leaves the account (D030) at once, cutting short any sync going: what still waits to be sent stays here, and the
+     * device keeps all its data, standalone again. The server forgets this device now, or once it can be reached
+     * ([Disconnection.tellServer]).
      */
     suspend fun disconnect() {
-        if (!connection.state().isLinked) return
-        withTimeoutOrNull(LAST_PUSH_TIMEOUT) { runs.runAndWait(SyncRequest(onlyIfChanged = true)) }
-        runs.exclusive {
-            val state = connection.state()
-            val server = state.server
-            val device = state.device
-            val token = try {
-                connection.token()
-            } catch (e: IOException) {
-                logcat(LogPriority.INFO, e) { "Can't read the sync device token to leave" }
-                null
-            }
-            if (server != null && device != null && token != null) {
-                try {
-                    withTimeoutOrNull(LAST_PUSH_TIMEOUT) { clients.of(server, token).revoke(device) }
-                } catch (e: SyncFailure) {
-                    // It stays in the device list until removed there; its token works for nobody but this device.
-                    logcat(LogPriority.INFO, e) { "Couldn't tell the sync server this device left" }
-                }
-            }
-            disconnection.leave(reason = null)
+        runs.interrupting {
+            if (connection.state().isLinked) disconnection.disconnect()
         }
     }
 
@@ -347,9 +328,5 @@ class SyncAccount(
         } catch (_: SyncFailure) {
             AccountCall.Unreachable
         }
-    }
-
-    private companion object {
-        val LAST_PUSH_TIMEOUT = 15.seconds
     }
 }

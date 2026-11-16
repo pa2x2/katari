@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.katari.presentation.kit.control.Stepper
+import app.katari.presentation.kit.control.StepperInput
+import app.katari.presentation.kit.control.StepperKind
 import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.Preference
 
@@ -22,6 +24,7 @@ fun StepperRow(
     value: Int,
     valueRange: IntRange,
     step: Int,
+    kind: StepperKind,
     valueFormatter: (Int) -> String,
     inputSuffix: String,
     decreaseContentDescription: String,
@@ -29,6 +32,7 @@ fun StepperRow(
     editContentDescription: String,
     onValueChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    input: StepperInput = StepperInput.WholeNumber,
     setting: Preference<*>? = null,
 ) {
     val density = LocalRowDensity.current
@@ -48,12 +52,14 @@ fun StepperRow(
             value = value,
             valueRange = valueRange,
             step = step,
+            kind = kind,
             valueFormatter = valueFormatter,
             inputSuffix = inputSuffix,
             decreaseContentDescription = decreaseContentDescription,
             increaseContentDescription = increaseContentDescription,
             editContentDescription = editContentDescription,
             onValueChange = onValueChange,
+            input = input,
         )
     }
 }

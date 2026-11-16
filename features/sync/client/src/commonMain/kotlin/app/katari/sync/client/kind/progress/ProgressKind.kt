@@ -77,7 +77,7 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
                 contentKey = row.content_key,
                 resourceKey = row.resource_key,
                 chapterKey = chapterKey,
-                locator = stamps.fieldEditedAt(
+                locator = stamps.positionEditedAt(
                     5,
                     ProgressLocator(
                         kind = row.locator_kind,

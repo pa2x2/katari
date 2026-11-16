@@ -6,6 +6,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.ApplyOutcome
 import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.Resolved
 import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
@@ -134,7 +135,13 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
             key = key(from),
             parents = parents.map { RecordRef(EntryKind, EntryKind.ref(it)) },
         ) { previous, stamps ->
-            val replacement = stamps.field(2, Replacement(to, cause, options, targetBefore), previous?.replacement)
+            val made = Replacement(to, cause, options, targetBefore)
+            // Each migration or move captured is a new replacement, even to where an earlier one went: the entry may
+            // have come back in between (EntryPayload.returned), and only a replacement made after that holds again
+            val replacement = stamps.editedAt(2)
+                ?.takeIf { previous == null || it > previous.replacement.at }
+                ?.let { Stamped(made, it) }
+                ?: stamps.field(2, made, previous?.replacement)
             EntryReplacementPayload(from, replacement, chapters?.let { Stamped(it, replacement.at) })
         }
     }
@@ -152,14 +159,26 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
      * The replacement's own changes arrive as records of the new entry, made by the device that replaced it; here the
      * old entry's rows follow a move to another profile, or its activity follows a migration, as it did on that device,
      * and its edits made since carry over ([ReplacedEntryEdits]).
-     * The old entry never returns to the library: its record no longer sets it as a favorite ([EntryKind.apply]).
+     * The old entry stays out of the library until the person brings it back ([EntryKind.apply]). Once back, a moved
+     * entry keeps its rows, and a migrated one keeps the activity recorded on it after its return.
      */
     override suspend fun apply(writes: LocalWrites, key: String, payload: EntryReplacementPayload): ApplyOutcome {
         val replacement = payload.replacement.value
-        val toId = writes.entryId(replacement.to).idOr { return it }
+        val toId = when (val resolved = writes.entryId(replacement.to)) {
+            // A move back to where the entry was moved away from: the record saying it came back hasn't arrived, so
+            // the entry has no row there yet to take the rows back
+            Resolved.Gone -> return if (writes.movedTo(replacement.to) == payload.from) {
+                ApplyOutcome.WaitsFor(replacement.to)
+            } else {
+                ApplyOutcome.Applied(null)
+            }
+            else -> resolved.idOr { return it }
+        }
+        val returnedAt = writes.database.standingReplacement(payload.from)?.returnedAt
         when (replacement.cause) {
-            Replacement.Cause.PROFILE_MOVE -> moveRows(writes, payload.from, toId)
-            Replacement.Cause.MIGRATION -> moveActivity(writes, payload.from, toId)
+            Replacement.Cause.PROFILE_MOVE -> if (returnedAt == null) moveRows(writes, payload.from, toId)
+            Replacement.Cause.MIGRATION ->
+                moveActivity(writes, payload.from, toId, before = returnedAt?.physicalMillis ?: Long.MAX_VALUE)
         }
         ReplacedEntryEdits(writes).carryAll(payload.from)
         return ApplyOutcome.Applied(null)
@@ -181,21 +200,22 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
         queries.moveProgress(toEntryId = toId, fromEntryId = fromId)
         progressChapters.forEach { queries.relinkProgressChapter(chapterId = it.chapter_id, progressId = it._id) }
         queries.moveHistory(toEntryId = toId, fromEntryId = fromId)
-        queries.moveActivitySessions(toEntryId = toId, fromEntryId = fromId)
-        queries.moveActivityCompletions(toEntryId = toId, fromEntryId = fromId)
+        queries.moveActivitySessions(toEntryId = toId, fromEntryId = fromId, before = Long.MAX_VALUE)
+        queries.moveActivityCompletions(toEntryId = toId, fromEntryId = fromId, before = Long.MAX_VALUE)
         writes.database.want(FileOwner.CustomCover(fromId), null)
         queries.deleteEntry(fromId)
     }
 
     /**
-     * Moves the old entry's sessions and completions to the entry that replaced it by a migration, as migrating moved
-     * them on the device that migrated. Its history moved there to the new entry's chapters, whose records bring it.
+     * Moves the old entry's sessions and completions recorded before [before] (epoch milliseconds) to the entry that
+     * replaced it by a migration, as migrating moved them on the device that migrated. Its history moved there to the
+     * new entry's chapters, whose records bring it.
      */
-    private suspend fun moveActivity(writes: LocalWrites, from: String, toId: Long) {
+    private suspend fun moveActivity(writes: LocalWrites, from: String, toId: Long, before: Long) {
         val fromId = otherLocalEntry(writes, from, toId) ?: return
         val queries = writes.database.sync_applyQueries
-        queries.moveActivitySessions(toEntryId = toId, fromEntryId = fromId)
-        queries.moveActivityCompletions(toEntryId = toId, fromEntryId = fromId)
+        queries.moveActivitySessions(toEntryId = toId, fromEntryId = fromId, before = before)
+        queries.moveActivityCompletions(toEntryId = toId, fromEntryId = fromId, before = before)
     }
 
     /** The local ID of the entry [from], when its row is here and isn't the entry [toId] it became. */

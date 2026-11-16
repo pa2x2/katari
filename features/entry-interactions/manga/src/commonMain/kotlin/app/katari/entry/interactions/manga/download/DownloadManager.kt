@@ -246,18 +246,12 @@ internal class DownloadManager(
         return cache.getTotalDownloadCount()
     }
 
-    /**
-     * Returns the amount of downloaded chapters for a manga.
-     *
-     * @param manga the manga to check.
-     */
-    fun getDownloadCount(manga: Entry): Int {
-        return cache.getDownloadCount(manga)
+    fun hasDownloads(manga: Entry): Boolean {
+        return cache.hasDownloads(manga)
     }
 
-    /** Returns the amount of downloaded chapters of each of [mangas], by entry id. */
-    fun getDownloadCounts(mangas: List<Entry>): Map<Long, Int> {
-        return cache.getDownloadCounts(mangas)
+    fun filterWithDownloads(mangas: List<Entry>): List<Entry> {
+        return cache.filterWithDownloads(mangas)
     }
 
     fun cancelQueuedDownloads(downloads: List<MangaDownload>) {
@@ -406,6 +400,42 @@ internal class DownloadManager(
             cache.renameManga(manga, renamed, newTitle)
         } else {
             logcat(LogPriority.ERROR) { "Failed to rename manga download folder: ${folder.name}" }
+        }
+    }
+
+    /**
+     * Moves [chapter]'s download stored under the name [former] gives it, the chapter as it was before its name,
+     * scanlator or URL changed, to the name it has now, with its translation. When it is also downloaded under the new
+     * name, as when it was downloaded again after the change, that download stays and the former one is deleted.
+     */
+    suspend fun moveRenamedChapter(manga: Entry, former: EntryChapter, chapter: EntryChapter) {
+        withIOContext {
+            val source = sourceManager.getOrStub(manga.source)
+            val mangaDir = provider.findEntryDir(manga.downloadFolderTitle, source) ?: return@withIOContext
+            val formerDownload = provider.getValidChapterDirNames(former.name, former.scanlator, former.url)
+                .firstNotNullOfOrNull(mangaDir::findFile)
+                ?: return@withIOContext
+            val formerDirName = checkNotNull(formerDownload.chapterDirName) { "Chapter download has no name" }
+            val currentNames = provider.getValidChapterDirNames(chapter.name, chapter.scanlator, chapter.url)
+            if (formerDownload.name in currentNames) return@withIOContext
+            val formerTranslation = mangaDir.findFile(provider.getChapterTranslationFileName(formerDownload))
+
+            if (currentNames.any { mangaDir.findFile(it) != null }) {
+                formerTranslation?.delete()
+                if (formerDownload.delete()) cache.removeChapterDirs(setOf(formerDirName), manga)
+                return@withIOContext
+            }
+
+            val dirName = provider.getChapterDirName(chapter.name, chapter.scanlator, chapter.url)
+            val name = if (formerDownload.isFile) "$dirName.cbz" else dirName
+            val moved = readyForRename(formerDownload, name)?.renameTo(name)
+            if (moved == null) {
+                logcat(LogPriority.ERROR) { "Failed to move renamed chapter download: ${formerDownload.name}" }
+                return@withIOContext
+            }
+            formerTranslation?.renameTo(provider.getChapterTranslationFileName(name))
+            cache.removeChapterDirs(setOf(formerDirName), manga)
+            cache.addChapter(dirName, mangaDir, manga)
         }
     }
 

@@ -681,12 +681,14 @@ UPDATE history
 SET entry_id = :toEntryId
 WHERE entry_id = :fromEntryId;
 
+-- Only what started before :before (epoch milliseconds): activity recorded after an entry came back stays with it
 moveActivitySessions:
 UPDATE activity_sessions
 SET entry_id = :toEntryId
-WHERE entry_id = :fromEntryId;
+WHERE entry_id = :fromEntryId AND started_at < :before;
 
+-- Only what happened before :before (epoch milliseconds), as moveActivitySessions
 moveActivityCompletions:
 UPDATE activity_completion_events
 SET entry_id = :toEntryId
-WHERE entry_id = :fromEntryId;
+WHERE entry_id = :fromEntryId AND occurred_at < :before;

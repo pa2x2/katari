@@ -48,7 +48,7 @@ internal fun VideoPlayerKeys(
 
 /**
  * The player's keys in its picture-in-picture window, which shows the picture alone, fitted: those that play, seek,
- * change episode, volume, speed and subtitles, and I, which [onLeave]s for the main window.
+ * change episode, volume, extra dim, speed and subtitles, and I, which [onLeave]s for the main window.
  */
 @Composable
 internal fun PictureInPictureKeys(target: VideoPlayerInputTarget, onLeave: () -> Unit) {
@@ -58,7 +58,16 @@ internal fun PictureInPictureKeys(target: VideoPlayerInputTarget, onLeave: () ->
 
 @Composable
 private fun PlaybackKeys(target: VideoPlayerInputTarget, seekStepSeconds: Int, enabled: Boolean) {
-    Key(VideoPlayerShortcuts.PlayPause, enabled) { target.togglePlayback(showControls = false) }
+    // Held, it plays faster as holding the mouse button does, rather than toggling playback on each key repeat
+    KeyboardShortcutHandler(
+        VideoPlayerShortcuts.PlayPause,
+        enabled = enabled,
+        onHoldChange = { held ->
+            target.setSpeedBoostActive(held)
+            if (held) target.registerControllerInteraction(showControls = false)
+        },
+        onTrigger = { target.togglePlayback(showControls = false) },
+    )
     Key(VideoPlayerShortcuts.seekBackward(seekStepSeconds), enabled) {
         target.seekStep(VideoPlayerSeekDirection.Backward)
     }
@@ -67,6 +76,8 @@ private fun PlaybackKeys(target: VideoPlayerInputTarget, seekStepSeconds: Int, e
     }
     Key(VideoPlayerShortcuts.VolumeUp, enabled) { target.stepVolume(VideoPlayerShortcuts.VOLUME_STEP_PERCENT) }
     Key(VideoPlayerShortcuts.VolumeDown, enabled) { target.stepVolume(-VideoPlayerShortcuts.VOLUME_STEP_PERCENT) }
+    Key(VideoPlayerShortcuts.DimLess, enabled) { target.stepBrightness(VideoPlayerShortcuts.DIM_STEP_LEVELS) }
+    Key(VideoPlayerShortcuts.DimMore, enabled) { target.stepBrightness(-VideoPlayerShortcuts.DIM_STEP_LEVELS) }
     Key(VideoPlayerShortcuts.Mute, enabled) { target.toggleMute() }
     Key(VideoPlayerShortcuts.Slower, enabled) { target.stepSpeed(faster = false) }
     Key(VideoPlayerShortcuts.Faster, enabled) { target.stepSpeed(faster = true) }
@@ -81,8 +92,11 @@ private fun PlaybackKeys(target: VideoPlayerInputTarget, seekStepSeconds: Int, e
 private fun Key(shortcut: KeyboardShortcut, enabled: Boolean, action: () -> Unit) =
     KeyboardShortcutHandler(shortcut, enabled = enabled, onTrigger = action)
 
-private fun VideoPlayerInputTarget.stepVolume(by: Int) {
-    val type = VideoPlayerSideGestureType.Volume
+private fun VideoPlayerInputTarget.stepVolume(by: Int) = stepSideGesture(VideoPlayerSideGestureType.Volume, by)
+
+private fun VideoPlayerInputTarget.stepBrightness(by: Int) = stepSideGesture(VideoPlayerSideGestureType.Brightness, by)
+
+private fun VideoPlayerInputTarget.stepSideGesture(type: VideoPlayerSideGestureType, by: Int) {
     applySideGestureLevel(type, sideGestureLevel(type) + by)
 }
 

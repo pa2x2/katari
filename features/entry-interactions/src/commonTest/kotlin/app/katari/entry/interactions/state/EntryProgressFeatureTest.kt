@@ -46,7 +46,7 @@ class EntryProgressFeatureTest {
         val recorded = slot<EntryProgressState>()
         val repository = mockk<EntryProgressRepository> {
             coEvery { get(source.id, "", child.url) } returns current
-            coEvery { mergeAndSyncChild(capture(recorded)) } answers { recorded.captured }
+            coEvery { editAndSyncChild(capture(recorded)) } answers { recorded.captured }
         }
         val feature = featureFor(DefaultEntryInteractions(), repository)
 

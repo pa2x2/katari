@@ -35,6 +35,7 @@ import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.surface.background
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
+import eu.kanade.tachiyomi.ui.video.player.VideoPlayerContentOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.seekBackwardIcon
 import eu.kanade.tachiyomi.ui.video.player.components.seekForwardIcon
 import eu.kanade.tachiyomi.ui.video.player.gesture.PictureInPictureKeys
@@ -76,6 +77,7 @@ internal fun PictureInPictureContent(
             modifier = Modifier.fillMaxSize(),
         )
         scene.subtitles(Modifier.fillMaxSize())
+        VideoPlayerContentOverlay(dim = scene.pictureDim, color = null, colorBlendMode = null)
         AnimatedVisibility(
             visible = pointerInside && !scene.endScreenVisible,
             enter = fadeIn(),

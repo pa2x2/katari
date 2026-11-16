@@ -285,6 +285,10 @@ internal class AnimeDownloadProvider(
         return renameDirectory(sourceDirectory, oldName, getAnimeDirName(newTitle))
     }
 
+    /** Renames the episode download [oldName] in [animeDirectory] to [newName], unless one is there already. */
+    fun renameEpisodePackage(animeDirectory: StorageFile, oldName: String, newName: String): Boolean =
+        renameDirectory(animeDirectory, oldName, newName)
+
     private fun recoverEpisodePackage(animeDirectory: StorageFile, finalDirectoryName: String) {
         val backup = animeDirectory.findFile(finalDirectoryName + BACKUP_DIR_SUFFIX) ?: return
         val published = animeDirectory.findFile(finalDirectoryName)

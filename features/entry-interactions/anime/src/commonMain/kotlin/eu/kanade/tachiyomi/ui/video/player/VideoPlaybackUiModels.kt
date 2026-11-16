@@ -4,6 +4,7 @@ import app.katari.entry.interactions.anime.stream.OFF_SUBTITLE_KEY
 import app.katari.entry.interactions.anime.stream.automaticSubtitle
 import app.katari.entry.interactions.anime.stream.sourceDefaultSubtitle
 import app.katari.entry.interactions.anime.stream.subtitlePreferenceKey
+import app.katari.entry.interactions.player.PlaybackSpeed
 import app.katari.video.engine.spi.tracks.subtitleChoiceKey
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
@@ -20,7 +21,7 @@ import tachiyomi.domain.entry.model.PlayerQualityMode
 internal data class VideoPlaybackUiState(
     val sourceSelection: PlaybackSelection,
     val preferredSourceQualityKey: String?,
-    val sessionPlaybackSpeed: Float,
+    val sessionPlaybackSpeed: PlaybackSpeed,
     val currentStream: VideoStream,
     val currentStreamLabel: String,
     val streamOptions: List<VideoPlaybackOption>,
@@ -99,11 +100,6 @@ internal sealed interface VideoAdaptiveQualityPreference {
 internal data class VideoAdaptiveQualityOption(
     val label: String,
     val preference: VideoAdaptiveQualityPreference,
-)
-
-internal data class VideoPlaybackSpeedOption(
-    val speed: Float,
-    val label: String,
 )
 
 /** [needsMpv] marks a subtitle the playing engine can't decode, which only mpv can show. */
@@ -265,28 +261,6 @@ internal fun subtitleSelectionKey(selection: VideoPlayerSubtitleSelection): Stri
     }
 }
 
-internal val videoPlaybackSpeedOptions = listOf(
-    VideoPlaybackSpeedOption(speed = 0.5f, label = "0.5x"),
-    VideoPlaybackSpeedOption(speed = 0.75f, label = "0.75x"),
-    VideoPlaybackSpeedOption(speed = 1f, label = "1x"),
-    VideoPlaybackSpeedOption(speed = 1.25f, label = "1.25x"),
-    VideoPlaybackSpeedOption(speed = 1.5f, label = "1.5x"),
-    VideoPlaybackSpeedOption(speed = 2f, label = "2x"),
-)
-
-/** The offered speed after [speed], or before it, staying at the last or first; a speed between two goes to either. */
-internal fun steppedPlaybackSpeed(speed: Float, faster: Boolean): Float {
-    val speeds = videoPlaybackSpeedOptions.map { it.speed }
-    return if (faster) {
-        speeds.firstOrNull { it > speed } ?: speeds.last()
-    } else {
-        speeds.lastOrNull { it < speed } ?: speeds.first()
-    }
-}
-
-internal fun videoPlaybackSpeedLabel(speed: Float): String =
-    videoPlaybackSpeedOptions.firstOrNull { it.speed == speed }?.label ?: "${speed}x"
-
 internal fun PlaybackPreferences.toAdaptiveQualityPreference(): VideoAdaptiveQualityPreference {
     return when (playerQualityMode) {
         PlayerQualityMode.AUTO -> VideoAdaptiveQualityPreference.Auto
@@ -296,5 +270,3 @@ internal fun PlaybackPreferences.toAdaptiveQualityPreference(): VideoAdaptiveQua
                 ?: VideoAdaptiveQualityPreference.Auto
     }
 }
-
-internal const val DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED = 1f

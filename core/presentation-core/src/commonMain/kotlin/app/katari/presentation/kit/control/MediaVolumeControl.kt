@@ -64,7 +64,7 @@ enum class MediaVolumeSlider {
  * 0 to [maxLevel], shown as [slider] says. Above [fullLevel] the volume is louder than recorded, and a mark on the track
  * shows where that starts; null leaves the mark out. While [muted] the slider shows the level that unmuting returns to,
  * and moving it unmutes, as [onLevelChange] decides. With a [wheelStep], the wheel over the control changes the level
- * by that much a notch, and a touchpad's swipe up or down by [mediaVolumeLevelsSwiped]; the wheel is the control's
+ * by that much a notch, and a touchpad's swipe up or down by [mediaLevelsSwiped]; the wheel is the control's
  * alone there.
  */
 @Composable
@@ -152,7 +152,7 @@ private fun Modifier.volumeWheel(wheelStep: Int, level: () -> Int, onLevelChange
                 swipeFrom = level()
                 axis == Orientation.Vertical
             },
-            onMove = { _, travel -> onLevelChange(swipeFrom + mediaVolumeLevelsSwiped(travel)) },
+            onMove = { _, travel -> onLevelChange(swipeFrom + mediaLevelsSwiped(travel)) },
         )
         awaitPointerEventScope {
             while (true) {

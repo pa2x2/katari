@@ -9,8 +9,10 @@ import kotlin.time.Duration.Companion.days
 
 /**
  * The settings one sync's records changed here from other devices, noted in its transaction with the value each
- * replaced ([SettingArrivals]). A setting changed again before Keep mine keeps the value it had before the first
- * change, which is the one that was this device's.
+ * replaced ([SettingArrivals]). A setting changed again from elsewhere before Keep mine keeps the value it had before
+ * the first change, which is the one that was this device's, until this device changes it itself
+ * ([app.katari.sync.client.outbox.OutboxDrain]). A note is kept for [KEPT_FOR] after the last sync that changed its
+ * setting, however long before that the other device made the change.
  */
 internal class ArrivalNotes(private val database: Database, val batch: Long) {
     var noted = false
@@ -23,7 +25,6 @@ internal class ArrivalNotes(private val database: Database, val batch: Long) {
         if (waiting != null) {
             queries.changedAgain(
                 fromDeviceId = at.device.value,
-                changedAt = at.physicalMillis,
                 batch = batch,
                 id = waiting,
             )
@@ -32,7 +33,6 @@ internal class ArrivalNotes(private val database: Database, val batch: Long) {
                 profileId = profileId,
                 settingKey = key,
                 fromDeviceId = at.device.value,
-                changedAt = at.physicalMillis,
                 previous = ProtoBuf.encodeToByteArray(SettingValue.serializer(), SettingValue.of(previous)),
                 batch = batch,
             )

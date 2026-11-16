@@ -60,7 +60,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A filter that includes, excludes or ignores | `TriStateRow` | |
 | A sort option | `SortRow` | |
 | A setting on a slider, its value in a pill | `SliderRow` | |
-| A value stepped one meaningful step at a time | `StepperRow` | |
+| A value stepped one meaningful step at a time | `StepperRow` | `StepperKind` says what it adjusts (A− A+ for a text size, − + otherwise); `StepperInput` types a decimal value, such as a speed |
 | A labelled field opening a menu of options | `SelectRow` | |
 | A row whose body the caller lays out, such as a segmented choice or a pair of buttons | `ControlRow` | |
 | Chips under a group header, such as quick filters in a sheet | `ChipsRow` | |
@@ -137,7 +137,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | One choice of a setting shown as a picture of it | `ChoiceTile` | |
 | Bare toggles, outside rows | `Switch`, `Checkbox`, `TriStateCheckbox`, `RadioButton` | Settings use the toggle and choice rows instead |
 | A slider | `Slider`, `VerticalSlider` | `SliderRow` for a setting |
-| A value stepped one meaningful step at a time | `Stepper` | `StepperRow` for a setting |
+| A value stepped one meaningful step at a time | `Stepper` | `StepperRow` for a setting; `StepperKind` and `StepperInput` as for `StepperRow` |
 | Chips side by side, scrolling or wrapping | `ChipRow` | |
 | A chip that starts an action, such as opening a picker | `AssistChip` | |
 | A chip that switches a filter on and off | `FilterChip` | |
@@ -209,7 +209,8 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Read-only formatted text the user wrote | `RichText`, `markdownStyle` | |
 | An icon, alone or inside a line of text | `Icon`, `InlineIcon` | |
 | A small icon on a round disc marking a step between items | `IconBadge` | |
-| Badges, such as on library covers | `Badge`, `BadgeGroup` | |
+| Badges, such as on a list row | `Badge`, `BadgeGroup` | |
+| Badges along the top of a cover, such as a library cover's unread count and entry type | `CoverBadges` | End badges move below the start ones when both don't fit |
 | A count or dot pinned to an icon or navigation item | `NotificationBadge`, `BadgedBox` | |
 | Key caps for a shortcut, such as Ctrl and F | `ShortcutKeyCaps` | |
 | Text as a QR code another device's camera reads, such as a link code | `QrCode` | Dark on a light tile in either theme, as scanners expect |

@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
-import app.katari.presentation.kit.content.BadgeGroup
+import app.katari.presentation.kit.content.CoverBadges
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.content.coverFrame
 import app.katari.presentation.kit.surface.CoverCell
@@ -246,21 +246,11 @@ private fun EntryGridCover(
     ) {
         cover()
         content?.invoke(this)
-        if (badgesStart != null) {
-            BadgeGroup(
-                modifier = Modifier
-                    .padding(KatariTheme.spacing.s)
-                    .align(Alignment.TopStart),
-                content = badgesStart,
-            )
-        }
-
-        if (badgesEnd != null) {
-            BadgeGroup(
-                modifier = Modifier
-                    .padding(KatariTheme.spacing.s)
-                    .align(Alignment.TopEnd),
-                content = badgesEnd,
+        if (badgesStart != null || badgesEnd != null) {
+            CoverBadges(
+                modifier = Modifier.padding(KatariTheme.spacing.s),
+                start = badgesStart ?: {},
+                end = badgesEnd ?: {},
             )
         }
     }

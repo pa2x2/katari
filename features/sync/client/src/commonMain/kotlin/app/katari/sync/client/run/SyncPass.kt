@@ -40,14 +40,17 @@ import java.io.IOException
 /**
  * One sync run ([SyncRuns] keeps them to one at a time).
  *
- * Nothing runs while the person paused syncing.
+ * A ready device first records the edits made here ([record]), whatever keeps the run from sending them: then they
+ * count as waiting to be sent, and Disconnect warns of them, while syncing is paused or stopped or the server can't be
+ * reached. While the person paused syncing, that is all a run does.
  *
  * Messages waiting to go to the account's other devices ([MessageOutbox]) go first, once the server answers, whatever
  * stage the device is at and on any network, so a run that has a long way to go doesn't hold them up.
  *
  * A device still joining its account goes on with its first sync ([FirstSyncSteps]), one stored stage after another,
  * and pushes nothing until it has taken the account's records, so what it held before merges with them first. A
- * device whose server turned out lost or restored resyncs in full ([FullResync]) before anything else.
+ * device whose server turned out lost or restored resyncs in full ([FullResync]) before anything else; where changes
+ * wait for Wi-Fi ([ChangeTransferRule]), so does the resync, once the run has taken what step 1 below takes.
  *
  * A device that is ready runs, in this order:
  * 1. The messages waiting for it ([MessageInbox]), on any network too. Then the entries it was asked about first
@@ -134,8 +137,9 @@ class SyncPass(
 
     private suspend fun attempt(request: SyncRequest, working: () -> Unit): SyncOutcome {
         val state = connection.state()
-        if (!state.isLinked || preferences.paused.get()) return SyncOutcome.IDLE
-        if (!resumes(state)) return SyncOutcome.IDLE
+        if (!state.isLinked) return SyncOutcome.IDLE
+        if (state.stage == SyncStage.READY) record()
+        if (preferences.paused.get() || !resumes(state)) return SyncOutcome.IDLE
         if (request.onlyIfChanged && request.entriesFirst.isEmpty() && state.stage == SyncStage.READY) {
             if (!hasChanges()) return SyncOutcome.IDLE
         }
@@ -220,6 +224,10 @@ class SyncPass(
                     }
                     SyncStage.SETTINGS -> firstSync.recordSettings()
                     SyncStage.RESYNC, SyncStage.RESYNC_WITHOUT_DELETIONS -> {
+                        if (!changeRule.allowsNow()) {
+                            takeOnAnyNetwork(client, device, request)
+                            return SyncOutcome.WAITING_FOR_WIFI
+                        }
                         pull.pullAll(client, device, liveOnly = state.stage == SyncStage.RESYNC_WITHOUT_DELETIONS)
                         resync.finish(state.stage)
                     }
@@ -250,9 +258,7 @@ class SyncPass(
     }
 
     private suspend fun exchange(client: SyncServerClient, device: DeviceId, request: SyncRequest): SyncOutcome {
-        messageInbox.fetch(client)
-        ungrouped.fill()
-        if (request.entriesFirst.isNotEmpty()) handOff.fetchFirst(client, device, request.entriesFirst)
+        takeOnAnyNetwork(client, device, request)
         if (!changeRule.allowsNow()) return SyncOutcome.WAITING_FOR_WIFI
         steps.step(SyncStep.Kind.DOWNLOADING_CHANGES) { progress ->
             val from = connection.state().position
@@ -269,9 +275,7 @@ class SyncPass(
             val files = steps.progressOf(SyncStep.Kind.UPLOADING_FILES)
             run rounds@{
                 repeat(PUSH_ROUNDS) { round ->
-                    settings.flush()
-                    fileCapture.flush()
-                    drainAll()
+                    record()
                     val total = sent + pending.count()
                     progress(sent, total)
                     stale = push.pushAll(client, afterPull = round > 0, onFiles = files) { taken ->
@@ -288,6 +292,13 @@ class SyncPass(
         // files may move, as one naming a file whose bytes changed while they were uploaded
         val changesLeft = pending.count() > 0 && (stale || fileRule.allowsNow())
         return if (filesMoved && !changesLeft) SyncOutcome.SYNCED else SyncOutcome.UNFINISHED
+    }
+
+    /** Step 1 of a device that is ready, which a resync waiting for Wi-Fi takes too. */
+    private suspend fun takeOnAnyNetwork(client: SyncServerClient, device: DeviceId, request: SyncRequest) {
+        messageInbox.fetch(client)
+        ungrouped.fill()
+        if (request.entriesFirst.isNotEmpty()) handOff.fetchFirst(client, device, request.entriesFirst)
     }
 
     /** Returns false when the server stopped answering midway. */
@@ -333,11 +344,17 @@ class SyncPass(
     private suspend fun waitsForWifi(state: SyncConnectionState): Boolean =
         state.stageTarget > 0 && !preferences.useMobileData.get() && !network.current().countsAsWifi
 
-    private suspend fun hasChanges(): Boolean {
+    private suspend fun hasChanges(): Boolean = pending.count() > 0 || messageOutbox.count() > 0
+
+    /**
+     * Turns the settings and files heard and the outbox into changes ready to send, which only reads and writes the
+     * local database. Only a ready device does: one still in its first sync keeps its edits in the outbox until its
+     * profiles are paired with the account's, which can change the keys they are recorded under (D066).
+     */
+    private suspend fun record() {
         settings.flush()
         fileCapture.flush()
         drainAll()
-        return pending.count() > 0 || messageOutbox.count() > 0
     }
 
     private suspend fun drainAll() {

@@ -36,6 +36,12 @@ data class EntryPayload(
     @ProtoNumber(14) val sourceName: String? = null,
     /** Null when the device that wrote the record carried none. */
     @ProtoNumber(15) val details: EntryDetails? = null,
+    /**
+     * Stamped when the person brought the entry back as itself after another replaced it: added it to the library
+     * again, as migrating back to it does, or moved it back to this profile. A replacement made before that no
+     * longer holds ([app.katari.sync.client.kind.replacement.EntryReplacementPayload.returnedAt]).
+     */
+    @ProtoNumber(16) val returned: Stamped<Boolean> = Stamped(false, Stamped.UNKNOWN_EDIT),
 )
 
 /** The source's description of the entry as this device last fetched it. */

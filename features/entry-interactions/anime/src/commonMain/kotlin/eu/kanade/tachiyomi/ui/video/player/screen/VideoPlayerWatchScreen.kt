@@ -37,7 +37,6 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettings
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsContent
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedBoostPill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
@@ -60,7 +59,6 @@ import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAdaptiveQuality
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
 import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
-import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.asEntryCover
@@ -68,8 +66,6 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.abs
 import kotlin.math.ceil
-
-private const val TEMPORARY_SPEED_BOOST = 2f
 
 /**
  * The screen while an episode plays: the video and its input, the controls, the end screen, the settings and the
@@ -129,11 +125,8 @@ internal fun VideoPlayerWatchScreen(
         !episodeOpening &&
         (!isInPictureInPictureMode || pictureInPicture.drawsOwnWindow) &&
         !ui.subtitleEditorVisible
-    val effectivePlaybackSpeed = if (temporarySpeedBoostActive) {
-        TEMPORARY_SPEED_BOOST
-    } else {
-        current.playback.sessionPlaybackSpeed
-    }
+    val heldPlaybackSpeed = current.playback.sessionPlaybackSpeed.held.takeIf { temporarySpeedBoostActive }
+    val effectivePlaybackSpeed = heldPlaybackSpeed ?: current.playback.sessionPlaybackSpeed
     val onPreviousEpisode = {
         if (current.canPlayPrevious) {
             temporarySpeedBoostActive = false
@@ -297,7 +290,7 @@ internal fun VideoPlayerWatchScreen(
         ui.ignoreNextGestureSeekTapUp = false
         ui.seekFeedbackState = null
         ui.sideGestureFeedbackState = null
-        brightness?.reapply()
+        brightness.reapply()
         volume.sync(currentPlayer)
         ui.scrubPositionMs = current.resumePositionMs.coerceAtLeast(0L)
         ui.playbackSnapshot = VideoPlayerPlaybackSnapshot(positionMs = ui.scrubPositionMs)
@@ -353,7 +346,7 @@ internal fun VideoPlayerWatchScreen(
     }
 
     LaunchedEffect(effectivePlaybackSpeed, currentPlayer) {
-        currentPlayer.setSpeed(effectivePlaybackSpeed)
+        currentPlayer.setSpeed(effectivePlaybackSpeed.multiplier)
     }
 
     val seekPreview = rememberVideoPlayerSeekPreviewSession(
@@ -502,7 +495,7 @@ internal fun VideoPlayerWatchScreen(
         }
 
         VideoPlayerContentOverlay(
-            brightness = brightness?.overlayValue ?: 0,
+            dim = brightness.pictureDim,
             color = null,
             colorBlendMode = null,
             modifier = pictureArea,
@@ -527,6 +520,7 @@ internal fun VideoPlayerWatchScreen(
                             modifier = modifier,
                         )
                     },
+                    pictureDim = brightness.pictureDim,
                     endScreen = { modifier ->
                         nextEpisode.EndScreen(
                             visible = endScreenVisible,
@@ -576,7 +570,7 @@ internal fun VideoPlayerWatchScreen(
             viewModel = viewModel,
             actions = actions,
             engine = engine,
-            temporarySpeedBoost = if (temporarySpeedBoostActive) TEMPORARY_SPEED_BOOST else null,
+            heldPlaybackSpeed = heldPlaybackSpeed,
             isInPictureInPictureMode = isInPictureInPictureMode,
             endScreenVisible = endScreenVisible,
             seekStepSeconds = seekStepSeconds,

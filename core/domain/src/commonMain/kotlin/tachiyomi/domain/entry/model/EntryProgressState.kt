@@ -68,7 +68,37 @@ data class EntryProgressState(
             completionUpdatedAt = maxOf(completionUpdatedAt, incoming.completionUpdatedAt),
         )
     }
+
+    /**
+     * [edit], made on this device just now, over this state. A time above 0 in [edit] marks a field it sets, which
+     * takes the edit's value dated after this state's, so it replaces what is held. A time of 0 leaves the field as it
+     * is. [mergeWith] would compare the times, but this state's can come from another device's clock: a position
+     * synced from a device whose clock is ahead would win over reading done here after it arrived, and sync carries
+     * these times, so the reading would be lost on every device.
+     */
+    fun withEdit(edit: EntryProgressState): EntryProgressState {
+        require(identity == edit.identity) { "progress identities must match" }
+
+        val setsLocator = edit.locatorUpdatedAt > 0
+        val setsCompletion = edit.completionUpdatedAt > 0
+
+        return copy(
+            chapterId = edit.chapterId ?: chapterId,
+            resourceRevision = if (setsLocator) edit.resourceRevision else resourceRevision,
+            locator = if (setsLocator) edit.locator else locator,
+            completed = if (setsCompletion) edit.completed else completed,
+            locatorUpdatedAt = if (setsLocator) after(locatorUpdatedAt, edit.locatorUpdatedAt) else locatorUpdatedAt,
+            completionUpdatedAt = if (setsCompletion) {
+                after(completionUpdatedAt, edit.completionUpdatedAt)
+            } else {
+                completionUpdatedAt
+            },
+        )
+    }
 }
+
+// Past the held time by at least 1, so the edit also sorts after a synced time that shares its millisecond
+private fun after(held: Long, edited: Long): Long = maxOf(edited, held + 1)
 
 @Serializable
 data class EntryProgressIdentity(
