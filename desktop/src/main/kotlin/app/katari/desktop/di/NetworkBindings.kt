@@ -17,8 +17,6 @@ import eu.kanade.tachiyomi.network.interceptor.WebViewInterceptorMessages
 import eu.kanade.tachiyomi.network.tls.LinuxCertificateAuthorities
 import eu.kanade.tachiyomi.network.tls.SystemCertificateAuthorities
 import eu.kanade.tachiyomi.network.tls.systemTrustManager
-import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetup
-import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetupState
 import kotlinx.coroutines.CoroutineScope
 
 @BindingContainer
@@ -56,9 +54,7 @@ object NetworkBindings {
         trustManager = systemTrustManager(certificateAuthorities),
     )
 
-    // The set-up is asked as a message is worded: it downloads with the client, so it is built after it
     @Provides
     @SingleIn(AppScope::class)
-    fun webViewInterceptorMessages(webViewSetup: Lazy<WebViewSetup>): WebViewInterceptorMessages =
-        DesktopWebViewInterceptorMessages { webViewSetup.value.state.value != WebViewSetupState.Ready }
+    fun webViewInterceptorMessages(): WebViewInterceptorMessages = DesktopWebViewInterceptorMessages()
 }

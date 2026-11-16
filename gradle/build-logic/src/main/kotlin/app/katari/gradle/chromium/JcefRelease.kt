@@ -3,15 +3,9 @@ package app.katari.gradle.chromium
 import org.gradle.api.GradleException
 import java.io.File
 
-/**
- * What a JetBrains Runtime's `release` file says of the JCEF it carries: the version the app's Chromium download is
- * pinned by, and the versions of the three projects that download is made of.
- */
+/** What a JetBrains Runtime's `release` file says of the JCEF it carries: the versions of the projects it is made of. */
 internal class JcefRelease(release: File) {
     private val lines = release.readLines()
-
-    /** The form `gradle/katari.versions.toml` pins: 150.0.14.1233-9df0879ddc3d, the version and its commit. */
-    val pin: String = "$jcefVersion-${value(COMMIT_KEY).take(COMMIT_LENGTH)}"
 
     /** 150.0.14.1233, of 150.0.14.1233+g9df0879. */
     val jcefVersion: String get() = value(VERSION_KEY).substringBefore('+')
@@ -32,9 +26,7 @@ internal class JcefRelease(release: File) {
 
     private companion object {
         const val VERSION_KEY = "JCEF_VERSION"
-        const val COMMIT_KEY = "JCEF_COMMIT_HASH"
         const val DETAILED_KEY = "JCEF_VERSION_DETAILED"
-        const val COMMIT_LENGTH = 12
         const val CHROMIUM_MARK = "-chromium-"
     }
 }

@@ -33,7 +33,6 @@ class WebViewScreen(
 
         WebViewScreenContent(
             browserView = browserView,
-            setup = graph.webViewSetup,
             url = url,
             initialTitle = initialTitle,
             sourceId = sourceId,

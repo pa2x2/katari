@@ -7,7 +7,9 @@ android-sdk-target = "37"
 android-ndk = "29.0.14206865"
 java = "17"
 # The JetBrains Runtime with JCEF (the jbr_jcef archives of https://github.com/JetBrains/JetBrainsRuntime/releases) that
-# :desktop:run and the extension harness run on, with the SHA-512 sum JetBrains publishes beside each archive. Used in
+# :desktop:run and the extension harness run on, with the SHA-512 sum JetBrains publishes beside each archive. Its JCEF
+# carries the Chromium the desktop web view runs on: after a bump, :desktop:updateChromiumLicences writes that Chromium's
+# versions into the licences screen, which checkChromiumLicences holds them to. Used in
 # [/gradle/build-logic/src/main/kotlin/app/katari/gradle/jetbrainsruntime/JetBrainsRuntime.kt].
 jbr = "25.0.4.1"
 jbr-build = "b635.79"
@@ -16,14 +18,6 @@ jbr-linux-aarch64-sha512 = "da337b8554517189af6ca70ecbab40e63932b41bef84282f88d6
 # The same runtime's SDK (jbrsdk_jcef), whose jmods and jlink link the smaller runtime the AppImage ships. x86_64 only,
 # as the AppImage is. Used in [/gradle/build-logic/src/main/kotlin/app/katari/gradle/appimage/DesktopAppImage.kt].
 jbr-sdk-linux-x64-sha512 = "bd828d009f11c14fe85fbe2ad74169a21692f3e0bdb2124c74f0a9f98b5d16e878fa806974a62186e52096a3c7ea1556eabd9481fe8f2ad384b7cb980357be5e"
-# Chromium for the desktop web view, which the AppImage leaves out and the app downloads when a web view is first
-# needed: the Chromium of the runtime's JCEF above, named by that JCEF's version and commit, which checkChromiumVersion
-# holds it to. :desktop:assembleChromiumArchive packs it and prints the archive's SHA-256, its size and the size of the
-# files in it, both in bytes, and tools/chromium/publish-release.sh publishes it as the release chromium-<version>.
-chromium = "150.0.14.1233-9df0879ddc3d"
-chromium-linux-x64-sha256 = "a972b57e17cd82025961a0d9965b660aaaf9e52e89c74b2ce156bfb22af6d72e"
-chromium-linux-x64-size = "113559996"
-chromium-linux-x64-installed-size = "362092383"
 # The Temurin runtime the sync server's image ships, which the server's tests run on: the JRE archives of Adoptium's
 # temurin<feature version>-binaries releases on GitHub, with the SHA-256 sums Adoptium publishes beside each archive.
 # The image's base in features/sync/server/Dockerfile must carry this version, which the build workflow's image check

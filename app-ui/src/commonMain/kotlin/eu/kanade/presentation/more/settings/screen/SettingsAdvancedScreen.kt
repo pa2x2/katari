@@ -20,9 +20,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
-import eu.kanade.presentation.more.settings.screen.advanced.WebViewEngineScreen
 import eu.kanade.presentation.more.settings.screen.advanced.rememberClearWebViewData
-import eu.kanade.presentation.more.settings.screen.advanced.webViewEngineStatus
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
 import eu.kanade.presentation.more.settings.screen.debug.rememberLogDump
 import eu.kanade.tachiyomi.network.NetworkPreferences
@@ -40,11 +38,9 @@ import eu.kanade.tachiyomi.network.PREF_DOH_QUAD9
 import eu.kanade.tachiyomi.network.PREF_DOH_SHECAN
 import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import kotlinx.coroutines.launch
-import logcat.LogPriority
 import okhttp3.Headers
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
-import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
@@ -178,9 +174,7 @@ class SettingsAdvancedScreen : SearchableSettings() {
         val messages = rememberScreenMessages()
         val networkHelper = graph.networkHelper
         val webViewData = graph.webViewData
-        val webViewSetup = graph.webViewSetup
         val clearWebViewData = rememberClearWebViewData()
-        val navigator = LocalNavigator.currentOrThrow
 
         val userAgentPref = networkPreferences.defaultUserAgent
         val userAgent by userAgentPref.collectAsState()
@@ -196,15 +190,8 @@ class SettingsAdvancedScreen : SearchableSettings() {
                     },
                 ),
                 Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.webview_engine_title),
-                    subtitle = webViewEngineStatus(webViewSetup),
-                    visible = webViewSetup.isManaged,
-                    onClick = { navigator.push(WebViewEngineScreen()) },
-                ),
-                // Where the app manages the engine, its page has the row
-                Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_clear_webview_data),
-                    visible = webViewData.isOffered && !webViewSetup.isManaged,
+                    visible = webViewData.isOffered,
                     onClick = clearWebViewData,
                 ),
                 Preference.PreferenceItem.ListPreference(

@@ -25,7 +25,7 @@ import app.katari.desktop.security.signin.SystemSignIn
 import app.katari.desktop.storage.DesktopDirectories
 import app.katari.desktop.tray.AppTray
 import app.katari.desktop.update.DesktopAppUpdateChecks
-import app.katari.desktop.webview.ChromiumUpkeep
+import app.katari.desktop.webview.DownloadedChromiumRemoval
 import app.katari.desktop.window.MainWindowVisibility
 import app.katari.desktop.window.OpenWindow
 import app.katari.desktop.window.WindowPreferences
@@ -110,7 +110,7 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val systemFileChooser: SystemFileChooser
     val persistedWorkResume: PersistedWorkResume
     val jcefRuntime: JcefRuntime
-    val chromiumUpkeep: ChromiumUpkeep
+    val downloadedChromiumRemoval: DownloadedChromiumRemoval
     val challengePage: ChallengePage
     val windowActivity: WindowActivity
     val windowExtensionDialogs: WindowExtensionDialogs
