@@ -15,6 +15,7 @@ import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.client.setting.apply.LocalSetting
 import app.katari.sync.client.setting.apply.localSetting
+import app.katari.sync.client.setting.read.LocalPreference
 import app.katari.sync.client.setting.scope.PreferenceScope
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.value.encodeSetting
@@ -36,6 +37,8 @@ sealed class ProfileSettings(name: String, private val scope: PreferenceScope) :
     override val capture: List<CaptureTrigger> = emptyList()
 
     fun ref(profileId: Long, key: String): LocalRef = LocalRef.of(profileId, key)
+
+    override fun localPreference(ref: LocalRef) = LocalPreference(profileId = ref.long(0), key = ref.text(1))
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<ProfileSettingPayload> {
         val profileId = ref.long(0)

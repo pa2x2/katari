@@ -45,6 +45,11 @@ SELECT *
 FROM sync_arrived_settings
 WHERE _id IN :ids;
 
+-- This device changed the setting since, so its value is this device's again and Keep mine has nothing to put back.
+changedHere:
+DELETE FROM sync_arrived_settings
+WHERE profile_id IS :profileId AND setting_key = :settingKey AND kept = 0;
+
 markKept:
 UPDATE sync_arrived_settings
 SET kept = 1

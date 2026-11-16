@@ -35,6 +35,9 @@ import tachiyomi.data.DatabaseHandler
  * A record of a part of the account this device chose not to sync ([OffParts]) is stored like any other, so its edits
  * keep the times they were made, and held back from pushing until the part is synced again.
  *
+ * A setting changed here is no longer offered to Keep mine ([app.katari.sync.client.arrival.SettingArrivals]): what
+ * another device changed it to was replaced by this device's own value, which a later arrival notes in turn.
+ *
  * It only reads the local database and preferences, so it runs whether or not the server is reachable. The rows a
  * restore under way wrote stay in the outbox for the restore to record
  * ([app.katari.sync.client.restore.RestoreStamping]).
@@ -215,12 +218,9 @@ private suspend fun <P : Any> Database.storePresent(
             sync_recordsQueries.detachLocalRef(kind.name, present.ref.json, key)
         }
     }
-    val changeId = if (stored != null && payload == previous) {
-        if (holdsRow) return
-        stored.change_id
-    } else {
-        newChangeId()
-    }
+    val changed = stored == null || payload != previous
+    if (!changed && holdsRow) return
+    val changeId = if (changed) newChangeId() else stored.change_id
     sync_recordsQueries.storeLocalChange(
         recordKey = key,
         kind = kind.name,
@@ -232,6 +232,9 @@ private suspend fun <P : Any> Database.storePresent(
         recordGroup = RecordGroups.of(kind, key, payload),
     )
     if (parts.isOff(kind, payload)) sync_recordsQueries.holdBack(key)
+    if (changed) {
+        kind.localPreference(present.ref)?.let { sync_arrived_settingsQueries.changedHere(it.profileId, it.key) }
+    }
 }
 
 private suspend fun <P : Any> Database.storeAbsent(

@@ -63,6 +63,11 @@ class SettingArrivals(
         keep(handler.await { sync_arrived_settingsQueries.inBatch(batch).awaitAsList() })
     }
 
+    /**
+     * Keeps [rows]' settings here, then puts back their values. The choices' writes take in this device's edits first,
+     * and a setting changed here since it arrived keeps that value ([app.katari.sync.client.outbox.OutboxDrain]). The
+     * rows are marked kept before the values are written back, so that writing isn't taken for such an edit.
+     */
     private suspend fun keep(rows: List<Sync_arrived_settings>) {
         if (rows.isEmpty()) return
         val menus = rows.mapNotNull { it.arrivedMenu }.toSet()
@@ -70,7 +75,10 @@ class SettingArrivals(
         rows.filter { it.arrivedMenu == null }.map { it.setting_key }.toSet().forEach {
             choices.syncSetting(it, on = false)
         }
-        rows.forEach { row ->
+        val waiting = handler.await { sync_arrived_settingsQueries.byIds(rows.map { it._id }).awaitAsList() }
+            .filter { !it.kept }
+        handler.await { sync_arrived_settingsQueries.markKept(waiting.map { it._id }) }
+        waiting.forEach { row ->
             val previous = ProtoBuf.decodeFromByteArray(SettingValue.serializer(), row.previous).stored
             val profileId = row.profile_id
             if (profileId == null) {
@@ -79,7 +87,6 @@ class SettingArrivals(
                 settings.writeProfileValue(profileId, row.setting_key, previous)
             }
         }
-        handler.await { sync_arrived_settingsQueries.markKept(rows.map { it._id }) }
     }
 
     private val Sync_arrived_settings.arrivedMenu
