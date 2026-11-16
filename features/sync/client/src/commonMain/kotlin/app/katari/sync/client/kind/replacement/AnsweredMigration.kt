@@ -22,6 +22,24 @@ internal fun EntryPayload.withoutMigration(before: LibraryState, at: HybridTimes
     )
 }
 
+/**
+ * The entry a migration kept by an answer had migrated to, with its library state stamped [at] wherever turning that
+ * migration down would change it ([withoutMigration]). An answer that turned it down on another device before then
+ * loses to this one there, and one given after it wins, so the later of two answers decides the entry, as it decides
+ * the replacement.
+ */
+internal fun EntryPayload.withMigrationKept(before: LibraryState, at: HybridTimestamp): EntryPayload {
+    val turnedDown = withoutMigration(before, at)
+    fun <T> Stamped<T>.keptOver(turned: Stamped<T>) = if (turned.value == value) this else Stamped(value, at)
+    return copy(
+        favorite = favorite.keptOver(turnedDown.favorite),
+        libraryPinned = libraryPinned.keptOver(turnedDown.libraryPinned),
+        chapterFlags = chapterFlags.keptOver(turnedDown.chapterFlags),
+        dateAdded = dateAdded.keptOver(turnedDown.dateAdded),
+        notes = notes.keptOver(turnedDown.notes),
+    )
+}
+
 private fun EntryPayload.libraryFields() =
     MigrationLibraryFields(favorite.value, libraryPinned.value, chapterFlags.value, dateAdded.value, notes.value)
 

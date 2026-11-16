@@ -11,8 +11,6 @@ import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.kind.question.QuestionDetection
-import app.katari.sync.client.kind.replacement.EntryReplacementKind
-import app.katari.sync.client.kind.replacement.Replacement
 import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
 import app.katari.sync.client.kind.replacement.carry.ReplacedEntryEdits
 import app.katari.sync.client.merge.RecordState
@@ -418,17 +416,6 @@ internal class ApplySession(
         }
         queries.insertAllocatingKey(idScheme = source.idScheme, externalId = source.externalId)
         return checkNotNull(find())
-    }
-
-    override suspend fun replacementOf(entryKey: String): String? = replacement(entryKey)?.to
-
-    override suspend fun movedTo(entryKey: String): String? =
-        replacement(entryKey)?.takeIf { it.cause == Replacement.Cause.PROFILE_MOVE }?.to
-
-    private suspend fun replacement(entryKey: String): Replacement? {
-        val stored = database.sync_recordsQueries.getByKey(EntryReplacementKind.key(entryKey)).awaitAsOneOrNull()
-        if (stored == null || stored.deleted) return null
-        return EntryReplacementKind.decode(stored.payload).replacement.value
     }
 
     override suspend fun newEdit(): HybridTimestamp {

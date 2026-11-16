@@ -1,5 +1,6 @@
 package app.katari.sync.client.kind.question
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.kind.entry.EntryKind
@@ -23,7 +24,9 @@ import app.katari.sync.protocol.clock.HybridTimestamp
  * profile's deletion, which leaves the profile in place until answered.
  *
  * A question already answered after both conflicting changes is not raised again, so old copies arriving late don't
- * reopen it.
+ * reopen it. Nor is one raised over what an answer to a migration question wrote: every write of an answer carries its
+ * stamp ([app.katari.sync.client.question.Questions.keepMigration]), and two devices answering differently is settled
+ * by the later answer, not asked about again.
  */
 internal class QuestionDetection(private val writes: LocalWrites) {
 
@@ -55,6 +58,7 @@ internal class QuestionDetection(private val writes: LocalWrites) {
         if (a.value.to == b.value.to || a.at == b.at) return
         val based = stored?.base_payload?.let { EntryReplacementKind.decode(it).replacement.at } ?: Stamped.UNKNOWN_EDIT
         if (a.at == based || b.at == based) return
+        if (answered(a.at) || answered(b.at)) return
         val key = MigrationQuestionKind.key(local.from)
         val existing = stored(MigrationQuestionKind, key)
         if (existing != null && existing.answer.at > maxOf(a.at, b.at)) return
@@ -82,6 +86,7 @@ internal class QuestionDetection(private val writes: LocalWrites) {
         if (a.value == b.value || a.at == b.at) return
         val based = stored?.base_payload?.let { EntryKind.decode(it).notes.at } ?: Stamped.UNKNOWN_EDIT
         if (a.at == based || b.at == based) return
+        if (answered(a.at) || answered(b.at)) return
         val questionKey = NotesQuestionKind.key(key)
         val existing = stored(NotesQuestionKind, questionKey)
         if (existing != null && existing.answer.at > maxOf(a.at, b.at)) return
@@ -136,6 +141,15 @@ internal class QuestionDetection(private val writes: LocalWrites) {
             ),
         )
     }
+
+    /**
+     * Whether [edit] is an answer to a migration question this device holds: this device's own answer, or the later
+     * one it merged in. Either way one of two answers given on different devices is among them.
+     */
+    private suspend fun answered(edit: HybridTimestamp): Boolean = writes.database.sync_recordsQueries
+        .byKinds(listOf(MigrationQuestionKind.name))
+        .awaitAsList()
+        .any { !it.deleted && MigrationQuestionKind.decode(it.payload).answer.at == edit }
 
     private suspend fun <P : Any> stored(kind: QuestionKind<P>, key: String): P? =
         writes.database.sync_recordsQueries.getByKey(key).awaitAsOneOrNull()?.let { kind.decode(it.payload) }
