@@ -34,9 +34,11 @@ class FieldStamps internal constructor() {
      */
     fun <T> field(number: Int, value: T, previous: Stamped<T>?): Stamped<T> {
         if (previous != null && previous.value == value) return previous
-        val edited = newer(byField[number], everyField)
-        return Stamped(value, edited ?: previous?.at ?: Stamped.UNKNOWN_EDIT)
+        return Stamped(value, editedAt(number) ?: previous?.at ?: Stamped.UNKNOWN_EDIT)
     }
+
+    /** The newest edit that touched field [number], whether or not it left the value changed; null for none. */
+    fun editedAt(number: Int): HybridTimestamp? = newer(byField[number], everyField)
 
     /**
      * [field] for a value whose row keeps the time it was last changed, [editedAtMillis] (0 for none), as reading
@@ -53,7 +55,7 @@ class FieldStamps internal constructor() {
         device: DeviceId,
     ): Stamped<T> {
         val stamped = field(number, value, previous)
-        val captured = newer(byField[number], everyField)
+        val captured = editedAt(number)
         if (captured == null || stamped === previous || editedAtMillis <= 0) return stamped
         val edited = Stamped(value, HybridTimestamp(editedAtMillis, 0, device))
         return if (previous != null && previous.at > edited.at) previous else edited

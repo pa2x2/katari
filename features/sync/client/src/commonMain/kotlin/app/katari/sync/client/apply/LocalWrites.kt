@@ -40,12 +40,6 @@ internal interface LocalWrites {
     /** This device's key for [source], registering it when no extension here has provided it yet. */
     suspend fun sourceKey(source: SourceReference): Long
 
-    /** The record key of the entry that replaced [entryKey], when one did. */
-    suspend fun replacementOf(entryKey: String): String?
-
-    /** The record key of the entry [entryKey] became by moving to another profile, when it did. */
-    suspend fun movedTo(entryKey: String): String?
-
     /**
      * A timestamp for a change sync makes on this device's behalf, such as merging two categories into one: after
      * every edit this device has made or seen, as a person's edit made now would be.

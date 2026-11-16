@@ -15,6 +15,10 @@ import app.katari.sync.client.file.local.FileOwner
 import app.katari.sync.client.file.local.want
 import app.katari.sync.client.file.local.wanted
 import app.katari.sync.client.kind.profile.ProfileKind
+import app.katari.sync.client.kind.replacement.StandingReplacement
+import app.katari.sync.client.kind.replacement.movedTo
+import app.katari.sync.client.kind.replacement.replacementOf
+import app.katari.sync.client.kind.replacement.standingReplacement
 import app.katari.sync.client.merge.fieldOfNewer
 import app.katari.sync.client.merge.latest
 import app.katari.sync.client.payload.SourceReference
@@ -24,6 +28,7 @@ import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
+import app.katari.sync.protocol.clock.HybridTimestamp
 import app.katari.sync.protocol.file.FileCategory
 import app.katari.sync.protocol.file.FileReference
 import kotlinx.serialization.json.JsonObject
@@ -83,6 +88,7 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
         val key = reads.entryKeyOf(row) ?: return LocalRead.NotSynced
         // A cover sync knows nothing of here, as after a restore wrote the row under a new ID, leaves the record's.
         val cover = reads.database.wanted(FileOwner.CustomCover(row._id))
+        val replaced = reads.database.standingReplacement(key)
         return LocalRead.Found(
             key = key,
             parents = listOf(RecordRef(ProfileKind, ProfileKind.ref(row.profile_uuid))),
@@ -122,8 +128,24 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
                         updateStrategy = UpdateStrategyColumnAdapter.encode(row.update_strategy),
                     )
                 },
+                returned = returned(row.favorite, replaced, stamps.editedAt(5)) ?: previous?.returned
+                    ?: Stamped(false, Stamped.UNKNOWN_EDIT),
             )
         }
+    }
+
+    /**
+     * The entry's return, when the edit [editedAt] put it in the library or moved it here, after the replacement
+     * [replaced] that still holds: the person added it back, migrated back to it or moved it back. Only an edit of
+     * this device's counts: sync's own writes aren't captured, and a restore's are stamped when its backup was made.
+     */
+    private fun returned(
+        favorite: Boolean,
+        replaced: StandingReplacement?,
+        editedAt: HybridTimestamp?,
+    ): Stamped<Boolean>? {
+        if (!favorite || replaced == null || !replaced.holds || editedAt == null) return null
+        return Stamped(true, editedAt).takeIf { editedAt > replaced.payload.replacement.at }
     }
 
     override fun merge(local: EntryPayload, incoming: EntryPayload) = local.copy(
@@ -142,6 +164,7 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
             ?: local.sourceName
             ?: incoming.sourceName,
         details = fieldOfNewer(serializer, local, incoming) { it.details } ?: local.details ?: incoming.details,
+        returned = latest(local.returned, incoming.returned),
     )
 
     override fun files(payload: EntryPayload): List<FileReference> =
@@ -152,9 +175,9 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
      * the row keeps those of its own refreshes, but takes the record's details in place of stand-ins a record without
      * them left (`entries_placeholder_details`). The source's name is stored for a source no extension here named. The
      * custom cover is put in place after the transaction, fetched first when no file here holds it. An entry another
-     * one replaced stays out of the library; its changes carry over to the replacement instead. An entry moved to
-     * another profile has no row of its own any more, as after moving it here, so its record makes none. Local-source
-     * entries never sync.
+     * one replaced stays out of the library, and its changes carry over to the replacement instead, until the person
+     * brings it back ([EntryPayload.returned]). An entry moved to another profile has no row of its own any more, as
+     * after moving it here, so its record makes none until it moves back. Local-source entries never sync.
      */
     override suspend fun apply(writes: LocalWrites, key: String, payload: EntryPayload): ApplyOutcome {
         if (payload.source.idScheme == SourceIdScheme.LOCAL.key) return ApplyOutcome.Applied(null)

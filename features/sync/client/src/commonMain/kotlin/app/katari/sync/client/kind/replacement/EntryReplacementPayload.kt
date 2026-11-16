@@ -1,7 +1,9 @@
 package app.katari.sync.client.kind.replacement
 
+import app.katari.sync.client.kind.entry.EntryPayload
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.payload.UnknownFields
+import app.katari.sync.protocol.clock.HybridTimestamp
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
@@ -23,6 +25,13 @@ data class EntryReplacementPayload(
 ) {
     val migratedChapters: MigratedChapters?
         get() = chapters?.takeIf { it.at == replacement.at }?.value
+
+    /**
+     * When the replaced entry came back as itself after this replacement, as its record [entry] says; null while the
+     * replacement holds. A replacement made after the entry came back holds again.
+     */
+    fun returnedAt(entry: EntryPayload?): HybridTimestamp? =
+        entry?.returned?.takeIf { it.value && it.at > replacement.at }?.at
 }
 
 @Serializable
