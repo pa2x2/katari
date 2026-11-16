@@ -1,6 +1,7 @@
 package app.katari.entry.interactions.download
 
 import app.katari.core.metro.AppCoroutineScope
+import app.katari.core.metro.StartupWarmup
 import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.entry.interactions.download.configuration.backup.DefaultEntryDownloadConfigurationBackupFeature
 import app.katari.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupFeature
@@ -51,6 +52,25 @@ object EntryDownloadBindings {
         chapterRepository = chapterRepository,
         scope = scope + Dispatchers.Default,
     )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun renamedChapterDownloads(
+        interactions: EntryInteractions,
+        chapterRepository: EntryChapterRepository,
+        entryRepository: EntryRepository,
+        @AppCoroutineScope scope: CoroutineScope,
+    ): RenamedChapterDownloads = RenamedChapterDownloads(
+        chapterRepository = chapterRepository,
+        entryRepository = entryRepository,
+        downloads = interactions.download,
+        scope = scope,
+    )
+
+    @Provides
+    @IntoSet
+    internal fun renamedChapterDownloadsWarmup(moves: () -> RenamedChapterDownloads): StartupWarmup =
+        StartupWarmup { moves().start() }
 
     @Provides
     internal fun runtimeFeature(coordinator: EntryDownloadRuntimeCoordinator): EntryDownloadRuntimeFeature =

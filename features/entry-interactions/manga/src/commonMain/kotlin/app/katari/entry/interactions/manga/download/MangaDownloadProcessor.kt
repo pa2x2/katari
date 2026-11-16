@@ -160,6 +160,11 @@ internal class MangaDownloadProcessor(
         return downloadManager.getDownloadedChapterIds(chapters, entry)
     }
 
+    override suspend fun moveRenamedDownload(entry: Entry, former: EntryChapter, chapter: EntryChapter) {
+        entry.requireManga()
+        downloadManager.moveRenamedChapter(entry, former, chapter)
+    }
+
     override fun getTotalDownloadCount(): Int {
         return downloadManager.getDownloadCount()
     }

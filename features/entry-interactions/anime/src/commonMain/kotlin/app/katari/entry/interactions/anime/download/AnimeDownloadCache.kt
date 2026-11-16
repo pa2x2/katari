@@ -193,12 +193,15 @@ internal class AnimeDownloadCache(
     }
 
     suspend fun removeEpisodes(episodes: List<EntryChapter>, anime: Entry) {
+        removeEpisodeDirs(episodes.flatMapTo(HashSet()) { provider.getValidEpisodeDirNames(it.name, it.url) }, anime)
+    }
+
+    /** Removes the downloads of [anime] stored under [episodeDirNames] from this cache. */
+    suspend fun removeEpisodeDirs(episodeDirNames: Set<String>, anime: Entry) {
         rootDownloadsDirMutex.withLock {
             val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return
             val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.downloadFolderTitle)] ?: return
-            animeDir.episodeDirs -= episodes
-                .flatMap { provider.getValidEpisodeDirNames(it.name, it.url) }
-                .toSet()
+            animeDir.episodeDirs -= episodeDirNames
         }
 
         notifyChanges()

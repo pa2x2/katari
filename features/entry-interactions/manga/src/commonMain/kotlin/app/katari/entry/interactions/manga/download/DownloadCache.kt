@@ -262,13 +262,19 @@ internal class DownloadCache(
      * @param manga the manga of the chapter.
      */
     suspend fun removeChapters(chapters: List<EntryChapter>, manga: Entry) {
+        removeChapterDirs(
+            chapters.flatMapTo(HashSet()) { provider.getValidChapterDirNames(it.name, it.scanlator, it.url) },
+            manga,
+        )
+    }
+
+    /** Removes the downloads of [manga] stored under [chapterDirNames] from this cache. */
+    suspend fun removeChapterDirs(chapterDirNames: Set<String>, manga: Entry) {
         commit {
             val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return@commit false
             val mangaDir =
                 sourceDir.mangaDirs[provider.getEntryDirName(manga.downloadFolderTitle)] ?: return@commit false
-            mangaDir.chapterDirs -= chapters
-                .flatMap { provider.getValidChapterDirNames(it.name, it.scanlator, it.url) }
-                .toSet()
+            mangaDir.chapterDirs -= chapterDirNames
             true
         }
     }

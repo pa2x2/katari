@@ -1,0 +1,34 @@
+-- The name, scanlator and URL a chapter had before a change to any of them, whether a refresh or sync made it. A
+-- chapter's download is stored under a name made from the three, so the download runtime moves the download to the
+-- chapter's new name and then removes the row. Kept here rather than handed over in memory, so a move still happens
+-- when the process ends between the change and the move.
+CREATE TABLE chapters_renamed(
+    _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    chapter_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    scanlator TEXT,
+    url TEXT NOT NULL,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE
+);
+
+CREATE INDEX chapters_renamed_chapter_id_index ON chapters_renamed(chapter_id);
+
+CREATE TRIGGER chapters_renamed_record
+AFTER UPDATE OF name, scanlator, url ON chapters
+FOR EACH ROW
+WHEN old.name IS NOT new.name OR old.scanlator IS NOT new.scanlator OR old.url IS NOT new.url
+BEGIN
+    INSERT INTO chapters_renamed(chapter_id, name, scanlator, url)
+    VALUES (old._id, old.name, old.scanlator, old.url);
+END;
+
+pending:
+SELECT REN._id, REN.chapter_id, CHA.entry_id, ENT.profile_id, REN.name, REN.scanlator, REN.url
+FROM chapters_renamed REN
+JOIN chapters CHA ON CHA._id = REN.chapter_id
+JOIN entries ENT ON ENT._id = CHA.entry_id
+ORDER BY REN._id;
+
+remove:
+DELETE FROM chapters_renamed
+WHERE _id IN :ids;

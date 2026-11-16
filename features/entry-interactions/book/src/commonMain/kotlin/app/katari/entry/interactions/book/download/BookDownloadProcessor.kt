@@ -137,6 +137,10 @@ internal class BookDownloadProcessor(
             .mapTo(HashSet(), EntryChapter::id)
     }
 
+    // A package is found by the chapter URL its verified manifest names, so moving it to a new URL means rewriting the
+    // manifest and its index entry, which book downloads can't do yet
+    override suspend fun moveRenamedDownload(entry: Entry, former: EntryChapter, chapter: EntryChapter) = Unit
+
     override fun getTotalDownloadCount(): Int = cache.getTotalDownloadCount()
 
     override fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean): Boolean {

@@ -159,6 +159,10 @@ internal class EntryDownloadInteractionDispatch(
         return processor.getDownloadedChapterIds(entry, chapters)
     }
 
+    override suspend fun moveRenamedDownload(entry: Entry, former: EntryChapter, chapter: EntryChapter) {
+        processors[entry.type]?.moveRenamedDownload(entry, former, chapter)
+    }
+
     override fun getTotalDownloadCount(): Int {
         return processors.values.sumOf { it.getTotalDownloadCount() }
     }

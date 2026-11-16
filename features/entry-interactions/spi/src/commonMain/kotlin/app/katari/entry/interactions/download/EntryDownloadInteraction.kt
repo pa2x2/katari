@@ -61,6 +61,9 @@ interface EntryDownloadInteraction {
     fun filterWithDownloads(entries: List<Entry>): List<Entry>
 
     fun getDownloadedChapterIds(entry: Entry, chapters: List<EntryChapter>): Set<Long>
+
+    /** Does nothing for a type without downloads. */
+    suspend fun moveRenamedDownload(entry: Entry, former: EntryChapter, chapter: EntryChapter)
     fun getTotalDownloadCount(): Int
     fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean = false): Boolean
     fun getStatus(

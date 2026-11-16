@@ -71,6 +71,12 @@ interface EntryDownloadProcessor {
     /** Returns the ids of those of [chapters], all of [entry], whose download is stored. */
     fun getDownloadedChapterIds(entry: Entry, chapters: List<EntryChapter>): Set<Long>
 
+    /**
+     * Moves the download of [chapter] of [entry] stored under the name [former], the chapter as it was before its
+     * name, scanlator or URL changed, gives it to the name the chapter has now. Does nothing when it has none there.
+     */
+    suspend fun moveRenamedDownload(entry: Entry, former: EntryChapter, chapter: EntryChapter)
+
     fun getTotalDownloadCount(): Int
     fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean = false): Boolean
     fun getStatus(

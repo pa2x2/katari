@@ -404,6 +404,42 @@ internal class DownloadManager(
     }
 
     /**
+     * Moves [chapter]'s download stored under the name [former] gives it, the chapter as it was before its name,
+     * scanlator or URL changed, to the name it has now, with its translation. When it is also downloaded under the new
+     * name, as when it was downloaded again after the change, that download stays and the former one is deleted.
+     */
+    suspend fun moveRenamedChapter(manga: Entry, former: EntryChapter, chapter: EntryChapter) {
+        withIOContext {
+            val source = sourceManager.getOrStub(manga.source)
+            val mangaDir = provider.findEntryDir(manga.downloadFolderTitle, source) ?: return@withIOContext
+            val formerDownload = provider.getValidChapterDirNames(former.name, former.scanlator, former.url)
+                .firstNotNullOfOrNull(mangaDir::findFile)
+                ?: return@withIOContext
+            val formerDirName = checkNotNull(formerDownload.chapterDirName) { "Chapter download has no name" }
+            val currentNames = provider.getValidChapterDirNames(chapter.name, chapter.scanlator, chapter.url)
+            if (formerDownload.name in currentNames) return@withIOContext
+            val formerTranslation = mangaDir.findFile(provider.getChapterTranslationFileName(formerDownload))
+
+            if (currentNames.any { mangaDir.findFile(it) != null }) {
+                formerTranslation?.delete()
+                if (formerDownload.delete()) cache.removeChapterDirs(setOf(formerDirName), manga)
+                return@withIOContext
+            }
+
+            val dirName = provider.getChapterDirName(chapter.name, chapter.scanlator, chapter.url)
+            val name = if (formerDownload.isFile) "$dirName.cbz" else dirName
+            val moved = readyForRename(formerDownload, name)?.renameTo(name)
+            if (moved == null) {
+                logcat(LogPriority.ERROR) { "Failed to move renamed chapter download: ${formerDownload.name}" }
+                return@withIOContext
+            }
+            formerTranslation?.renameTo(provider.getChapterTranslationFileName(name))
+            cache.removeChapterDirs(setOf(formerDirName), manga)
+            cache.addChapter(dirName, mangaDir, manga)
+        }
+    }
+
+    /**
      * Returns [folder] ready to be renamed to [newName]: as it is, or moved to a temporary name first when only the
      * capitalization changes, which a storage that ignores case wouldn't take as a rename. Returns `null` when that
      * move fails.

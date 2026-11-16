@@ -260,6 +260,11 @@ internal class AnimeDownloadProcessor(
         return animeDownloadManager.getDownloadedEpisodeIds(chapters, entry)
     }
 
+    override suspend fun moveRenamedDownload(entry: Entry, former: EntryChapter, chapter: EntryChapter) {
+        entry.requireAnime()
+        animeDownloadManager.moveRenamedEpisode(entry, former, chapter)
+    }
+
     override fun getTotalDownloadCount(): Int {
         return animeDownloadManager.getTotalDownloadCount()
     }

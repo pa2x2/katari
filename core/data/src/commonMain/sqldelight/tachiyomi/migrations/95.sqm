@@ -1,0 +1,20 @@
+-- Former names of chapters, whose downloads the download runtime moves (tachiyomi/data/chapters_renamed.sq).
+CREATE TABLE chapters_renamed(
+    _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    chapter_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    scanlator TEXT,
+    url TEXT NOT NULL,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE
+);
+
+CREATE INDEX chapters_renamed_chapter_id_index ON chapters_renamed(chapter_id);
+
+CREATE TRIGGER chapters_renamed_record
+AFTER UPDATE OF name, scanlator, url ON chapters
+FOR EACH ROW
+WHEN old.name IS NOT new.name OR old.scanlator IS NOT new.scanlator OR old.url IS NOT new.url
+BEGIN
+    INSERT INTO chapters_renamed(chapter_id, name, scanlator, url)
+    VALUES (old._id, old.name, old.scanlator, old.url);
+END;
