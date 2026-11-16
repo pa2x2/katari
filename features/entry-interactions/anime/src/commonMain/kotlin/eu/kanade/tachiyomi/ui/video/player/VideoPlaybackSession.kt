@@ -16,12 +16,10 @@ internal class VideoPlaybackSession(
 
     private var savedPositionMs: Long = 0L
     private var savedCompleted: Boolean = false
-    private var completionUpdatedAt: Long = 0L
 
     fun restore(state: EntryProgressState?) {
         savedPositionMs = state?.positionMs ?: 0L
         savedCompleted = state?.completed ?: false
-        completionUpdatedAt = state?.completionUpdatedAt ?: 0L
     }
 
     fun restore(positionMs: Long) {
@@ -36,9 +34,8 @@ internal class VideoPlaybackSession(
             (safeDurationMs > 0L && safePositionMs * 100 >= safeDurationMs * COMPLETION_PERCENTAGE)
         val completedNow = completed && !savedCompleted
         val timestamp = now()
-        if (completed != savedCompleted) {
-            completionUpdatedAt = timestamp
-        }
+        // Completion that didn't change here is left to whatever the row holds, which another device may have changed
+        val completionUpdatedAt = if (completed != savedCompleted) timestamp else 0L
 
         savedPositionMs = safePositionMs
         savedCompleted = completed

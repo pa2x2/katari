@@ -24,6 +24,9 @@ interface EntryProgressRepository {
 
     suspend fun mergeAndSyncChild(state: EntryProgressState): EntryProgressState
 
+    /** Writes [edit], made here just now, over the held state ([EntryProgressState.withEdit]). */
+    suspend fun editAndSyncChild(edit: EntryProgressState): EntryProgressState
+
     suspend fun rekey(
         entryId: Long,
         chapterId: Long?,
