@@ -40,6 +40,9 @@ sealed interface SyncHeadline {
     /** [count] synced records failed to apply here and wait for an update while the rest sync. */
     data class HeldAside(val count: Long) : SyncHeadline
 
+    /** [count] synced records wait because they are dated ahead of this device's clock: a device's clock is off. */
+    data class HeldAhead(val count: Long) : SyncHeadline
+
     /** A first download or full resync; [percent] done, or null when unknown. */
     data class Downloading(val percent: Int?) : SyncHeadline
 
@@ -96,7 +99,8 @@ sealed interface SyncHeadline {
     val needsAttention: Boolean
         get() = when (this) {
             is Removed, is AccountDisabled, SignInAgain, ServerReset, AppTooOld, is ServerTooOld, ChoicesWaiting,
-            TokenUnreadable, is Questions, is UnreachableLong, is HeldKinds, is HeldAside, is Failed,
+            TokenUnreadable, is Questions, is UnreachableLong, is HeldKinds, is HeldAside, is HeldAhead,
+            is Failed,
             -> true
             else -> false
         }
@@ -131,6 +135,7 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
     }
     if (heldKinds.isNotEmpty()) return SyncHeadline.HeldKinds(heldKinds)
     if (heldAside > 0) return SyncHeadline.HeldAside(heldAside)
+    if (heldAhead > 0) return SyncHeadline.HeldAhead(heldAhead)
     return when (activity) {
         is SyncStatus.Activity.Syncing -> when {
             activity.catchingUp -> SyncHeadline.CatchingUp(activity.percent)

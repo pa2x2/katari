@@ -49,6 +49,9 @@
     <string name="sync_status_first_download_unmetered">First download waits for an unmetered network</string>
     <string name="sync_status_changes_unmetered">Changes wait for an unmetered network</string>
     <string name="sync_unsent_waiting_for_unmetered">waiting for an unmetered network</string>
+    <string name="sync_disconnect_unsent_waiting">Connect to an unmetered network, or turn on Use metered networks for changes, to send them first.</string>
+    <string name="sync_in_background">Sync on a schedule</string>
+    <string name="sync_in_background_summary">Also every so often while Katari runs, beside live updates. Nothing syncs once it quits</string>
     <string name="lock_with_sign_in_summary">Asks for the password you sign in to this computer with</string>
     <string name="lock_when_idle_desktop_summary">%1$s · Counts while Katari is minimized or the screen is locked</string>
     <string name="profile_lock_unavailable_summary">Katari can\'t check your sign-in on this computer.</string>

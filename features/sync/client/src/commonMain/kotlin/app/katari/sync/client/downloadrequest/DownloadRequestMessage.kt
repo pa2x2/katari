@@ -5,6 +5,7 @@ import app.katari.sync.protocol.message.MessageLimits
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.protobuf.ProtoNumber
+import kotlin.time.Duration
 
 /**
  * What a download request says: download these chapters of the entry whose record has [entryKey]. Chapters are named
@@ -27,6 +28,12 @@ data class RequestedChapter(
 object DownloadRequestMessage {
     const val KIND = "download"
     const val VERSION = 1
+
+    /**
+     * How long a request lasts from when it is sent, waiting here, on the server and on the device asked for an entry
+     * it doesn't have yet; past it, it is dropped unanswered.
+     */
+    val LIFETIME: Duration = MessageLimits.MAX_LIFETIME
 
     fun encode(payload: DownloadRequestPayload): ByteArray = ProtoBuf.encodeToByteArray(
         DownloadRequestPayload.serializer(),

@@ -54,7 +54,7 @@ import tachiyomi.presentation.core.util.collectAsState
 
 /**
  * The page of a linked device (D050): the status card, what waits for the person, how many records are held aside
- * (D067), the account's devices with Link a device, the options, and Disconnect.
+ * (D067) or wait for a device's clock, the account's devices with Link a device, the options, and Disconnect.
  */
 @Composable
 internal fun linkedPreferences(
@@ -73,12 +73,21 @@ internal fun linkedPreferences(
     // In the status card, under the status they explain
     addAll(attentionRows(headline, link, actions))
     if (status.live == LiveUpdatesState.NOT_WORKING) add(liveUpdatesNotWorkingRow())
-    if (status.files.refusedAsTooLarge > 0) add(filesTooLargeRow())
+    if (status.files.refusedAsTooLarge > 0) {
+        add(filesNotOnServerRow(MR.strings.sync_files_too_large, MR.strings.sync_files_too_large_text))
+    }
+    if (status.files.missingOnServer > 0) {
+        add(filesNotOnServerRow(MR.strings.sync_files_missing_title, MR.strings.sync_files_missing_text))
+    }
     profilesNotSynced.filter { it.state == ProfileSyncState.ASKING }.forEach { add(arrivingProfileRow(it, actions)) }
     if (missingExtensions.isNotEmpty()) add(missingExtensionsRow(missingExtensions, actions))
     if (status.heldAside > 0) {
         val count = status.heldAside.toInt()
         add(Preference.PreferenceItem.InfoPreference(pluralStringResource(MR.plurals.sync_held_aside, count, count)))
+    }
+    if (status.heldAhead > 0) {
+        val count = status.heldAhead.toInt()
+        add(Preference.PreferenceItem.InfoPreference(pluralStringResource(MR.plurals.sync_held_ahead, count, count)))
     }
     // The server no longer knows this device's sign-in, so it has no devices to list or link until it signs in again
     if (link.stopped != SyncStop.SIGN_IN_AGAIN && link.stopped != SyncStop.SERVER_RESET) {
@@ -173,17 +182,18 @@ private fun liveUpdatesNotWorkingRow(): Preference.PreferenceItem<*, *> {
 }
 
 /**
- * Covers or fonts the server, or a proxy in front of it, refused as too large, opening the guide's section on the
+ * Covers or fonts that didn't reach the server: [title] and [text] say whether this device was refused them as too large
+ * or another device's are missing there, which a refusal like that also leaves. It opens the guide's section on the
  * proxy, which names its upload limit.
  */
 @Composable
-private fun filesTooLargeRow(): Preference.PreferenceItem<*, *> {
-    val title = stringResource(MR.strings.sync_files_too_large)
+private fun filesNotOnServerRow(title: StringResource, text: StringResource): Preference.PreferenceItem<*, *> {
+    val shownTitle = stringResource(title)
     val openGuide = rememberOpenSyncGuide()
-    return Preference.PreferenceItem.CustomPreference(title = title) {
+    return Preference.PreferenceItem.CustomPreference(title = shownTitle) {
         TextPreferenceWidget(
-            title = title,
-            subtitle = stringResource(MR.strings.sync_files_too_large_text),
+            title = shownTitle,
+            subtitle = stringResource(text),
             icon = MaterialSymbols.Rounded.SyncProblem,
             onPreferenceClick = { openGuide(PROXY_GUIDE) },
         )
@@ -383,8 +393,8 @@ internal fun syncOptionsGroup(
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = preferences.syncInBackground,
-                title = stringResource(MR.strings.sync_in_background),
-                subtitle = stringResource(MR.strings.sync_in_background_summary),
+                title = stringResource(platformPresentation.syncInBackgroundLabel),
+                subtitle = stringResource(platformPresentation.syncInBackgroundSummary),
             ),
             Preference.PreferenceItem.BasicListPreference(
                 value = if (instant && instantSetup.isOffered) INSTANT_MODE else interval.toString(),
