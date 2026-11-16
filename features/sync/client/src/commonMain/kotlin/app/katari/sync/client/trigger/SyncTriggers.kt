@@ -1,6 +1,7 @@
 package app.katari.sync.client.trigger
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.account.DeviceListFollowing
 import app.katari.sync.client.connection.SyncConnection
@@ -46,6 +47,8 @@ import kotlin.time.Duration.Companion.minutes
  *   With instant updates on as well, the platform keeps the app running and the live channel open
  *   ([SyncBackgroundWork.keepConnected]); the periodic work goes on under it, for when the channel can't.
  * - Syncing resumed, or Wi-Fi reached while changes wait for it: a run, for what waited.
+ * - A network back after a run found none ([SyncOutcome.OFFLINE]): a run, even where changes still wait for Wi-Fi, for
+ *   the messages between devices, which go on any network.
  * - A long run, moving the whole library in a first sync or a full resync: the platform's work for it, which shows its
  *   progress and goes on when the app leaves the front.
  * - A run that left work, or couldn't read the device's token ([SyncOutcome.leavesWork]): the platform's retry work
@@ -67,6 +70,7 @@ class SyncTriggers(
     private val handOff: EntryHandOff,
     private val changeRule: ChangeTransferRule,
     private val deviceList: DeviceListFollowing,
+    private val network: NetworkConnectivity,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val isOpen = MutableStateFlow(false)
@@ -88,9 +92,14 @@ class SyncTriggers(
             connection.states().map { state -> state.stage.takeIf { state.isLinked && it.movesLibrary } }
                 .distinctUntilChanged { old, new -> (old == null) == (new == null) }
                 .collect { stage ->
-                    // Only a first download waits for Wi-Fi (D022); a full resync goes on any network
+                    // A first download waits for Wi-Fi as the person chose for it (D022), a full resync as for changes
                     if (stage != null) {
-                        work.longRun(onMetered = preferences.useMobileData.get() || !stage.isFirstDownload)
+                        val onMetered = if (stage.isFirstDownload) {
+                            preferences.useMobileData.get()
+                        } else {
+                            preferences.changesOnMobileData.get()
+                        }
+                        work.longRun(onMetered)
                     }
                 }
         }
@@ -130,6 +139,14 @@ class SyncTriggers(
                 .distinctUntilChanged()
                 .drop(1)
                 .collect { mayGo -> if (mayGo) runs.request(SyncRequest()) }
+        }
+        // Told by the outcome rather than by the network going away, which a network back at once may hide
+        scope.launch {
+            combine(runs.lastOutcome, network.state()) { outcome, state ->
+                outcome == SyncOutcome.OFFLINE && state.hasNetwork
+            }
+                .distinctUntilChanged()
+                .collect { networkBack -> if (networkBack) runs.request(SyncRequest()) }
         }
     }
 
