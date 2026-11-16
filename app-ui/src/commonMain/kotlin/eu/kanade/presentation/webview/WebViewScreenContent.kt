@@ -97,6 +97,10 @@ fun WebViewScreenContent(
                 return isUserGesture
             }
 
+            override fun onCloseWindow(popup: BrowserPage) {
+                tabs.close(popup)
+            }
+
             override fun onJsDialog(page: BrowserPage, dialog: BrowserJsDialog) {
                 tabs.onDialog(page, dialog)
             }

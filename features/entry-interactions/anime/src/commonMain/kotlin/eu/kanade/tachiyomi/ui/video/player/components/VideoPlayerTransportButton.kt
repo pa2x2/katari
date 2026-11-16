@@ -12,29 +12,26 @@ import app.katari.presentation.kit.feedback.HoverTooltip
 import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.surface.OverlayPill
 import app.katari.presentation.kit.surface.OverlayStyle
-import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 
 /**
- * A round button on the media shade; [content] fills [contentSize] in the tone for its enabled state. Hovered with a
- * mouse, it names [label] and the keys of [shortcut].
+ * A round button on the media shade; [content] fills [contentSize]. Hovered with a mouse, it names [label] and the keys
+ * of [shortcut].
  */
 @Composable
 internal fun VideoPlayerTransportButton(
     onClick: () -> Unit,
-    enabled: Boolean,
     contentSize: Dp,
     label: String,
     shortcut: KeyboardShortcut,
     modifier: Modifier = Modifier,
-    content: @Composable (tone: ContentTone) -> Unit,
+    content: @Composable () -> Unit,
 ) {
     HoverTooltip(label, shortcut = shortcut) {
         OverlayPill(
             modifier = modifier.mediaControl(),
             style = OverlayStyle.Scrim,
             onClick = onClick,
-            enabled = enabled,
         ) {
             Box(
                 modifier = Modifier
@@ -42,7 +39,7 @@ internal fun VideoPlayerTransportButton(
                     .size(contentSize),
                 contentAlignment = Alignment.Center,
             ) {
-                content(if (enabled) ContentTone.OnMedia else ContentTone.OnMediaVariant)
+                content()
             }
         }
     }

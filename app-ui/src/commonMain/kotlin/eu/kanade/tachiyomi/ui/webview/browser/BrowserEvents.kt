@@ -22,6 +22,11 @@ interface BrowserEvents {
      */
     fun onNewWindow(popup: BrowserPage, isUserGesture: Boolean): Boolean
 
+    /**
+     * [popup], a page the screen showed through [onNewWindow], closed itself or was closed by the page that opened it.
+     */
+    fun onCloseWindow(popup: BrowserPage)
+
     /** [page] waits for [dialog] to be answered, which has to happen exactly once. */
     fun onJsDialog(page: BrowserPage, dialog: BrowserJsDialog)
 }

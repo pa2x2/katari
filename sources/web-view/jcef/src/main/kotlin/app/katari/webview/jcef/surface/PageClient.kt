@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.ui.webview.browser.BrowserJsDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.cef.CefClient
+import org.cef.CefSettings
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefFileDialogCallback
@@ -24,9 +25,9 @@ import javax.swing.SwingUtilities
 
 /**
  * What Chromium tells of [page]'s browser, on threads of its own, brought to the page and the screen's events on the
- * main thread. Chromium's own windows stay closed: a new window opens as a page of the screen's, JavaScript dialogs
- * are the screen's, and file choosers and downloads are refused, as Android's web view refuses them without an app that
- * handles them.
+ * main thread. Chromium's own windows stay closed: a new window opens as a page of the screen's ([PageWindows] keeps
+ * its link to the page that opened it), JavaScript dialogs are the screen's, and file choosers and downloads are
+ * refused, as Android's web view refuses them without an app that handles them.
  */
 internal class PageClient(private val page: ChromiumPage) {
     fun attachTo(client: CefClient) {
@@ -99,6 +100,18 @@ internal class PageClient(private val page: ChromiumPage) {
 
         override fun onTooltip(browser: CefBrowser, text: String?): Boolean {
             onMainThread { page.input.showTooltip(text) }
+            return true
+        }
+
+        override fun onConsoleMessage(
+            browser: CefBrowser,
+            level: CefSettings.LogSeverity,
+            message: String,
+            source: String?,
+            line: Int,
+        ): Boolean {
+            val linked = page.windows.script.read(message) ?: return false
+            onMainThread { page.windows.on(linked) }
             return true
         }
     }
@@ -205,7 +218,7 @@ internal class PageClient(private val page: ChromiumPage) {
 
     private fun openPopup(url: String, isUserGesture: Boolean) = onMainThread {
         // A popup the screen refuses never opened its browser, so it needs no closing
-        page.events.onNewWindow(page.popup(url), isUserGesture)
+        page.events.onNewWindow(page.popup(url, opener = null), isUserGesture)
     }
 
     private fun showDialog(dialog: BrowserJsDialog) {

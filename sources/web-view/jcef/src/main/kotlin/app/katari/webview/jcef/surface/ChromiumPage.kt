@@ -29,10 +29,11 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * A page in an off-screen Chromium browser of its own, which [frame] gets the pictures of. Chromium starts, and the
  * browser opens and loads [firstUrl], when the page is first shown; the browser outlives the page's time on screen, so a
- * tab shown again keeps its history. Everything here runs on the main thread; [PageClient] brings Chromium's news over.
+ * tab shown again keeps its history. A popup a page opened through `window.open` has that page as its [opener], which it
+ * stays linked with ([PageWindows]). Everything here runs on the main thread; [PageClient] brings Chromium's news over.
  */
 internal class ChromiumPage(
-    private val firstUrl: String,
+    private var firstUrl: String,
     val siteHeaders: SiteHeaders,
     private val userAgent: String,
     val scope: CoroutineScope,
@@ -40,12 +41,14 @@ internal class ChromiumPage(
     private val runtime: JcefRuntime,
     val cookies: ChromiumCookieMirror,
     val origins: SiteOrigins,
+    opener: PageWindows.Opener?,
 ) : BrowserPage,
     PagePointerTarget {
     val caret = PageCaret(scope) { PageCaret.parse(devTools?.evaluate(PageCaret.SCRIPT)) }
     val frame = PageFrame(caret)
     val input = PageInput()
     val composition = PageComposition { browser }
+    val windows = PageWindows(this, opener)
 
     override var title by mutableStateOf<String?>(null)
         private set
@@ -75,6 +78,7 @@ internal class ChromiumPage(
     private var closed = false
     private var released = false
     private var focused = false
+    private var loadedFirstUrl = false
 
     /** Whether the browser has left the blank page it starts on; what it reports before that isn't the screen's. */
     var showsSite = false
@@ -96,11 +100,19 @@ internal class ChromiumPage(
 
     override fun close() {
         closed = true
+        windows.onClosed()
         if (!shown) release()
     }
 
+    /** Loads [url] in place of the page shown, or of the first page where the browser hasn't loaded that yet. */
+    fun load(url: String) {
+        firstUrl = url
+        if (loadedFirstUrl) browser?.loadURL(url)
+    }
+
     /** A page this one opened in a new window, with the same site headers and user agent. */
-    fun popup(url: String) = ChromiumPage(url, siteHeaders, userAgent, scope, events, runtime, cookies, origins)
+    fun popup(url: String, opener: PageWindows.Opener?) =
+        ChromiumPage(url, siteHeaders, userAgent, scope, events, runtime, cookies, origins, opener)
 
     fun onShown() {
         shown = true
@@ -185,12 +197,16 @@ internal class ChromiumPage(
     suspend fun onCreated(browser: CefBrowser) {
         if (browser !== this.browser) return
         val devTools = PageDevTools(browser).also { devTools = it }
-        withTimeoutOrNull(USER_AGENT_TIMEOUT) { devTools.setUserAgent(userAgent) }
+        withTimeoutOrNull(SETUP_TIMEOUT) { devTools.setUserAgent(userAgent) }
             ?: logcat(LogPriority.WARN) { "The page's user agent wasn't set in time" }
+        if (withTimeoutOrNull(SETUP_TIMEOUT) { devTools.addDocumentScript(windows.documentScript) } != true) {
+            logcat(LogPriority.WARN) { "The page's link to its popups and opener wasn't added" }
+        }
         if (this.browser !== browser) return
         browser.setFocus(focused)
         browser.wasResized(frame.size.width, frame.size.height)
         browser.loadURL(firstUrl)
+        loadedFirstUrl = true
     }
 
     /**
@@ -256,6 +272,6 @@ internal class ChromiumPage(
 
         const val BLANK_PAGE = "about:blank"
 
-        val USER_AGENT_TIMEOUT = 5.seconds
+        val SETUP_TIMEOUT = 5.seconds
     }
 }

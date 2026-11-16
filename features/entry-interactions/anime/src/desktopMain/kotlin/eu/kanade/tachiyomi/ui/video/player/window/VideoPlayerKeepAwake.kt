@@ -5,7 +5,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import app.katari.core.platform.power.ScreenIdleInhibitor
 import app.katari.entry.viewer.chrome.ui.window.KeepScreenAwake
-import app.katari.video.engine.spi.player.VideoPlayerState
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackController
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -32,10 +31,3 @@ internal fun VideoPlayerKeepAwake(
         evenWhenHidden = inPictureInPicture,
     )
 }
-
-// Buffering counts, so a stall doesn't let go of the screen only to take it again a moment later
-private val VideoPlayerState.meansToPlay: Boolean
-    get() = playWhenReady && when (playback) {
-        VideoPlayerState.Playback.Ready, VideoPlayerState.Playback.Buffering -> true
-        VideoPlayerState.Playback.Idle, VideoPlayerState.Playback.Ended -> false
-    }

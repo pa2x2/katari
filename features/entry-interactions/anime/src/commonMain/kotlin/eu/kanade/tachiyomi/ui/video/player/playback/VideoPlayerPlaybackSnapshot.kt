@@ -8,6 +8,7 @@ internal data class VideoPlayerPlaybackSnapshot(
     val durationMs: Long = 0L,
     val bufferedPositionMs: Long = 0L,
     val isPlaying: Boolean = false,
+    val meansToPlay: Boolean = false,
     val isLoading: Boolean = false,
     val playbackEnded: Boolean = false,
 )
@@ -27,6 +28,7 @@ internal fun VideoPlayerState.playbackSnapshot(positionMs: Long = this.positionM
         durationMs = resolvedDurationMs,
         bufferedPositionMs = resolvedBufferedPositionMs,
         isPlaying = isPlaying,
+        meansToPlay = meansToPlay,
         isLoading = playback == VideoPlayerState.Playback.Buffering,
         playbackEnded = playback == VideoPlayerState.Playback.Ended,
     )

@@ -1,5 +1,12 @@
 # Desktop Changelog
 
+## [1.1.1] - 2026-11-16
+
+### 🐛 Fixed
+
+- You can pause a video while it is still loading, by clicking the loading indicator or pressing Space.
+- Signing in through a site's popup in WebView, such as Google's, works. The popup hands its result back to the site that opened it and closes when it is done.
+
 ## [1.1.0] - 2026-11-16
 
 ### ✨ Added
@@ -428,7 +435,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.1...HEAD
+[1.1.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.1
 [1.1.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.0
 [1.0.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.2
 [1.0.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.1

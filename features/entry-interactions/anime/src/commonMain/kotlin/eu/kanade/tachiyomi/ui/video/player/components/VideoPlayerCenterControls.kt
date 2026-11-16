@@ -26,7 +26,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 internal fun VideoPlayerCenterControls(
-    isPlaying: Boolean,
+    meansToPlay: Boolean,
     isLoading: Boolean,
     seekStepSeconds: Int,
     onSeekBackward: () -> Unit,
@@ -43,54 +43,49 @@ internal fun VideoPlayerCenterControls(
         val seekBackward = stringResource(MR.strings.anime_playback_seek_backward, seekStepSeconds)
         VideoPlayerTransportButton(
             onClick = onSeekBackward,
-            enabled = true,
             contentSize = sizes.icon,
             label = seekBackward,
             shortcut = VideoPlayerShortcuts.seekBackward(seekStepSeconds),
-        ) { tone ->
+        ) {
             Icon(
                 imageVector = seekBackwardIcon(seekStepSeconds),
                 contentDescription = seekBackward,
                 modifier = Modifier.fillMaxSize(),
-                tone = tone,
             )
         }
-        val playback = stringResource(if (isPlaying) MR.strings.action_pause else MR.strings.action_play)
+        val playback = stringResource(if (meansToPlay) MR.strings.action_pause else MR.strings.action_play)
+        // Loading stands in for Pause, which stays pressable; a stream paused while it loads shows Play
         VideoPlayerTransportButton(
             onClick = onTogglePlayback,
-            enabled = !isLoading,
             contentSize = sizes.iconLarge,
             label = playback,
             shortcut = VideoPlayerShortcuts.PlayPause,
-        ) { tone ->
-            if (isLoading) {
+        ) {
+            if (isLoading && meansToPlay) {
                 LoadingIndicator(modifier = Modifier.fillMaxSize(), tone = ContentTone.OnMedia)
             } else {
                 Icon(
-                    imageVector = if (isPlaying) {
+                    imageVector = if (meansToPlay) {
                         MaterialSymbols.RoundedFilled.Pause
                     } else {
                         MaterialSymbols.RoundedFilled.PlayArrow
                     },
                     contentDescription = playback,
                     modifier = Modifier.fillMaxSize(),
-                    tone = tone,
                 )
             }
         }
         val seekForward = stringResource(MR.strings.anime_playback_seek_forward, seekStepSeconds)
         VideoPlayerTransportButton(
             onClick = onSeekForward,
-            enabled = true,
             contentSize = sizes.icon,
             label = seekForward,
             shortcut = VideoPlayerShortcuts.seekForward(seekStepSeconds),
-        ) { tone ->
+        ) {
             Icon(
                 imageVector = seekForwardIcon(seekStepSeconds),
                 contentDescription = seekForward,
                 modifier = Modifier.fillMaxSize(),
-                tone = tone,
             )
         }
     }

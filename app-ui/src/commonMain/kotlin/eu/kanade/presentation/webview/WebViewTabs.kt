@@ -42,10 +42,12 @@ internal class WebViewTabs {
 
     /** Closes the shown tab's page and shows the tab shown before it. */
     fun closeShown() {
-        val tab = tabs.removeAt(tabs.lastIndex)
-        dismissDialogsOf(tab)
-        tab.page.close()
-        dialogs.firstOrNull()?.let { bringForward(it.tab) }
+        close(tabs.last())
+    }
+
+    /** Closes [page]'s tab; the tab shown before it comes back where it was the one shown. */
+    fun close(page: BrowserPage) {
+        tabOf(page)?.let(::close)
     }
 
     /** Closes every page, as the screen closes; their dialogs are answered as the pages would be closing. */
@@ -78,6 +80,13 @@ internal class WebViewTabs {
     /** [dialog], the one on screen, has been answered; the next one asked brings its own tab forward. */
     fun onDialogAnswered(dialog: BrowserJsDialog) {
         dialogs.removeAll { it.dialog === dialog }
+        dialogs.firstOrNull()?.let { bringForward(it.tab) }
+    }
+
+    private fun close(tab: WebViewTab) {
+        tabs.remove(tab)
+        dismissDialogsOf(tab)
+        tab.page.close()
         dialogs.firstOrNull()?.let { bringForward(it.tab) }
     }
 

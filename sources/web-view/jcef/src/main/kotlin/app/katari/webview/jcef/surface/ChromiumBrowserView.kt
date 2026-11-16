@@ -40,6 +40,7 @@ class ChromiumBrowserView(
         runtime = runtime,
         cookies = cookies,
         origins = origins,
+        opener = null,
     )
 
     @Composable

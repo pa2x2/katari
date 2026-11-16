@@ -1,6 +1,6 @@
 // What the desktop web view does with Chromium whichever way Chromium is run: mirroring the app's cookies into it,
 // the DevTools protocol messages that set a page's user agent and run its scripts, an extension page's bridges and
-// loads, and the data a Chromium profile keeps.
+// loads, the link between a page and the popups it opens, and the data a Chromium profile keeps.
 plugins {
     alias(katari.plugins.kotlin.jvm)
     alias(katari.plugins.spotless)
