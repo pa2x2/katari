@@ -40,7 +40,9 @@ import java.io.IOException
 /**
  * One sync run ([SyncRuns] keeps them to one at a time).
  *
- * Nothing runs while the person paused syncing.
+ * A ready device first records the edits made here ([record]), whatever keeps the run from sending them: then they
+ * count as waiting to be sent, and Disconnect warns of them, while syncing is paused or stopped or the server can't be
+ * reached. While the person paused syncing, that is all a run does.
  *
  * Messages waiting to go to the account's other devices ([MessageOutbox]) go first, once the server answers, whatever
  * stage the device is at and on any network, so a run that has a long way to go doesn't hold them up.
@@ -134,8 +136,9 @@ class SyncPass(
 
     private suspend fun attempt(request: SyncRequest, working: () -> Unit): SyncOutcome {
         val state = connection.state()
-        if (!state.isLinked || preferences.paused.get()) return SyncOutcome.IDLE
-        if (!resumes(state)) return SyncOutcome.IDLE
+        if (!state.isLinked) return SyncOutcome.IDLE
+        if (state.stage == SyncStage.READY) record()
+        if (preferences.paused.get() || !resumes(state)) return SyncOutcome.IDLE
         if (request.onlyIfChanged && request.entriesFirst.isEmpty() && state.stage == SyncStage.READY) {
             if (!hasChanges()) return SyncOutcome.IDLE
         }
@@ -269,9 +272,7 @@ class SyncPass(
             val files = steps.progressOf(SyncStep.Kind.UPLOADING_FILES)
             run rounds@{
                 repeat(PUSH_ROUNDS) { round ->
-                    settings.flush()
-                    fileCapture.flush()
-                    drainAll()
+                    record()
                     val total = sent + pending.count()
                     progress(sent, total)
                     stale = push.pushAll(client, afterPull = round > 0, onFiles = files) { taken ->
@@ -333,11 +334,17 @@ class SyncPass(
     private suspend fun waitsForWifi(state: SyncConnectionState): Boolean =
         state.stageTarget > 0 && !preferences.useMobileData.get() && !network.current().countsAsWifi
 
-    private suspend fun hasChanges(): Boolean {
+    private suspend fun hasChanges(): Boolean = pending.count() > 0 || messageOutbox.count() > 0
+
+    /**
+     * Turns the settings and files heard and the outbox into changes ready to send, which only reads and writes the
+     * local database. Only a ready device does: one still in its first sync keeps its edits in the outbox until its
+     * profiles are paired with the account's, which can change the keys they are recorded under (D066).
+     */
+    private suspend fun record() {
         settings.flush()
         fileCapture.flush()
         drainAll()
-        return pending.count() > 0 || messageOutbox.count() > 0
     }
 
     private suspend fun drainAll() {
