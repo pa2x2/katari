@@ -1,5 +1,40 @@
 # Changelog
 
+## [3.4.0] - 2026-11-16
+
+### ✨ Added
+
+- The player plays at any speed from 0.25x to 4x.
+- Extra dim. Keep swiping brightness down past its lowest level to make the picture darker than the screen can go.
+
+### 🔄 Changed
+
+- Holding the video plays it at twice the speed you chose, instead of always at 2x.
+- Manga, anime and books have new type icons.
+- A full resync waits for Wi-Fi when changes do, unless Use mobile data for changes is on.
+
+### 🧩 Improved
+
+- Changes made offline sync as soon as the network is back.
+- Disconnecting from sync takes effect at once, even offline. Your other devices stop listing this one once the server can be reached.
+- Changes made while syncing is paused, or while they wait for Wi-Fi, count as unsent when you disconnect.
+- The sync page says when synced changes wait because a device's clock is off. Setting the time automatically on every device fixes it.
+- The sync page lists covers and fonts another device added that never reached the server.
+
+### 🐛 Fixed
+
+- Reading on a device whose clock is behind no longer loses to an older position synced from another device. At the first sync, the position read last is kept.
+- An entry you add back, or migrate back to, after migrating away from it stays in the library on your other devices too.
+- When two devices answer the same migration question differently, the later answer decides on every device.
+- Changed on other devices lists a setting for 14 days after it reaches this device, even when the change itself is older.
+- Keep mine is no longer offered for a setting you changed here after another device's change arrived.
+- A chapter or episode renamed by its source or on another device keeps its download.
+- The library's download badge counts only downloads of chapters and episodes the entry still has.
+- Badges that don't fit beside a cover's unread count move to a second line instead of covering it.
+- After the phone switches networks, the first requests to a source no longer hang until they time out.
+- Video no longer plays out of step with its audio track after a short network drop. The player asks again for what failed, and if it still can't get it in time, playback stops with an error and keeps your place.
+- Native crashes recorded while telemetry was off are no longer sent once it is turned back on.
+
 ## [3.3.3] - 2026-11-15
 
 ### 🧩 Improved
@@ -1289,7 +1324,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.3.3...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.0...HEAD
+[3.4.0]: https://github.com/pa2x2/katari/releases/tag/v3.4.0
 [3.3.3]: https://github.com/pa2x2/katari/releases/tag/v3.3.3
 [3.3.2]: https://github.com/pa2x2/katari/releases/tag/v3.3.2
 [3.3.1]: https://github.com/pa2x2/katari/releases/tag/v3.3.1
