@@ -28,6 +28,12 @@ updates:
       interval: weekly
     cooldown:
       default-days: 3
+      # Google Maven dates only an artifact's newest version, and the cooldown drops every version it can't date. Once a
+      # pre-release is the newest, no stable version is left to update to, so Google Maven groups skip the cooldown.
+      exclude:
+        - androidx.*
+        - com.android.*
+        - com.google.android.*
     commit-message:
       prefix: dependencies
     ignore:
@@ -38,6 +44,9 @@ updates:
       # Pinned to a JitPack commit build. JitPack lists only commit hashes, which Dependabot can't read as versions;
       # finding none, it blames the JetBrains repository's 403 and fails the whole job.
       - dependency-name: com.github.mihon:unifile
+      # JitPack builds of the projects' last tags. Dependabot reads no versions from JitPack, so it can never offer one.
+      - dependency-name: com.github.chrisbanes:PhotoView
+      - dependency-name: com.github.gpanther:java-nat-sort
       # Follows the JCEF of the JetBrains Runtime pinned in gradle/katari.versions.toml.
       - dependency-name: org.jetbrains.intellij.deps.jcef:*
       # Follows dex2jar.
