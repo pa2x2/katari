@@ -28,6 +28,16 @@ data class VideoPlayerState(
     val fileChapters: List<FileChapter> = emptyList(),
     val error: VideoPlayerError? = null,
 ) {
+    /**
+     * Whether the player plays or waits to: unlike [isPlaying] it holds through loading and stalls, which is what
+     * Play/Pause shows and toggles, so a viewer can pause a stream that is still loading.
+     */
+    val meansToPlay: Boolean
+        get() = playWhenReady && when (playback) {
+            Playback.Ready, Playback.Buffering -> true
+            Playback.Idle, Playback.Ended -> false
+        }
+
     enum class Playback {
         /** Not loading: not prepared yet, stopped, or failed. */
         Idle,

@@ -220,7 +220,7 @@ internal fun VideoPlayerWatchScreen(
         if (ui.playbackSnapshot.playbackEnded) {
             currentPlayer.seekTo(0L)
         }
-        if (currentPlayer.state.value.isPlaying) {
+        if (currentPlayer.state.value.meansToPlay) {
             currentPlayer.pause()
         } else {
             currentPlayer.play()

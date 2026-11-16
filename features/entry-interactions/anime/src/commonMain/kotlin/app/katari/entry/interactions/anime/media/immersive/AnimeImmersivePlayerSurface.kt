@@ -126,7 +126,7 @@ internal fun AnimeImmersivePlayerSurface(
         onPlayIntentChange(playing)
         onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
     }
-    val togglePlayback = { setPlaying(!player.state.value.isPlaying) }
+    val togglePlayback = { setPlaying(!player.state.value.meansToPlay) }
     val toggleMute = {
         controllerInteractionSequence += 1L
         onMutedChange(!muted)
@@ -282,7 +282,6 @@ internal fun AnimeImmersivePlayerSurface(
                 onClick = togglePlayback,
                 modifier = Modifier.align(Alignment.Center).mediaControl(),
                 style = OverlayStyle.Scrim,
-                enabled = !isBuffering,
             ) {
                 Box(
                     modifier = Modifier
@@ -290,17 +289,17 @@ internal fun AnimeImmersivePlayerSurface(
                         .size(KatariTheme.sizes.iconLarge),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (isBuffering) {
+                    if (isBuffering && playbackSnapshot.meansToPlay) {
                         LoadingIndicator(modifier = Modifier.fillMaxSize(), tone = ContentTone.OnMedia)
                     } else {
                         Icon(
-                            imageVector = if (playbackSnapshot.isPlaying) {
+                            imageVector = if (playbackSnapshot.meansToPlay) {
                                 MaterialSymbols.RoundedFilled.Pause
                             } else {
                                 MaterialSymbols.RoundedFilled.PlayArrow
                             },
                             contentDescription = stringResource(
-                                if (playbackSnapshot.isPlaying) MR.strings.action_pause else MR.strings.action_play,
+                                if (playbackSnapshot.meansToPlay) MR.strings.action_pause else MR.strings.action_play,
                             ),
                             modifier = Modifier.fillMaxSize(),
                         )

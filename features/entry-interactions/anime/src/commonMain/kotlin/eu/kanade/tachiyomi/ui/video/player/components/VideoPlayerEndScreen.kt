@@ -75,16 +75,14 @@ internal fun VideoPlayerEndScreen(
                     val playNow = stringResource(MR.strings.anime_playback_play_now)
                     VideoPlayerTransportButton(
                         onClick = onPlayNext,
-                        enabled = true,
                         contentSize = if (compact) KatariTheme.sizes.icon else KatariTheme.sizes.iconLarge,
                         label = playNow,
                         shortcut = VideoPlayerShortcuts.NextEpisode,
-                    ) { tone ->
+                    ) {
                         Icon(
                             imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
                             contentDescription = playNow,
                             modifier = Modifier.fillMaxSize(),
-                            tone = tone,
                         )
                     }
                     if (countdown != null) {

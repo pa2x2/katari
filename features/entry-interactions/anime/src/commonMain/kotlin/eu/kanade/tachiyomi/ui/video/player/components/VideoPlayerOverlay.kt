@@ -267,7 +267,7 @@ internal fun VideoPlayerOverlay(
                 },
                 centre = {
                     VideoPlayerCenterControls(
-                        isPlaying = playbackSnapshot.isPlaying,
+                        meansToPlay = playbackSnapshot.meansToPlay,
                         isLoading = playbackSnapshot.isLoading,
                         seekStepSeconds = seekStepSeconds,
                         onSeekBackward = onSeekBackward,

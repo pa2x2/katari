@@ -167,7 +167,7 @@ internal class ActivityPictureInPicture(
             player.seekTo(0L)
         }
 
-        if (player.state.value.isPlaying) {
+        if (player.state.value.meansToPlay) {
             player.pause()
         } else {
             player.play()
@@ -220,7 +220,7 @@ internal class ActivityPictureInPicture(
             } else {
                 DEFAULT_ASPECT_RATIO
             },
-            showsPause = snapshot.isPlaying && !snapshot.playbackEnded,
+            showsPause = snapshot.meansToPlay,
             hasPreviousEpisode = onPreviousEpisode != null,
             hasNextEpisode = onNextEpisode != null,
             autoEnter = !suppressAutomatic &&

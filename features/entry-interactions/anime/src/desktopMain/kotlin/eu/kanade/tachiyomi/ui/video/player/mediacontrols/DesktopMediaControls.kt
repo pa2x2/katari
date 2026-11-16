@@ -82,7 +82,7 @@ internal class DesktopMediaControls(
         override fun pause() = onPlayer(VideoPlayer::pause)
 
         override fun togglePlayback() = onPlayer { player ->
-            if (player.state.value.playWhenReady) player.pause() else play(player)
+            if (player.state.value.meansToPlay) player.pause() else play(player)
         }
 
         override fun stop() = onUiThread { navigation().close() }
@@ -110,10 +110,3 @@ internal class DesktopMediaControls(
 }
 
 private data class EpisodeNavigation(val canPlayPrevious: Boolean, val canPlayNext: Boolean)
-
-// Buffering counts, as shells would otherwise show a pause at every stall
-internal val VideoPlayerState.meansToPlay: Boolean
-    get() = playWhenReady && when (playback) {
-        VideoPlayerState.Playback.Ready, VideoPlayerState.Playback.Buffering -> true
-        VideoPlayerState.Playback.Idle, VideoPlayerState.Playback.Ended -> false
-    }

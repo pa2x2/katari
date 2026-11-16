@@ -131,12 +131,12 @@ private fun Controls(scene: VideoPlayerPictureInPictureScene, onReturn: () -> Un
                 onClick = { input.seekStep(VideoPlayerSeekDirection.Backward) },
             )
             ControlButton(
-                icon = if (snapshot.isPlaying) {
+                icon = if (snapshot.meansToPlay) {
                     MaterialSymbols.RoundedFilled.Pause
                 } else {
                     MaterialSymbols.RoundedFilled.PlayArrow
                 },
-                label = stringResource(if (snapshot.isPlaying) MR.strings.action_pause else MR.strings.action_play),
+                label = stringResource(if (snapshot.meansToPlay) MR.strings.action_pause else MR.strings.action_play),
                 shortcut = VideoPlayerShortcuts.PlayPause,
                 size = IconButtonSize.Large,
                 onClick = { input.togglePlayback(showControls = true) },

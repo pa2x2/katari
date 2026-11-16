@@ -7,7 +7,6 @@ import app.katari.entry.interactions.player.AnimePlayerMediaSession
 import app.katari.entry.interactions.player.AnimePlayerMediaState
 import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
-import eu.kanade.tachiyomi.ui.video.player.mediacontrols.meansToPlay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
