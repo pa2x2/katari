@@ -209,7 +209,8 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Read-only formatted text the user wrote | `RichText`, `markdownStyle` | |
 | An icon, alone or inside a line of text | `Icon`, `InlineIcon` | |
 | A small icon on a round disc marking a step between items | `IconBadge` | |
-| Badges, such as on library covers | `Badge`, `BadgeGroup` | |
+| Badges, such as on a list row | `Badge`, `BadgeGroup` | |
+| Badges along the top of a cover, such as a library cover's unread count and entry type | `CoverBadges` | End badges move below the start ones when both don't fit |
 | A count or dot pinned to an icon or navigation item | `NotificationBadge`, `BadgedBox` | |
 | Key caps for a shortcut, such as Ctrl and F | `ShortcutKeyCaps` | |
 | Text as a QR code another device's camera reads, such as a link code | `QrCode` | Dark on a light tile in either theme, as scanners expect |
