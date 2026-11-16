@@ -49,7 +49,8 @@ import java.io.IOException
  *
  * A device still joining its account goes on with its first sync ([FirstSyncSteps]), one stored stage after another,
  * and pushes nothing until it has taken the account's records, so what it held before merges with them first. A
- * device whose server turned out lost or restored resyncs in full ([FullResync]) before anything else.
+ * device whose server turned out lost or restored resyncs in full ([FullResync]) before anything else; where changes
+ * wait for Wi-Fi ([ChangeTransferRule]), so does the resync, once the run has taken what step 1 below takes.
  *
  * A device that is ready runs, in this order:
  * 1. The messages waiting for it ([MessageInbox]), on any network too. Then the entries it was asked about first
@@ -223,6 +224,10 @@ class SyncPass(
                     }
                     SyncStage.SETTINGS -> firstSync.recordSettings()
                     SyncStage.RESYNC, SyncStage.RESYNC_WITHOUT_DELETIONS -> {
+                        if (!changeRule.allowsNow()) {
+                            takeOnAnyNetwork(client, device, request)
+                            return SyncOutcome.WAITING_FOR_WIFI
+                        }
                         pull.pullAll(client, device, liveOnly = state.stage == SyncStage.RESYNC_WITHOUT_DELETIONS)
                         resync.finish(state.stage)
                     }
@@ -253,9 +258,7 @@ class SyncPass(
     }
 
     private suspend fun exchange(client: SyncServerClient, device: DeviceId, request: SyncRequest): SyncOutcome {
-        messageInbox.fetch(client)
-        ungrouped.fill()
-        if (request.entriesFirst.isNotEmpty()) handOff.fetchFirst(client, device, request.entriesFirst)
+        takeOnAnyNetwork(client, device, request)
         if (!changeRule.allowsNow()) return SyncOutcome.WAITING_FOR_WIFI
         steps.step(SyncStep.Kind.DOWNLOADING_CHANGES) { progress ->
             val from = connection.state().position
@@ -289,6 +292,13 @@ class SyncPass(
         // files may move, as one naming a file whose bytes changed while they were uploaded
         val changesLeft = pending.count() > 0 && (stale || fileRule.allowsNow())
         return if (filesMoved && !changesLeft) SyncOutcome.SYNCED else SyncOutcome.UNFINISHED
+    }
+
+    /** Step 1 of a device that is ready, which a resync waiting for Wi-Fi takes too. */
+    private suspend fun takeOnAnyNetwork(client: SyncServerClient, device: DeviceId, request: SyncRequest) {
+        messageInbox.fetch(client)
+        ungrouped.fill()
+        if (request.entriesFirst.isNotEmpty()) handOff.fetchFirst(client, device, request.entriesFirst)
     }
 
     /** Returns false when the server stopped answering midway. */

@@ -14,9 +14,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
 /**
- * The default network: there is one while it has a transport, validated or not; online once it is connected and
- * Android has validated that it reaches the internet, metered as Android judges the active network, and counting as
+ * The default network: there is one while it has a transport, validated or not; online once Android has validated
+ * that it reaches the internet and it isn't suspended, metered unless Android calls it not metered, and counting as
  * Wi-Fi while its transport is Wi-Fi.
+ *
+ * Each change is read from what its callback reports rather than from the active network: while a lost network is
+ * being torn down, the active network can still be that one, and a state read from it then would stay until the next
+ * network comes.
  */
 @Inject
 class AndroidNetworkConnectivity(private val context: Context) : NetworkConnectivity {
@@ -26,11 +30,12 @@ class AndroidNetworkConnectivity(private val context: Context) : NetworkConnecti
     override fun state(): Flow<NetworkState> = callbackFlow {
         val callback = object : NetworkCallback() {
             override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
-                trySend(current())
+                trySend(stateOf(networkCapabilities))
             }
 
+            // Of the default network: until another becomes the default, there is none
             override fun onLost(network: Network) {
-                trySend(current())
+                trySend(stateOf(null))
             }
         }
         trySend(current())
@@ -38,19 +43,17 @@ class AndroidNetworkConnectivity(private val context: Context) : NetworkConnecti
         awaitClose { connectivityManager.unregisterNetworkCallback(callback) }
     }
 
-    @Suppress("DEPRECATION")
-    override fun current(): NetworkState {
-        val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        val isConnected = connectivityManager.activeNetworkInfo?.isConnected ?: false
-        val isValidated = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) ?: false
-        return NetworkState(
-            // The transports source errors have always counted, cellular to LoWPAN with a VPN among them; later ones,
-            // such as USB or satellite, stay out so an unresolved host reads as it always did
-            hasNetwork = (NetworkCapabilities.TRANSPORT_CELLULAR..NetworkCapabilities.TRANSPORT_LOWPAN)
-                .any { capabilities?.hasTransport(it) == true },
-            isOnline = isConnected && isValidated,
-            isMetered = connectivityManager.isActiveNetworkMetered,
-            countsAsWifi = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false,
-        )
-    }
+    override fun current(): NetworkState = connectivityManager.run { stateOf(getNetworkCapabilities(activeNetwork)) }
+
+    private fun stateOf(capabilities: NetworkCapabilities?) = NetworkState(
+        // The transports source errors have always counted, cellular to LoWPAN with a VPN among them; later ones, such
+        // as USB or satellite, stay out so an unresolved host reads as it always did
+        hasNetwork = (NetworkCapabilities.TRANSPORT_CELLULAR..NetworkCapabilities.TRANSPORT_LOWPAN)
+            .any { capabilities?.hasTransport(it) == true },
+        isOnline = capabilities != null &&
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) &&
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_SUSPENDED),
+        isMetered = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED) != true,
+        countsAsWifi = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false,
+    )
 }

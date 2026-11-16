@@ -226,6 +226,7 @@ internal class SyncingTestDevice(
         changeRule,
         DeviceListFollowing(deviceChanges, account),
         disconnection,
+        network,
     )
     val status = SyncStatusFlow(
         connection,
@@ -309,12 +310,16 @@ internal class SyncingTestDevice(
         }
     }
 
-    /** On Wi-Fi until a test puts it on mobile data. */
+    /** On Wi-Fi until a test puts it on mobile data or takes the network away. */
     class Network : NetworkConnectivity {
         private val state = MutableStateFlow(NetworkState(hasNetwork = true, isOnline = true, isMetered = false, true))
 
         fun onWifi(wifi: Boolean) {
-            state.value = state.value.copy(isMetered = !wifi, countsAsWifi = wifi)
+            state.value = NetworkState(hasNetwork = true, isOnline = true, isMetered = !wifi, countsAsWifi = wifi)
+        }
+
+        fun offline() {
+            state.value = NetworkState(hasNetwork = false, isOnline = false, isMetered = false, countsAsWifi = false)
         }
 
         override fun state() = state
