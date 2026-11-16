@@ -89,7 +89,7 @@ internal class SyncingTestDevice(
     val directory = DeviceDirectory(local.handler)
     val deviceChoices = DeviceChoices(local.handler, local.writing, local.syncPreferences, directory)
     val handOff = EntryHandOff(local.handler, local.incoming, local.preferences.reads, directory)
-    private val disconnection = Disconnection(capture, connection, handOff, directory)
+    private val disconnection = Disconnection(capture, connection, handOff, directory, clients)
     val lastReadDevices = LastReadDevices(local.handler, connection, directory)
     val otherDeviceLibraryUpdates = OtherDeviceLibraryUpdates(local.handler, connection, directory)
     private val resync = FullResync(local.handler, local.writing)
@@ -225,6 +225,7 @@ internal class SyncingTestDevice(
         handOff,
         changeRule,
         DeviceListFollowing(deviceChanges, account),
+        disconnection,
     )
     val status = SyncStatusFlow(
         connection,

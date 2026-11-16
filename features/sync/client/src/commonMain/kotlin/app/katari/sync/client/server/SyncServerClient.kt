@@ -30,7 +30,11 @@ import app.katari.sync.protocol.server.ServerInfo
 import app.katari.sync.protocol.snapshot.SnapshotInfo
 import app.katari.sync.protocol.version.SyncProtocolVersion
 import eu.kanade.tachiyomi.network.await
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
@@ -217,19 +221,36 @@ class SyncServerClient internal constructor(
         client: OkHttpClient = transports.calls,
         read: (Response) -> T,
     ): T {
+        val call = client.newCall(request)
         val response = try {
-            client.newCall(request).await()
+            call.await()
         } catch (e: IOException) {
             throw SyncFailure.Unreachable(e)
         }
         answered = true
-        return withContext(Dispatchers.IO) {
-            response.use {
+        return coroutineScope {
+            // A caller cut short, such as a run when the device leaves its account, stops reading at once rather than
+            // once a page or a file has come in full: the blocking read ends only when the call is cancelled
+            var finished = false
+            val cutOff = launch(start = CoroutineStart.UNDISPATCHED) {
                 try {
-                    read(it)
-                } catch (e: IOException) {
-                    throw SyncFailure.Unreachable(e)
+                    awaitCancellation()
+                } finally {
+                    if (!finished) call.cancel()
                 }
+            }
+            try {
+                withContext(Dispatchers.IO) {
+                    response.use {
+                        try {
+                            read(it)
+                        } catch (e: IOException) {
+                            throw SyncFailure.Unreachable(e)
+                        }
+                    }
+                }.also { finished = true }
+            } finally {
+                cutOff.cancel()
             }
         }
     }

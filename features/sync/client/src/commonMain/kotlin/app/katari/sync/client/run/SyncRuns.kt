@@ -9,6 +9,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -16,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -28,8 +32,10 @@ import kotlin.time.Duration.Companion.seconds
  * with the others made meanwhile into the run that follows it, so triggers coalesce instead of queueing. Background
  * work that must know how its run ended waits with [runAndWait].
  *
- * Changing the connection itself (signing out, being removed) waits for the current run and keeps new ones from
- * starting with [exclusive], so a run never works on a connection taken from under it.
+ * Changing the connection itself (signing in, being removed) waits for the current run and keeps new ones from
+ * starting with [exclusive], so a run never works on a connection taken from under it. Leaving the account cuts the
+ * current run short instead ([interrupting]): what it would still do means nothing once the device has left, and a
+ * first download or a full resync can take minutes.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -40,6 +46,11 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
     private var waiting: SyncRequest? = null
     private var worker: Job? = null
     private var requested = 0L
+
+    // The run going now, and how many callers wait to cut runs short: a run the worker starts before such a caller
+    // gets the lock is cut short as soon as it starts
+    private var current: Job? = null
+    private var interrupters = 0
 
     // Each waiting caller has its own run's outcome handed to it: the latest outcome alone can be a later run's, as
     // when the writes of the run it waited for start another that finds nothing to do
@@ -90,6 +101,27 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
     /** Runs [block] with no run going, after the current one ends. */
     suspend fun <T> exclusive(block: suspend () -> T): T = runLock.withLock { block() }
 
+    /**
+     * Runs [block] with no run going, cutting the current one short rather than waiting for it to end. Callers waiting
+     * for that run hear [SyncOutcome.IDLE]; runs requested meanwhile start after [block].
+     */
+    suspend fun <T> interrupting(block: suspend () -> T): T {
+        synchronized(lock) {
+            interrupters++
+            current?.cancel()
+        }
+        var waiting = true
+        try {
+            return runLock.withLock {
+                synchronized(lock) { interrupters-- }
+                waiting = false
+                block()
+            }
+        } finally {
+            if (waiting) synchronized(lock) { interrupters-- }
+        }
+    }
+
     private fun enqueue(request: SyncRequest): Long = synchronized(lock) {
         waiting = waiting?.merge(request) ?: request
         val ticket = ++requested
@@ -110,10 +142,12 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
             var working = false
             val outcome = try {
                 runLock.withLock {
-                    pass.run(next) {
-                        working = true
-                        steps.begin()
-                        runningState.value = true
+                    cuttable {
+                        pass.run(next) {
+                            working = true
+                            steps.begin()
+                            runningState.value = true
+                        }
                     }
                 }
             } catch (e: CancellationException) {
@@ -132,6 +166,24 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
             carried.forEach { it.outcome.complete(outcome) }
             finishedThrough.value = ticket
             endings.emit(outcome)
+        }
+    }
+
+    /** Runs [run] so that [interrupting] can cut it short, which ends it [SyncOutcome.IDLE]. */
+    private suspend fun cuttable(run: suspend () -> SyncOutcome): SyncOutcome = coroutineScope {
+        val job = async { run() }
+        synchronized(lock) {
+            current = job
+            if (interrupters > 0) job.cancel()
+        }
+        try {
+            job.await()
+        } catch (e: CancellationException) {
+            // The worker itself stopping is no run cut short
+            if (!currentCoroutineContext().isActive) throw e
+            SyncOutcome.IDLE
+        } finally {
+            synchronized(lock) { current = null }
         }
     }
 

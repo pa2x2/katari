@@ -127,11 +127,20 @@ class SyncConnection(
         handler.await { sync_stateQueries.unreachable(Clock.System.now().toEpochMilliseconds()) }
     }
 
-    /** Forgets the token and the connection, leaving [reason] for the person to read; capture is stopped apart. */
-    suspend fun forget(reason: SyncStop?) {
-        forgetToken()
+    /**
+     * Forgets the connection, leaving [reason] for the person to read; capture is stopped apart. The token goes too,
+     * unless [tellServerLater]: then it stays for the registration the device leaves by, along with its DeviceId and
+     * server ([SyncConnectionState.leftDevice]), until [forgetLeft].
+     */
+    suspend fun forget(reason: SyncStop?, tellServerLater: Boolean = false) {
+        if (!tellServerLater) forgetToken()
         handler.await(inTransaction = true) {
-            sync_stateQueries.forget(reason?.stored)
+            val left = sync_stateQueries.get().awaitAsOne().takeIf { tellServerLater }
+            sync_stateQueries.forget(
+                stopped = reason?.stored,
+                leftDeviceId = left?.device_id,
+                leftServerUrl = left?.server_url,
+            )
             sync_recordsQueries.clear()
             sync_pendingQueries.clear()
             sync_outboxQueries.clear()
@@ -140,6 +149,12 @@ class SyncConnection(
             sync_filesQueries.clearUploads()
             sync_arrived_settingsQueries.clear()
         }
+    }
+
+    /** Forgets the registration the device left by, and its token, once the server heard of it or never can. */
+    suspend fun forgetLeft() {
+        forgetToken()
+        handler.await { sync_stateQueries.forgetLeft() }
     }
 
     /** Forgets the token alone, keeping the device's records for when it signs in again. */
