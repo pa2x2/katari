@@ -4,13 +4,15 @@ import app.katari.webview.engine.devtools.DevToolsSession
 import app.katari.webview.engine.devtools.PageUserAgent
 import app.katari.webview.engine.devtools.evaluate
 import app.katari.webview.jcef.devtools.JcefDevToolsSession
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.cef.browser.CefBrowser
 
 /**
  * What a page asks of its browser through the DevTools protocol: a user agent of the page's own, which Android's web
- * view sets per page and JCEF only for the whole process, a script's value, which JCEF's own scripts don't return, and
- * a history without the blank page the browser starts on. The session lasts as long as the browser, as the user agent
- * holds only while it is open.
+ * view sets per page and JCEF only for the whole process, a script's value, which JCEF's own scripts don't return, a
+ * script run before each document's own, and a history without the blank page the browser starts on. The session lasts
+ * as long as the browser, as the user agent holds only while it is open.
  */
 internal class PageDevTools(browser: CefBrowser) {
     private val session = JcefDevToolsSession(browser)
@@ -24,6 +26,20 @@ internal class PageDevTools(browser: CefBrowser) {
     }
 
     suspend fun evaluate(script: String): String? = session.evaluate(script)
+
+    /**
+     * Runs [source] at the start of every document the page loads from now on, before the document's own scripts;
+     * whether Chromium took it.
+     */
+    suspend fun addDocumentScript(source: String): Boolean {
+        // Chromium adds such scripts through the Page domain
+        session.call("Page.enable") ?: return false
+        val added = session.call(
+            "Page.addScriptToEvaluateOnNewDocument",
+            buildJsonObject { put("source", source) },
+        )
+        return added != null
+    }
 
     /**
      * Removes every page from the history but the one shown, and returns once Chromium has; false where the page didn't
