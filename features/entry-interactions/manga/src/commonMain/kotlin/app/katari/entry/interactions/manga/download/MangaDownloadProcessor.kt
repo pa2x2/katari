@@ -147,17 +147,17 @@ internal class MangaDownloadProcessor(
 
     override fun hasDownloads(entry: Entry): Boolean {
         entry.requireManga()
-        return downloadManager.getDownloadCount(entry) > 0
+        return downloadManager.hasDownloads(entry)
     }
 
-    override fun getDownloadCount(entry: Entry): Int {
-        entry.requireManga()
-        return downloadManager.getDownloadCount(entry)
-    }
-
-    override fun getDownloadCounts(entries: List<Entry>): Map<Long, Int> {
+    override fun filterWithDownloads(entries: List<Entry>): List<Entry> {
         entries.forEach { it.requireManga() }
-        return downloadManager.getDownloadCounts(entries)
+        return downloadManager.filterWithDownloads(entries)
+    }
+
+    override fun getDownloadedChapterIds(entry: Entry, chapters: List<EntryChapter>): Set<Long> {
+        entry.requireManga()
+        return downloadManager.getDownloadedChapterIds(chapters, entry)
     }
 
     override fun getTotalDownloadCount(): Int {

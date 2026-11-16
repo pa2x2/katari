@@ -13,7 +13,7 @@ import tachiyomi.domain.library.model.LibraryItemKey
 internal fun observeLibraryDownloadCountUpdates(
     initialItems: List<LibraryItem>,
     statusUpdates: Flow<EntryDownloadStatus>,
-    calculateDownloadCount: (LibraryItem) -> Int,
+    calculateDownloadCount: suspend (LibraryItem) -> Int,
 ): Flow<List<LibraryItem>> {
     val itemIndexByMemberKey = buildMap {
         initialItems.forEachIndexed { itemIndex, item ->
@@ -40,6 +40,6 @@ internal fun observeLibraryDownloadCountUpdates(
         .distinctUntilChanged { previous, current -> previous === current }
 }
 
-internal fun LibraryItem.calculateDownloadCount(downloadRuntime: EntryDownloadRuntimeFeature): Int {
-    return memberEntries.sumOf(downloadRuntime::downloadCount)
+internal suspend fun LibraryItem.calculateDownloadCount(downloadRuntime: EntryDownloadRuntimeFeature): Int {
+    return downloadRuntime.downloadCounts(memberEntries).values.sum()
 }

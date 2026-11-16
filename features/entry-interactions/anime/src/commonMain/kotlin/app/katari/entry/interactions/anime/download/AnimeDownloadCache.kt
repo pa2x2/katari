@@ -149,29 +149,23 @@ internal class AnimeDownloadCache(
         }
     }
 
-    fun getDownloadCount(anime: Entry): Int {
+    /** Whether anything is stored in [anime]'s download folder, downloads of episodes it no longer has included. */
+    fun hasDownloads(anime: Entry): Boolean {
         renewCache()
-        val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return 0
-        val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.downloadFolderTitle)] ?: return 0
-        return animeDir.episodeDirs.size
+        val animeDirs = rootDownloadsDir.sourceDirs[anime.source]?.animeDirs
+        if (animeDirs.isNullOrEmpty()) return false
+        return !animeDirs[provider.getAnimeDirName(anime.downloadFolderTitle)]?.episodeDirs.isNullOrEmpty()
     }
 
-    fun getDownloadCounts(animes: List<Entry>): Map<Long, Int> {
+    /** Returns those of [animes] that [hasDownloads]. */
+    fun filterWithDownloads(animes: List<Entry>): List<Entry> {
         renewCache()
         val sourceDirs = rootDownloadsDir.sourceDirs
-        return animes.associate { anime ->
+        return animes.filter { anime ->
             val animeDirs = sourceDirs[anime.source]?.animeDirs
             // Building the directory name is the costly part, so it's skipped for sources without downloads
-            val animeDir = if (animeDirs.isNullOrEmpty()) {
-                null
-            } else {
-                animeDirs[
-                    provider.getAnimeDirName(
-                        anime.downloadFolderTitle,
-                    ),
-                ]
-            }
-            anime.id to (animeDir?.episodeDirs?.size ?: 0)
+            !animeDirs.isNullOrEmpty() &&
+                !animeDirs[provider.getAnimeDirName(anime.downloadFolderTitle)]?.episodeDirs.isNullOrEmpty()
         }
     }
 

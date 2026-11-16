@@ -282,12 +282,12 @@ internal class AnimeDownloadManager(
         return queue.associateBy { it.episode.id }.also { queueIndex = QueueIndex(queue, it) }
     }
 
-    fun getDownloadCount(anime: Entry): Int {
-        return cache.getDownloadCount(anime)
+    fun hasDownloads(anime: Entry): Boolean {
+        return cache.hasDownloads(anime)
     }
 
-    fun getDownloadCounts(animes: List<Entry>): Map<Long, Int> {
-        return cache.getDownloadCounts(animes)
+    fun filterWithDownloads(animes: List<Entry>): List<Entry> {
+        return cache.filterWithDownloads(animes)
     }
 
     fun getTotalDownloadCount(): Int {

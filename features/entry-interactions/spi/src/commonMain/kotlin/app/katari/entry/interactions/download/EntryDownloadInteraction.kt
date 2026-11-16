@@ -56,13 +56,11 @@ interface EntryDownloadInteraction {
     suspend fun deleteEntryDownloads(entry: Entry): Boolean
 
     fun hasDownloads(entry: Entry): Boolean
-    fun getDownloadCount(entry: Entry): Int
 
-    /**
-     * Returns the download count of each of [entries] by entry id, looking up the downloads once per type. Entries of
-     * a type without downloads are left out.
-     */
-    fun getDownloadCounts(entries: List<Entry>): Map<Long, Int>
+    /** Returns those of [entries] that [hasDownloads], looking up the downloads once per type. */
+    fun filterWithDownloads(entries: List<Entry>): List<Entry>
+
+    fun getDownloadedChapterIds(entry: Entry, chapters: List<EntryChapter>): Set<Long>
     fun getTotalDownloadCount(): Int
     fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean = false): Boolean
     fun getStatus(

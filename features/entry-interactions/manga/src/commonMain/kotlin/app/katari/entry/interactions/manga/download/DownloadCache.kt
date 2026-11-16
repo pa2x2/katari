@@ -192,42 +192,25 @@ internal class DownloadCache(
         }
     }
 
-    /**
-     * Returns the amount of downloaded chapters for a manga.
-     *
-     * @param manga the manga to check.
-     */
-    fun getDownloadCount(manga: Entry): Int {
+    /** Whether anything is stored in [manga]'s download folder, downloads of chapters it no longer has included. */
+    fun hasDownloads(manga: Entry): Boolean {
         renewCache()
 
-        val sourceDir = rootDownloadsDir.sourceDirs[manga.source]
-        if (sourceDir != null) {
-            val mangaDir = sourceDir.mangaDirs[provider.getEntryDirName(manga.downloadFolderTitle)]
-            if (mangaDir != null) {
-                return mangaDir.chapterDirs.size
-            }
-        }
-        return 0
+        val mangaDirs = rootDownloadsDir.sourceDirs[manga.source]?.mangaDirs
+        if (mangaDirs.isNullOrEmpty()) return false
+        return !mangaDirs[provider.getEntryDirName(manga.downloadFolderTitle)]?.chapterDirs.isNullOrEmpty()
     }
 
-    /** Returns the amount of downloaded chapters of each of [mangas], by entry id. */
-    fun getDownloadCounts(mangas: List<Entry>): Map<Long, Int> {
+    /** Returns those of [mangas] that [hasDownloads]. */
+    fun filterWithDownloads(mangas: List<Entry>): List<Entry> {
         renewCache()
 
         val sourceDirs = rootDownloadsDir.sourceDirs
-        return mangas.associate { manga ->
+        return mangas.filter { manga ->
             val mangaDirs = sourceDirs[manga.source]?.mangaDirs
             // Building the directory name is the costly part, so it's skipped for sources without downloads
-            val mangaDir = if (mangaDirs.isNullOrEmpty()) {
-                null
-            } else {
-                mangaDirs[
-                    provider.getEntryDirName(
-                        manga.downloadFolderTitle,
-                    ),
-                ]
-            }
-            manga.id to (mangaDir?.chapterDirs?.size ?: 0)
+            !mangaDirs.isNullOrEmpty() &&
+                !mangaDirs[provider.getEntryDirName(manga.downloadFolderTitle)]?.chapterDirs.isNullOrEmpty()
         }
     }
 

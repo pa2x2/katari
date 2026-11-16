@@ -10,7 +10,7 @@ import tachiyomi.domain.library.model.LibraryItem
  * database change is their pinned state.
  */
 internal fun Flow<List<LibraryItem>>.reuseEnrichmentForPinUpdates(
-    enrich: (List<LibraryItem>) -> List<LibraryItem>,
+    enrich: suspend (List<LibraryItem>) -> List<LibraryItem>,
 ): Flow<List<LibraryItem>> = flow {
     var previousSourceItems: List<LibraryItem>? = null
     var previousEnrichedItems: List<LibraryItem>? = null

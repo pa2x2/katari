@@ -247,17 +247,17 @@ internal class AnimeDownloadProcessor(
 
     override fun hasDownloads(entry: Entry): Boolean {
         entry.requireAnime()
-        return animeDownloadManager.getDownloadCount(entry) > 0
+        return animeDownloadManager.hasDownloads(entry)
     }
 
-    override fun getDownloadCount(entry: Entry): Int {
-        entry.requireAnime()
-        return animeDownloadManager.getDownloadCount(entry)
-    }
-
-    override fun getDownloadCounts(entries: List<Entry>): Map<Long, Int> {
+    override fun filterWithDownloads(entries: List<Entry>): List<Entry> {
         entries.forEach { it.requireAnime() }
-        return animeDownloadManager.getDownloadCounts(entries)
+        return animeDownloadManager.filterWithDownloads(entries)
+    }
+
+    override fun getDownloadedChapterIds(entry: Entry, chapters: List<EntryChapter>): Set<Long> {
+        entry.requireAnime()
+        return animeDownloadManager.getDownloadedEpisodeIds(chapters, entry)
     }
 
     override fun getTotalDownloadCount(): Int {

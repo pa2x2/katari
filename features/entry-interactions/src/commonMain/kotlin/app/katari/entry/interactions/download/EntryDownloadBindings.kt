@@ -30,6 +30,7 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
+import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
@@ -42,10 +43,12 @@ object EntryDownloadBindings {
     internal fun runtimeCoordinator(
         downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
         interactions: EntryInteractions,
+        chapterRepository: EntryChapterRepository,
         @AppCoroutineScope scope: CoroutineScope,
     ): EntryDownloadRuntimeCoordinator = DefaultEntryDownloadRuntimeFeature(
         applicableTypes = downloadProcessors.keys,
         interaction = interactions.download,
+        chapterRepository = chapterRepository,
         scope = scope + Dispatchers.Default,
     )
 

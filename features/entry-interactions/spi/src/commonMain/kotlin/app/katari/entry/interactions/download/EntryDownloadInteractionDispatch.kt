@@ -148,18 +148,15 @@ internal class EntryDownloadInteractionDispatch(
         return processor.hasDownloads(entry)
     }
 
-    override fun getDownloadCount(entry: Entry): Int {
-        val processor = processors[entry.type] ?: return 0
-        return processor.getDownloadCount(entry)
+    override fun filterWithDownloads(entries: List<Entry>): List<Entry> {
+        return entries.groupBy(Entry::type).flatMap { (type, typeEntries) ->
+            processors[type]?.filterWithDownloads(typeEntries).orEmpty()
+        }
     }
 
-    override fun getDownloadCounts(entries: List<Entry>): Map<Long, Int> {
-        return buildMap {
-            entries.groupBy(Entry::type).forEach { (type, typeEntries) ->
-                val processor = processors[type] ?: return@forEach
-                putAll(processor.getDownloadCounts(typeEntries))
-            }
-        }
+    override fun getDownloadedChapterIds(entry: Entry, chapters: List<EntryChapter>): Set<Long> {
+        val processor = processors[entry.type] ?: return emptySet()
+        return processor.getDownloadedChapterIds(entry, chapters)
     }
 
     override fun getTotalDownloadCount(): Int {

@@ -125,11 +125,16 @@ internal class BookDownloadProcessor(
         return manager.deleteEntryDownloads(entry)
     }
 
-    override fun hasDownloads(entry: Entry): Boolean = getDownloadCount(entry) > 0
-
-    override fun getDownloadCount(entry: Entry): Int {
+    override fun hasDownloads(entry: Entry): Boolean {
         entry.requireBook()
-        return cache.getDownloadCount(entry)
+        return cache.getDownloadCount(entry) > 0
+    }
+
+    override fun getDownloadedChapterIds(entry: Entry, chapters: List<EntryChapter>): Set<Long> {
+        entry.requireBook()
+        return chapters
+            .filter { cache.find(entry.source, it.url, entry.title) != null }
+            .mapTo(HashSet(), EntryChapter::id)
     }
 
     override fun getTotalDownloadCount(): Int = cache.getTotalDownloadCount()
