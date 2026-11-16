@@ -4,16 +4,15 @@ import app.katari.sync.client.setting.scope.MenuSettings
 import app.katari.sync.client.setting.scope.PreferenceScopes
 
 /**
- * A setting another device changed here: [key] in [profileId]'s store, or the shared one when null, changed at
- * [changedAt] on the device named [from] (null when the account doesn't list it any more). The changes one sync applied
- * share [batch].
+ * A setting another device changed here: [key] in [profileId]'s store, or the shared one when null, changed on the
+ * device named [from] (null when the account doesn't list it any more). The changes one sync applied share [batch],
+ * the time that sync ran in epoch milliseconds.
  */
 data class ArrivedSetting(
     val id: Long,
     val profileId: Long?,
     val key: String,
     val from: String?,
-    val changedAt: Long,
     val batch: Long,
     val keepMine: KeepMine,
 ) {

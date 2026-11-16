@@ -19,9 +19,9 @@ import tachiyomi.data.DatabaseHandler
 import kotlin.time.Clock
 
 /**
- * The settings other devices changed here in the last 14 days, and Keep mine: it keeps the setting on this device,
- * then puts back the value it had. Kept here first, the value written back is held back like any edit of a setting
- * this device doesn't sync, and switching the setting on again later asks whose value it keeps.
+ * The settings other devices changed that arrived here in the last 14 days, and Keep mine: it keeps the setting on
+ * this device, then puts back the value it had. Kept here first, the value written back is held back like any edit of
+ * a setting this device doesn't sync, and switching the setting on again later asks whose value it keeps.
  *
  * A setting of a menu ([ArrivedSetting.menu]) is kept with the rest of its menu that the same sync changed, as its
  * settings sync or stay as one.
@@ -35,14 +35,14 @@ class SettingArrivals(
     private val settings: SettingWrites,
     private val batches: ArrivedBatches,
 ) {
-    /** Every setting changed here in the last 14 days, newest first, as this device's choices stand. */
+    /** Every setting that arrived in the last 14 days, latest arrival first, as this device's choices stand. */
     fun changes(): Flow<List<ArrivedSetting>> = combine(
         handler.subscribeToList { sync_arrived_settingsQueries.all() },
         preferences.choicesChanges(),
     ) { rows, choices ->
         val since = now() - ArrivalNotes.KEPT_FOR.inWholeMilliseconds
         val names = directory.listed()
-        rows.filter { it.changed_at >= since }.map { it.arrived(names, choices) }
+        rows.filter { it.batch >= since }.map { it.arrived(names, choices) }
     }
 
     /** The settings each sync changes here from now on, as that sync is committed. */
@@ -90,7 +90,6 @@ class SettingArrivals(
         profileId = profile_id,
         key = setting_key,
         from = names[DeviceId(from_device_id)],
-        changedAt = changed_at,
         batch = batch,
         keepMine = when {
             !kept -> KeepMine.OFFERED
