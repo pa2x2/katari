@@ -59,6 +59,24 @@ class FieldStamps internal constructor() {
         return if (previous != null && previous.at > edited.at) previous else edited
     }
 
+    /**
+     * [fieldEditedAt] for a reading position, which also dates by [editedAtMillis] a position no device saw read
+     * while syncing, such as one read before sync was set up: two devices that read in one resource before their first
+     * sync keep the position read last, instead of tying. Completion keeps tying there, so that a chapter read on
+     * either device stays read ([app.katari.sync.client.merge.latest]).
+     */
+    fun <T> positionEditedAt(
+        number: Int,
+        value: T,
+        previous: Stamped<T>?,
+        editedAtMillis: Long,
+        device: DeviceId,
+    ): Stamped<T> {
+        val stamped = fieldEditedAt(number, value, previous, editedAtMillis, device)
+        if (stamped === previous || stamped.at != Stamped.UNKNOWN_EDIT || editedAtMillis <= 0) return stamped
+        return Stamped(value, HybridTimestamp(editedAtMillis, 0, device))
+    }
+
     private fun newer(a: HybridTimestamp?, b: HybridTimestamp?): HybridTimestamp? = when {
         a == null -> b
         b == null -> a

@@ -8,7 +8,8 @@ import app.katari.sync.client.payload.Stamped
  *
  * Timestamps differ for every real edit, since each carries its device. They tie for values neither device saw edited
  * while syncing ([Stamped.UNKNOWN_EDIT]), such as two devices' libraries merged at their first sync; the larger value
- * wins then, so a chapter read on either device stays read and the later of two dates stays.
+ * wins then, so a chapter read on either device stays read, the later of two dates stays and the further of two
+ * reading positions stays ([app.katari.sync.client.kind.progress.ProgressLocator]).
  */
 internal fun <T> latest(a: Stamped<T>, b: Stamped<T>): Stamped<T> = when {
     a.at > b.at -> a
