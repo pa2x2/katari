@@ -18,9 +18,9 @@ import kotlin.math.roundToInt
 /**
  * The window's brightness as a level from -[ExtraDim.LEVELS] to [MAX_LEVEL]. While the window has no brightness
  * override and the level sits at the default, the screen follows the system setting and the level tracks it; a gesture
- * overrides the window's brightness along a gamma curve. At 0 and below the screen is at its lowest and a dark layer
- * dims the picture too: [DIM_AT_ZERO] at 0, then extra dim below it. When the viewer keeps it, the level set carries
- * over to the next time the player opens.
+ * overrides the window's brightness along a gamma curve. At 0 and below the screen is at its lowest, and below 0
+ * [ExtraDim] darkens the picture further. When the viewer keeps it, the level set carries over to the next time the
+ * player opens.
  */
 internal class WindowBrightness(
     private val window: Window,
@@ -53,7 +53,7 @@ internal class WindowBrightness(
         } else {
             // Every level from 0 down shares the screen's lowest brightness, so the window alone can't tell them apart
             if (screenBrightness != screenBrightnessForLevel(level)) level = levelForScreenBrightness(screenBrightness)
-            pictureDim = pictureDimFor(level)
+            pictureDim = ExtraDim.pictureDim(level)
         }
     }
 
@@ -85,7 +85,7 @@ internal class WindowBrightness(
     override fun adjust(level: Int): Int {
         val normalizedLevel = level.coerceIn(levels)
         this.level = normalizedLevel
-        pictureDim = pictureDimFor(normalizedLevel)
+        pictureDim = ExtraDim.pictureDim(normalizedLevel)
         applyToWindow(normalizedLevel)
         return normalizedLevel
     }
@@ -144,11 +144,6 @@ internal class WindowBrightness(
         const val SYSTEM_BRIGHTNESS_MAX = 255
         const val MIN_POSITIVE_BRIGHTNESS = 0.01f
         const val BRIGHTNESS_RESPONSE_GAMMA = 2.2f
-
-        /** The dark layer at level 0, where the screen can go no lower, so the last step still darkens the picture. */
-        const val DIM_AT_ZERO = 0.75f
-
-        fun pictureDimFor(level: Int): Float = if (level > 0) 0f else ExtraDim.pictureDim(level, DIM_AT_ZERO)
 
         fun screenBrightnessForLevel(level: Int): Float {
             if (level <= 0) return MIN_POSITIVE_BRIGHTNESS

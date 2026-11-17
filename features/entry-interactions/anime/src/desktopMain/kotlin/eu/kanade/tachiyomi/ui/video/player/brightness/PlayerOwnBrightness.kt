@@ -17,7 +17,7 @@ internal class PlayerOwnBrightness(private val preferences: AnimePlayerDevicePre
         private set
 
     override val pictureDim: Float
-        get() = ExtraDim.pictureDim(level, atZero = 0f)
+        get() = ExtraDim.pictureDim(level)
 
     override fun adjust(level: Int): Int {
         this.level = level.coerceIn(levels)
