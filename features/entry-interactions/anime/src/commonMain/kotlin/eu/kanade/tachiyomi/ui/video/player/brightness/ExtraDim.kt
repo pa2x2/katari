@@ -13,13 +13,12 @@ internal object ExtraDim {
     private const val DARKEST = 0.9f
 
     /**
-     * The layer's share at [level], from [atZero] at 0 down to [DARKEST]. Each level takes the same share of the light
+     * The layer's share at [level], from none at 0 down to [DARKEST]. Each level takes the same share of the light
      * that is left, so every step looks as large as the last, where an even share of the whole would make the first
      * steps barely visible and the last ones jumps.
      */
-    fun pictureDim(level: Int, atZero: Float): Float {
+    fun pictureDim(level: Int): Float {
         val depth = (-level).coerceIn(0, LEVELS) / LEVELS.toFloat()
-        val lightAtZero = 1f - atZero
-        return 1f - lightAtZero * ((1f - DARKEST) / lightAtZero).pow(depth)
+        return 1f - (1f - DARKEST).pow(depth)
     }
 }
