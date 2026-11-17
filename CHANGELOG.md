@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.1] - 2026-11-17
+
+### 🐛 Fixed
+
+- You can pause a video while it is still loading.
+- Extra dim does not skip big value on lowest level.
+
 ## [3.4.0] - 2026-11-16
 
 ### ✨ Added
@@ -1324,7 +1331,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.1...HEAD
+[3.4.1]: https://github.com/pa2x2/katari/releases/tag/v3.4.1
 [3.4.0]: https://github.com/pa2x2/katari/releases/tag/v3.4.0
 [3.3.3]: https://github.com/pa2x2/katari/releases/tag/v3.3.3
 [3.3.2]: https://github.com/pa2x2/katari/releases/tag/v3.3.2
