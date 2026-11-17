@@ -1,0 +1,23 @@
+features/entry-interactions/anime/src/androidMain/kotlin/eu/kanade/tachiyomi/ui/video/player/brightness/WindowBrightness.kt
+  s_21369226f552c3::t_47509ce5c60e2a 21-23,56,88
+features/entry-interactions/anime/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/video/player/brightness/ExtraDim.kt
+  s_21369226f552c3::t_c702195d3636b1 16,20,22
+features/entry-interactions/anime/src/desktopMain/kotlin/eu/kanade/tachiyomi/ui/video/player/brightness/PlayerOwnBrightness.kt
+  s_21369226f552c3::t_ef290655edc387 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b82bde92da7d2fa6248842fb1c0a56869c00eace",
+  "prompts": {},
+  "sessions": {
+    "s_21369226f552c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "951a42ef-356a-44b1-be4a-61d6ef4d2cb8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
