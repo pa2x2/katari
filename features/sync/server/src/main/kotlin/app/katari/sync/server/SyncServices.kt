@@ -10,6 +10,7 @@ import app.katari.sync.server.attemptlimit.AttemptLimiter
 import app.katari.sync.server.config.ServerConfig
 import app.katari.sync.server.device.AccountDevices
 import app.katari.sync.server.device.DeviceAuthentication
+import app.katari.sync.server.device.DeviceDescriptions
 import app.katari.sync.server.device.DeviceRegistration
 import app.katari.sync.server.file.FileContentStore
 import app.katari.sync.server.file.FileTransfers
@@ -35,24 +36,26 @@ class SyncServices(
     val storage: ServerStorage,
     val clock: Clock = Clock.System,
     val random: SecureRandom = SecureRandom(),
+    deviceAppVersion: String? = null,
 ) {
     val passwords = PasswordHasher(random = random)
     val changes = AccountChanges()
     val connected = ConnectedDevices()
     val content = FileContentStore(config.dataDirectory)
     val attempts = AttemptLimiter(clock)
+    val deviceDescriptions = DeviceDescriptions(deviceAppVersion)
 
     val passwordCheck = PasswordCheck(storage, passwords, attempts)
 
     val firstAdminSetup = FirstAdminSetup(storage, passwords, clock, random, attempts)
-    val registration = DeviceRegistration(storage, changes, passwordCheck, clock, random, attempts)
+    val registration = DeviceRegistration(storage, changes, passwordCheck, clock, random, attempts, deviceDescriptions)
     val invites = Invites(storage, passwords, registration, clock, random, attempts)
     val administration = AccountAdministration(storage, passwords, content, changes, clock, random)
     val passwordChange = PasswordChange(storage, passwords, passwordCheck)
     val dataWipe = SyncedDataWipe(storage, passwordCheck, content, changes)
     val webSessions = WebSessions(storage, clock, random)
     val authentication = DeviceAuthentication(storage, clock)
-    val devices = AccountDevices(storage, changes, connected, clock, random)
+    val devices = AccountDevices(storage, changes, connected, clock, random, deviceDescriptions)
     val messages = DeviceMessages(storage, changes, connected, clock)
     val push = RecordPush(storage, changes)
     val pull = RecordPull(storage, config.pullPageSize)

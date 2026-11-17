@@ -10,9 +10,10 @@ import kotlin.time.Instant
 
 /**
  * The sync server as the showcase runs it: the real server, configured by the same environment variables, whose clock
- * stands still at the showcase moment and whose random numbers come from a fixed seed. What it shows then reads the
- * same on every run: devices that synced "just now", link codes that expire two minutes after the moment, and the same
- * codes. A clock that ran on would have the account list say "3 minutes ago" on one run and "4 minutes ago" on the next.
+ * stands still at the showcase moment, whose random numbers come from a fixed seed, and which lists every device under
+ * [APP_VERSION]. What it shows then reads the same on every run: devices that synced "just now", link codes that expire
+ * two minutes after the moment, and the same codes. A clock that ran on would have the account list say "3 minutes ago"
+ * on one run and "4 minutes ago" on the next, and the apps' own versions would change the Sync page with each release.
  *
  * Arguments: the showcase moment in epoch milliseconds, then a username and a password for each account it creates
  * before serving, the admin's first.
@@ -29,6 +30,7 @@ fun main(args: Array<String>) {
         },
         // SHA1PRNG seeded before its first use draws the same numbers on every JVM.
         random = SecureRandom.getInstance("SHA1PRNG").apply { setSeed(SEED) },
+        deviceAppVersion = APP_VERSION,
     )
     createAccounts(server, args.drop(1).chunked(2).map { (username, password) -> username to password })
     server.start(wait = true)
@@ -48,5 +50,8 @@ private fun createAccounts(server: SyncServer, accounts: List<Pair<String, Strin
 }
 
 private val SEED = "katari-showcase".encodeToByteArray()
+
+/** As About names a stable release's version, which is how the apps describe themselves to the server. */
+private const val APP_VERSION = "Stable 1.0.0"
 
 private const val LOOPBACK = "127.0.0.1"

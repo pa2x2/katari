@@ -28,8 +28,8 @@ import { SHOWCASE_NOW, SHOWCASE_TIME_ZONE, YEAR_RECAP_EDITION } from "../../seed
 import type { Display } from "./display.ts";
 
 /**
- * The folder name the release keeps its data under. The pipeline runs the release, so the app names itself and its
- * version as people's installs do, such as on the Sync page's list of devices.
+ * The folder name the release keeps its data under. The pipeline runs the release, so the app names itself as people's
+ * installs do.
  */
 const APP_FOLDER = "katari";
 const EXTENSION_PACKAGE = "app.katari.showcase.extension";

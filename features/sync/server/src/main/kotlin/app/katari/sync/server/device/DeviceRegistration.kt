@@ -34,6 +34,7 @@ class DeviceRegistration(
     private val clock: Clock,
     private val random: SecureRandom,
     private val attempts: AttemptLimiter,
+    private val descriptions: DeviceDescriptions,
 ) {
     fun register(request: RegisterDeviceRequest, remoteAddress: String): RegistrationOutcome =
         joinAccount(request, remoteAddress).also { outcome ->
@@ -85,7 +86,7 @@ class DeviceRegistration(
         storage.devices.insert(
             id = id,
             accountId = account.id,
-            description = description.trimmed(),
+            description = descriptions.kept(description),
             tokenHash = BearerTokens.hash(token),
             registeredAtMillis = clock.now().toEpochMilliseconds(),
         )
@@ -107,9 +108,6 @@ class DeviceRegistration(
 
     private fun newDeviceId(): DeviceId = generateSequence { DeviceId(random.nextLong()) }
         .first { it.value != 0L && !storage.devices.exists(it) }
-
-    private fun DeviceDescription.trimmed() =
-        copy(name = name.trim(), platform = platform.trim(), appVersion = appVersion.trim())
 }
 
 sealed interface RegistrationOutcome {
