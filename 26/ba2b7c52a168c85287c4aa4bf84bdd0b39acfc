@@ -1,0 +1,37 @@
+features/video-engine/mpv/src/commonMain/kotlin/app/katari/video/engine/mpv/proxy/BodyRest.kt
+  s_b33cf401540420::t_f9b94aec7d7cc1 1-47
+features/video-engine/mpv/src/commonMain/kotlin/app/katari/video/engine/mpv/proxy/ContentEncoding.kt
+  s_1786e77dedf0f1::t_462593c1d30bbf 25,31-38
+features/video-engine/mpv/src/commonMain/kotlin/app/katari/video/engine/mpv/proxy/RelayLog.kt
+  s_1786e77dedf0f1::t_4dd9f03ab71aac 53-55
+features/video-engine/mpv/src/commonMain/kotlin/app/katari/video/engine/mpv/proxy/StreamProxy.kt
+  s_1786e77dedf0f1::t_aa52fe9c1e9ffa 49-52,235,244,254,300,305-306,317,334-355,357-381,474,477-487,501,540-543,545,585-587,594,596,599-600,604,606,609,635-637
+features/video-engine/mpv/src/commonMain/kotlin/app/katari/video/engine/mpv/proxy/UpstreamCalls.kt
+  s_1786e77dedf0f1::t_c96b421c7ea578 55-57,63,66
+features/video-engine/mpv/src/commonTest/kotlin/app/katari/video/engine/mpv/proxy/BodyRestTest.kt
+  s_1786e77dedf0f1::t_78d6f706b28ddc 1-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "26ba2b7c52a168c85287c4aa4bf84bdd0b39acfc",
+  "prompts": {},
+  "sessions": {
+    "s_1786e77dedf0f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "020f9731-9482-4d7d-9354-e8963eb413fb",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    },
+    "s_b33cf401540420": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "28a0cfd7-623a-41e5-ad4e-9cc8ce936137",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
