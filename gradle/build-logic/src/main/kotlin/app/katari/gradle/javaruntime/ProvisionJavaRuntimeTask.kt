@@ -23,8 +23,10 @@ import javax.inject.Inject
 /**
  * Downloads a pinned Java runtime from [url], checks it against [digest] and unpacks it to [home], unless an earlier
  * build on this machine did. The unpacked runtime is moved into place whole, so [home] existing means it is complete;
- * a lock beside it keeps builds of other worktrees from unpacking it at the same time. Runtime archives keep symbolic
- * links, which the system's `tar` restores and Gradle's own archive reading does not.
+ * a lock beside it keeps builds of other worktrees from unpacking it at the same time. That file lock is held per
+ * process, so the projects of one build, which each have this task for the same runtime, take turns through
+ * [JavaRuntimeProvisioning] instead: a second lock taken in the same process fails rather than waits. Runtime archives
+ * keep symbolic links, which the system's `tar` restores and Gradle's own archive reading does not.
  */
 @UntrackedTask(because = "Its output is in the Gradle user home, shared by every build on the machine")
 abstract class ProvisionJavaRuntimeTask : DefaultTask() {
@@ -105,8 +107,10 @@ internal fun Project.provisionJavaRuntime(runtime: PinnedJavaRuntime): TaskProvi
     val name = runtime.provisionTaskName
     if (name in tasks.names) return tasks.named(name, ProvisionJavaRuntimeTask::class.java)
     val offline = gradle.startParameter.isOffline
+    val provisioning = javaRuntimeProvisioning(runtime)
     return tasks.register<ProvisionJavaRuntimeTask>(name) {
         description = "Downloads, verifies and unpacks ${runtime.name}."
+        usesService(provisioning)
         runtimeName.set(runtime.name)
         url.set(runtime.url)
         digestAlgorithm.set(runtime.digestAlgorithm)
