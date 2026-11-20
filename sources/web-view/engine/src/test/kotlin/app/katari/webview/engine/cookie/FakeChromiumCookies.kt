@@ -5,8 +5,8 @@ import kotlin.time.Duration.Companion.days
 /**
  * Chromium's cookie manager as the mirror meets it: one cookie per key, expiries kept in whole seconds and capped at
  * 400 days, prefixed names refused without `Secure`, and a removal taking the cookies of its name sent with it along. An
- * expired cookie a page sets removes the one it replaces; one set through JCEF is kept, empty and without an expiry, as
- * JetBrains' Chromium server keeps it.
+ * expired cookie a page sets removes the one it replaces; a cookie set through JCEF is kept without its expiry, as
+ * JetBrains' Chromium server drops it.
  */
 internal class FakeChromiumCookies : ChromiumCookieManager {
     private val cookies = LinkedHashMap<ChromiumCookie.Key, ChromiumCookie>()
@@ -20,8 +20,7 @@ internal class FakeChromiumCookies : ChromiumCookieManager {
     override fun set(cookie: ChromiumCookie) {
         synchronized(cookies) {
             sets++
-            val expired = cookie.expiresAt?.let { it <= System.currentTimeMillis() } == true
-            store(if (expired) cookie.copy(value = "", expiresAt = null) else cookie)
+            store(cookie.copy(expiresAt = null))
         }
     }
 

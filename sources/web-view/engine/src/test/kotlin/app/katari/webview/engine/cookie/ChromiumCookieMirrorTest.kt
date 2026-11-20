@@ -1,6 +1,7 @@
 package app.katari.webview.engine.cookie
 
 import app.katari.core.common.network.cookie.DesktopCookieStore
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import okhttp3.Cookie
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 class ChromiumCookieMirrorTest {
 
@@ -40,5 +42,31 @@ class ChromiumCookieMirrorTest {
 
         runBlocking { mirror.cookiesFor(site) } shouldBe listOf(kept)
         chromium.held.map { it.name } shouldBe listOf("kept")
+    }
+
+    // Chromium holds the store's cookies without their expiries, so one the store let expire stayed in Chromium while
+    // only pages ran, and their requests sent it: an expired Anubis pass sent before the new one repeated the challenge.
+    @Test
+    fun `a cookie that expires leaves Chromium at the next read`() {
+        val pass = Cookie.Builder()
+            .name("pass")
+            .value("1")
+            .hostOnlyDomain("example.org")
+            .expiresAt(System.currentTimeMillis() + EXPIRY_MS)
+            .build()
+        store.save(listOf(pass))
+        val chromium = FakeChromiumCookies()
+        val mirror = ChromiumCookieMirror(store)
+        mirror.attach(chromium).get(5, TimeUnit.SECONDS)
+        chromium.held.map { it.name } shouldBe listOf("pass")
+
+        Thread.sleep(EXPIRY_MS + 500)
+        mirror.readBack()
+
+        runBlocking { eventually(5.seconds) { chromium.held shouldBe emptyList() } }
+    }
+
+    private companion object {
+        const val EXPIRY_MS = 2_000L
     }
 }

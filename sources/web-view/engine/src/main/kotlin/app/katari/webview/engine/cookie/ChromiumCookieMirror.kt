@@ -137,6 +137,10 @@ class ChromiumCookieMirror(private val store: DesktopCookieStore) {
 
     private suspend fun read() {
         val manager = chromium ?: return
+        // Chromium holds the store's cookies without their expiries (ChromiumCookie.expiresAt), so it sends one that has
+        // expired until the store removes it, which nothing else may do while only pages run: a challenge would reject
+        // the expired pass over and over
+        store.removeExpired()
         val seen = manager.read()
         if (seen == null) {
             logcat(LogPriority.WARN) { "Chromium's cookies couldn't be read" }
