@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.4.3] - 2026-11-20
+
+### 🐛 Fixed
+
+- Recap pages that show covers appear at full size instead of shrunk.
+
 ## [3.4.2] - 2026-11-20
 
 ### ✨ Added
@@ -1342,7 +1348,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.2...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.3...HEAD
+[3.4.3]: https://github.com/pa2x2/katari/releases/tag/v3.4.3
 [3.4.2]: https://github.com/pa2x2/katari/releases/tag/v3.4.2
 [3.4.1]: https://github.com/pa2x2/katari/releases/tag/v3.4.1
 [3.4.0]: https://github.com/pa2x2/katari/releases/tag/v3.4.0
