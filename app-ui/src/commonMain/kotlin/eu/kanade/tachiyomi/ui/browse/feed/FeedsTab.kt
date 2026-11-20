@@ -46,6 +46,7 @@ import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.FloatingToolbarBox
+import app.katari.presentation.kit.navigation.FullWindowContent
 import app.katari.presentation.kit.refresh.PullRefresh
 import app.katari.presentation.kit.refresh.refreshAppBarAction
 import app.katari.presentation.kit.sheet.rememberPopoverAnchor
@@ -75,7 +76,6 @@ import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedPickerPopover
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import eu.kanade.tachiyomi.ui.home.navigation.HideHomeNavigation
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.withIOContext
@@ -229,8 +229,6 @@ private fun Screen.FeedsTabContent(
         }
     }
 
-    HideHomeNavigation(hidden = feedViewMode != FeedViewMode.Regular)
-
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
         isBackEnabled = feedViewMode == FeedViewMode.Immersive,
@@ -326,21 +324,23 @@ private fun Screen.FeedsTabContent(
                         .fillMaxWidth(),
                 ) {
                     if (feedViewMode == FeedViewMode.Immersive) {
-                        EntryImmersiveFeedContent(
-                            timelineModel = timelineModel,
-                            immersiveModel = immersiveModel,
-                            snackbarHostState = snackbarHostState,
-                            activeSource = activeSource,
-                            feedLabel = rememberFeedLabel(activeFeed, activeSource, activePreset),
-                            onShowFeedPicker = { showFeedPicker = true },
-                            feedPickerAnchor = feedPickerAnchor,
-                            onExitImmersive = { onFeedViewModeChange(FeedViewMode.Regular) },
-                            onEntryClick = { navigator.push(EntryScreen(it.id, fromSource = true)) },
-                            onLibraryAction = actionModel::confirmBrowseLibraryAction,
-                            onPagingBlockedChange = {},
-                            jumpToNewestRequest = jumpToNewestRequest,
-                            modifier = Modifier.fillMaxSize(),
-                        )
+                        FullWindowContent(Modifier.fillMaxSize()) {
+                            EntryImmersiveFeedContent(
+                                timelineModel = timelineModel,
+                                immersiveModel = immersiveModel,
+                                snackbarHostState = snackbarHostState,
+                                activeSource = activeSource,
+                                feedLabel = rememberFeedLabel(activeFeed, activeSource, activePreset),
+                                onShowFeedPicker = { showFeedPicker = true },
+                                feedPickerAnchor = feedPickerAnchor,
+                                onExitImmersive = { onFeedViewModeChange(FeedViewMode.Regular) },
+                                onEntryClick = { navigator.push(EntryScreen(it.id, fromSource = true)) },
+                                onLibraryAction = actionModel::confirmBrowseLibraryAction,
+                                onPagingBlockedChange = {},
+                                jumpToNewestRequest = jumpToNewestRequest,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
                     } else {
                         FloatingToolbarBox(
                             bottomPadding = contentPadding.calculateBottomPadding(),

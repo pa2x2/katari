@@ -47,6 +47,7 @@ import app.katari.presentation.kit.content.StoryMetrics
 import app.katari.presentation.kit.menu.CheckMenuItem
 import app.katari.presentation.kit.menu.DropdownMenu
 import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.navigation.FullWindowContent
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.StoryPalette
 import app.katari.presentation.kit.theme.StoryTheme
@@ -169,7 +170,7 @@ internal fun RecapStoryPlayer(
     }
 
     StoryTheme(palette) {
-        Box(
+        FullWindowContent(
             Modifier
                 .fillMaxSize()
                 .onGloballyPositioned { screenCoordinates = it }

@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import app.katari.presentation.kit.navigation.DockClearance
 import app.katari.presentation.kit.navigation.LocalDockClearance
+import app.katari.presentation.kit.navigation.LocalDockHideRequests
 
 /**
  * The room a screen's content keeps on each side, which the kit `Scaffold` works out and keeps out of the padding it
@@ -66,13 +67,14 @@ internal fun SidesApplied(content: @Composable () -> Unit) {
 
 /**
  * [content] shown apart from the screen that opens it, such as a sheet, dialog, menu or popup: it keeps none of the
- * screen's side room or room for the dock, which belong to the window behind it.
+ * screen's side room or room for the dock, which belong to the window behind it, and doesn't hide the screen's docks.
  */
 @Composable
 internal fun ApartFromScreen(content: @Composable () -> Unit) {
     CompositionLocalProvider(
         LocalContentSides provides ContentSides.None,
         LocalDockClearance provides DockClearance.None,
+        LocalDockHideRequests provides null,
         content = content,
     )
 }

@@ -31,6 +31,8 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 |---|---|---|
 | The home destinations | `FloatingDockHost`, `FloatingDock`, `FloatingDockItem` | One dock for the app; screens don't add their own |
 | The dock's room for each screen a navigator swaps beside it, so a screen leaving in a transition keeps its layout | `DockedScreen` | Wraps each screen inside a `FloatingDockHost`, such as the root navigator's screens beside the home side dock |
+| Content that fills the whole window instead of sitting beside the dock: an immersive feed, a story, a reader, the web view, a full-screen guide | `FullWindowContent` | Every dock around its screen hides while it shows, and it keeps no room for them; build any edge-to-edge view in it |
+| A screen that keeps its layout but takes the window for a while, such as during a selection | `HideDocks` | |
 | Tabs over a fixed set of pages, such as Browse's sections or a sheet's tabs | `TabRow`, `Tab` | |
 | Tabs over pages the user defines, such as library categories | `PillTabRow`, `Tab` | |
 | Swipeable pages | `HorizontalPager`, `VerticalPager` | One page per wheel notch or touchpad swipe; never Compose's pagers |

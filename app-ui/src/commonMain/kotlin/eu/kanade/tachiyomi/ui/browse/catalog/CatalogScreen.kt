@@ -25,6 +25,7 @@ import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.layout.ScreenFrame
 import app.katari.presentation.kit.navigation.AppBarExtension
+import app.katari.presentation.kit.navigation.FullWindowContent
 import app.katari.presentation.kit.navigation.Scaffold
 import app.katari.presentation.kit.refresh.PullRefresh
 import app.katari.sourcemigration.dialog.MigrateEntryDialog
@@ -60,7 +61,6 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.search.EntryGenreSearchOrigin
-import eu.kanade.tachiyomi.ui.home.navigation.HideHomeNavigation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -146,8 +146,6 @@ data class CatalogScreen(
             if (!immersiveAvailable) immersiveMode = false
         }
 
-        HideHomeNavigation(hidden = immersiveMode)
-
         val onWebViewClick = viewModel.homeUrl?.takeIf { webViewDestination.isAvailable }?.let { url ->
             {
                 navigator.push(
@@ -191,17 +189,19 @@ data class CatalogScreen(
         }
 
         if (immersiveMode) {
-            CatalogImmersiveContent(
-                catalogList = catalogList,
-                immersiveModel = immersiveModel,
-                sourceName = viewModel.sourceName,
-                snackbarHostState = snackbarHostState,
-                onExitImmersive = { immersiveMode = false },
-                onEntryClick = { navigator.push(EntryScreen(it.id, fromSource = true)) },
-                onLibraryAction = viewModel::confirmBrowseLibraryAction,
-                positionState = immersivePositionState,
-                modifier = Modifier.fillMaxSize(),
-            )
+            FullWindowContent(Modifier.fillMaxSize()) {
+                CatalogImmersiveContent(
+                    catalogList = catalogList,
+                    immersiveModel = immersiveModel,
+                    sourceName = viewModel.sourceName,
+                    snackbarHostState = snackbarHostState,
+                    onExitImmersive = { immersiveMode = false },
+                    onEntryClick = { navigator.push(EntryScreen(it.id, fromSource = true)) },
+                    onLibraryAction = viewModel::confirmBrowseLibraryAction,
+                    positionState = immersivePositionState,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         } else {
             Scaffold(
                 frame = ScreenFrame.Wide,

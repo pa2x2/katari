@@ -1,14 +1,16 @@
 package eu.kanade.tachiyomi.ui.webview
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.navigation.FullWindowContent
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.webview.WebViewScreenContent
-import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
 
 /**
  * The web view screen in the main window's navigation. It reads the platform's browser from the app graph, as a screen
@@ -19,7 +21,7 @@ class WebViewScreen(
     private val initialTitle: String? = null,
     private val sourceId: Long? = null,
     private val headers: Map<String, String> = emptyMap(),
-) : Screen(), AssistContentScreen, FullWindowScreen {
+) : Screen(), AssistContentScreen {
 
     private var assistUrl: String? = null
 
@@ -31,14 +33,16 @@ class WebViewScreen(
         val graph = LocalAppUiGraph.current
         val browserView = remember { graph.browserView }
 
-        WebViewScreenContent(
-            browserView = browserView,
-            url = url,
-            initialTitle = initialTitle,
-            sourceId = sourceId,
-            headers = headers,
-            onNavigateUp = { navigator.pop() },
-            onUrlChange = { assistUrl = it },
-        )
+        FullWindowContent(Modifier.fillMaxSize()) {
+            WebViewScreenContent(
+                browserView = browserView,
+                url = url,
+                initialTitle = initialTitle,
+                sourceId = sourceId,
+                headers = headers,
+                onNavigateUp = { navigator.pop() },
+                onUrlChange = { assistUrl = it },
+            )
+        }
     }
 }

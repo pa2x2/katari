@@ -1,13 +1,16 @@
 package eu.kanade.tachiyomi.ui.more
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import app.katari.core.platform.currentPlatformContext
 import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.presentation.kit.navigation.FullWindowContent
 import app.katari.sync.ui.signin.SyncJoinOrigin
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -16,11 +19,10 @@ import eu.kanade.presentation.more.onboarding.OnboardingScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.more.settings.screen.data.rememberBackupFilePicker
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.collectAsState
 
-class OnboardingScreen : Screen(), FullWindowScreen, SyncJoinOrigin {
+class OnboardingScreen : Screen(), SyncJoinOrigin {
 
     @Composable
     override fun Content() {
@@ -55,15 +57,17 @@ class OnboardingScreen : Screen(), FullWindowScreen, SyncJoinOrigin {
             onBackCompleted = {},
         )
 
-        OnboardingScreen(
-            onComplete = finishOnboarding,
-            offersMihon = showMihonMigration,
-            onOpenMihon = {
-                if (installedMihon == null || !mihonApp.open(context, installedMihon)) {
-                    messages.show(MR.strings.app_not_available)
-                }
-            },
-            onChooseMihonBackup = chooseMihonBackup,
-        )
+        FullWindowContent(Modifier.fillMaxSize()) {
+            OnboardingScreen(
+                onComplete = finishOnboarding,
+                offersMihon = showMihonMigration,
+                onOpenMihon = {
+                    if (installedMihon == null || !mihonApp.open(context, installedMihon)) {
+                        messages.show(MR.strings.app_not_available)
+                    }
+                },
+                onChooseMihonBackup = chooseMihonBackup,
+            )
+        }
     }
 }

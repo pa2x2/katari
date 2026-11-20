@@ -26,8 +26,14 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -49,8 +55,9 @@ enum class DockPlacement { Bottom, Side }
 /**
  * Lays [dock], typically a [FloatingDock], over [content] at the [placement] edge. Content scrolls on under the dock:
  * every [Scaffold] inside adds the dock's footprint to its bottom padding or the room on its start side and keeps its
- * FAB and snackbars clear of it, for as long as [dockVisible] holds. Screens that a navigator swaps inside the host each take their room from a
- * [DockedScreen] instead.
+ * FAB and snackbars clear of it, for as long as the dock shows. It shows while [dockVisible] holds and the content
+ * shown, or the screen shown when a navigator swaps them in [DockedScreen]s, hides no docks: content that fills the
+ * window, a [FullWindowContent], hides them by itself.
  */
 @Composable
 fun FloatingDockHost(
@@ -65,27 +72,34 @@ fun FloatingDockHost(
     val docked = outer.withDock(placement)
     val outerOnScreen = LocalDockOnScreen.current
     val dockedOnScreen = outerOnScreen.withDock(placement)
+    val outerHideRequests = LocalDockHideRequests.current
+    val hideRequests = remember(outerHideRequests) { DockHideRequests(outerHideRequests) }
+    val screens = remember { DockHostScreens() }
+    val shown = dockVisible && !hideRequests.any && screens.shown?.any != true
     Box(modifier = modifier) {
         CompositionLocalProvider(
-            LocalDockClearance provides if (dockVisible) docked else outer,
-            LocalDockOnScreen provides if (dockVisible) dockedOnScreen else outerOnScreen,
+            LocalDockClearance provides if (shown) docked else outer,
+            LocalDockOnScreen provides if (shown) dockedOnScreen else outerOnScreen,
+            LocalDockHideRequests provides hideRequests,
             LocalDockHostRoom provides DockHostRoom(
                 outer = outer,
                 docked = docked,
                 outerOnScreen = outerOnScreen,
                 dockedOnScreen = dockedOnScreen,
+                dockVisible = dockVisible,
+                screens = screens,
             ),
             content = content,
         )
         when (placement) {
             DockPlacement.Bottom -> AnimatedVisibility(
-                visible = dockVisible,
+                visible = shown,
                 modifier = Modifier.align(Alignment.BottomCenter),
                 enter = slideInVertically { it } + fadeIn(),
                 exit = slideOutVertically { it } + fadeOut(),
             ) { dock() }
             DockPlacement.Side -> AnimatedVisibility(
-                visible = dockVisible,
+                visible = shown,
                 modifier = Modifier.align(Alignment.CenterStart),
                 enter = slideInHorizontally { -it } + fadeIn(),
                 exit = slideOutHorizontally { -it } + fadeOut(),
@@ -188,29 +202,39 @@ private fun DockClearance.withDock(placement: DockPlacement): DockClearance = wh
 }
 
 /**
- * Gives [content], one screen of a navigator shown inside a [FloatingDockHost], the room of the host's dock when
- * [besideDock] holds and none otherwise, whatever the host shows at the moment. While a transition swaps screens, the one
- * leaving keeps its own layout as the dock comes or goes for the one replacing it, so its lists don't reflow and lose
- * their place. Used by the home side dock for the root navigator's screens, which full-window screens such as the web
- * view don't sit beside.
+ * Gives [content], one screen of a navigator shown inside a [FloatingDockHost], the room of the host's dock while the
+ * host has one to show and the screen hides no docks (see [FullWindowContent]), and none otherwise, whatever the host
+ * shows at the moment. While a transition swaps screens, the one leaving keeps its own layout as the dock comes or goes
+ * for the one replacing it, so its lists don't reflow and lose their place. Used by the home side dock for the root
+ * navigator's screens.
+ *
+ * @param shown whether this is the screen the host's dock is shown or hidden for, such as the navigator's top screen
+ * while another leaves under it.
  */
 @Composable
-fun DockedScreen(besideDock: Boolean, content: @Composable () -> Unit) {
+fun DockedScreen(shown: Boolean, content: @Composable () -> Unit) {
     val room = LocalDockHostRoom.current
     if (room == null) {
         content()
         return
     }
+    val hideRequests = remember(room.screens) { DockHideRequests(outer = null) }
+    DisposableEffect(room.screens, hideRequests, shown) {
+        if (shown) room.screens.shown = hideRequests
+        onDispose { if (room.screens.shown === hideRequests) room.screens.shown = null }
+    }
+    val docked = room.dockVisible && !hideRequests.any
     CompositionLocalProvider(
-        LocalDockClearance provides if (besideDock) room.docked else room.outer,
-        LocalDockOnScreen provides if (besideDock) room.dockedOnScreen else room.outerOnScreen,
+        LocalDockClearance provides if (docked) room.docked else room.outer,
+        LocalDockOnScreen provides if (docked) room.dockedOnScreen else room.outerOnScreen,
+        LocalDockHideRequests provides hideRequests,
         content = content,
     )
 }
 
 /**
- * The room a [FloatingDockHost] leaves its content without its dock ([outer]) and beside it ([docked]), and the same as
- * [LocalDockOnScreen] reports it.
+ * The room a [FloatingDockHost] leaves its content without its dock ([outer]) and beside it ([docked]), the same as
+ * [LocalDockOnScreen] reports it, and whether it has a dock to show before its screens hide it.
  */
 @Immutable
 private data class DockHostRoom(
@@ -218,7 +242,15 @@ private data class DockHostRoom(
     val docked: DockClearance,
     val outerOnScreen: DockClearance,
     val dockedOnScreen: DockClearance,
+    val dockVisible: Boolean,
+    val screens: DockHostScreens,
 )
+
+/** The [DockedScreen]s of a [FloatingDockHost]: [shown] holds the requests of the one its dock is shown or hidden for. */
+@Stable
+private class DockHostScreens {
+    var shown by mutableStateOf<DockHideRequests?>(null)
+}
 
 private val LocalDockHostRoom = compositionLocalOf<DockHostRoom?> { null }
 
