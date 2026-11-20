@@ -1,20 +1,14 @@
 package app.katari.appupdate.ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import app.katari.appupdate.AppUpdateController
 import app.katari.appupdate.AppUpdatePreferences
 import app.katari.appupdate.AppUpdateStatus
 import app.katari.appupdate.check.AppUpdateChannel
-import app.katari.presentation.kit.progress.LoadingIndicator
-import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.more.settings.widget.ListPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
-import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -35,15 +29,10 @@ private fun CheckForUpdatesItem(controller: AppUpdateController, preferences: Ap
     val lastCheckedAt by preferences.lastCheckedAt.collectAsState()
     val checking = state.status == AppUpdateStatus.Checking
 
-    TextPreferenceWidget(
-        title = stringResource(MR.strings.check_for_updates),
+    CheckForUpdatesRow(
         subtitle = state.status.subtitle(state.update, lastCheckedAt),
-        widget = {
-            AnimatedVisibility(visible = checking) {
-                LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.icon))
-            }
-        },
-        onPreferenceClick = {
+        checking = checking,
+        onClick = {
             when {
                 checking -> Unit
                 state.update != null && state.status != AppUpdateStatus.UpToDate -> controller.openSheet()

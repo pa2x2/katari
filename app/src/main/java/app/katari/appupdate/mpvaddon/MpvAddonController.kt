@@ -43,8 +43,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Installs and updates the mpv add-on from the libmpv releases: on request from the player or Settings, and through
- * the add-on update sheet the launch check opens. Katari's own update uses its download, check and install steps when
- * the new Katari needs another add-on.
+ * the add-on update sheet the launch check or Settings' check opens. Katari's own update uses its download, check and
+ * install steps when the new Katari needs another add-on.
  *
  * A new add-on only takes effect after Katari restarts when this process has already loaded the libraries, so an
  * update installed then is followed by the restart prompt.
@@ -65,6 +65,9 @@ internal class MpvAddonController(
 
     private val mutablePrompt = MutableStateFlow(MpvAddonPrompt())
     val prompt: StateFlow<MpvAddonPrompt> = mutablePrompt.asStateFlow()
+
+    private val mutableCheck = MutableStateFlow<MpvAddonUpdateCheck>(MpvAddonUpdateCheck.Idle)
+    val check: StateFlow<MpvAddonUpdateCheck> = mutableCheck.asStateFlow()
 
     /** The release behind [MpvAddonInstallState.offer]. */
     @Volatile
@@ -92,12 +95,39 @@ internal class MpvAddonController(
         if (!CHECKS_AUTOMATICALLY || !preferences.checkOnLaunch.get()) return
         scope.launch {
             try {
-                checkForUpdate()
+                val update = findUpdate() ?: return@launch
+                val skipped = !update.required && update.release.version == addonPreferences.skippedVersion.get()
+                mutablePrompt.update { it.copy(update = update, sheetOpen = !skipped) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 // Nobody asked for this check, so its failure stays quiet.
                 logcat(LogPriority.WARN, e) { "mpv add-on update check failed" }
+            }
+        }
+    }
+
+    /** Checks on the user's request: a found update opens its sheet even when its version was skipped. */
+    fun checkNow() {
+        if (check.value == MpvAddonUpdateCheck.Checking) return
+        mutableCheck.value = MpvAddonUpdateCheck.Checking
+        scope.launch {
+            mutableCheck.value = try {
+                val update = findUpdate()
+                if (update != null) {
+                    mutablePrompt.update { it.copy(update = update, sheetOpen = true) }
+                    MpvAddonUpdateCheck.Idle
+                } else {
+                    MpvAddonUpdateCheck.UpToDate
+                }
+            } catch (e: CancellationException) {
+                mutableCheck.value = MpvAddonUpdateCheck.Idle
+                throw e
+            } catch (e: AppUpdateException) {
+                MpvAddonUpdateCheck.Failed(e.error.toInstallError())
+            } catch (e: Exception) {
+                logcat(LogPriority.WARN, e) { "mpv add-on update check failed" }
+                MpvAddonUpdateCheck.Failed(MpvAddonInstallError.GithubUnexpected)
             }
         }
     }
@@ -193,17 +223,19 @@ internal class MpvAddonController(
         return outcome
     }
 
-    private suspend fun checkForUpdate() {
-        val installed = addon.read() as? MpvAddonState.Installed ?: return
+    /** The update for the installed add-on; null when it is current or there is none installed to update. */
+    private suspend fun findUpdate(): MpvAddonUpdate? {
+        val installed = addon.read() as? MpvAddonState.Installed ?: return null
         // Android won't install over an add-on signed with another key.
-        if (installed.problem == MpvAddonProblem.ForeignSigner) return
+        if (installed.problem == MpvAddonProblem.ForeignSigner) return null
         val requirement = addon.requirement
-        val found = source.newest(requirement.glue, requirement.minVersionCode, requirement.abi) ?: return
+        val found = source.newest(requirement.glue, requirement.minVersionCode, requirement.abi)
+        addonPreferences.lastCheckedAt.set(System.currentTimeMillis())
+        if (found == null) return null
         val required = installed.problem != null
-        if (!required && found.versionCode <= installed.versionCode) return
+        if (!required && found.versionCode <= installed.versionCode) return null
         offer(found)
-        val skipped = !required && found.version == addonPreferences.skippedVersion.get()
-        mutablePrompt.update { it.copy(update = MpvAddonUpdate(found, required), sheetOpen = !skipped) }
+        return MpvAddonUpdate(found, required)
     }
 
     /** Looks up the add-on to offer, reporting a failure or a missing release in [state]. */
@@ -280,6 +312,14 @@ internal class MpvAddonController(
          */
         val CHECKS_AUTOMATICALLY = !BuildConfig.DEBUG || BuildConfig.MPV_ADDON_RELEASES_URL.isNotEmpty()
     }
+}
+
+/** Settings' check for an update of the installed add-on; a found update is [MpvAddonPrompt.update]. */
+internal sealed interface MpvAddonUpdateCheck {
+    data object Idle : MpvAddonUpdateCheck
+    data object Checking : MpvAddonUpdateCheck
+    data object UpToDate : MpvAddonUpdateCheck
+    data class Failed(val error: MpvAddonInstallError) : MpvAddonUpdateCheck
 }
 
 internal data class MpvAddonPrompt(

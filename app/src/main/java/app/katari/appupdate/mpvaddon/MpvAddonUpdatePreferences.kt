@@ -9,4 +9,7 @@ internal class MpvAddonUpdatePreferences(preferenceStore: PreferenceStore) {
     /** The optional mpv add-on version whose prompt the user skipped. Empty for none. */
     val skippedVersion: Preference<String> =
         preferenceStore.getString(Preference.appStateKey("mpv_addon_update_skipped"), "")
+
+    val lastCheckedAt: Preference<Long> =
+        preferenceStore.getLong(Preference.appStateKey("mpv_addon_update_last_checked"), 0)
 }
