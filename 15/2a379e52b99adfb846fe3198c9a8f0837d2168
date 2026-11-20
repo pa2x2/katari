@@ -1,0 +1,33 @@
+sources/web-view/engine/src/main/kotlin/app/katari/webview/engine/cookie/ChromiumCookieMirror.kt
+  s_1428adfe5a308a::t_6d7e176b5bb82e 140-143
+sources/web-view/engine/src/test/kotlin/app/katari/webview/engine/cookie/ChromiumCookieMirrorTest.kt
+  s_1428adfe5a308a::t_8d20d7725a4a42 4,14,46-71
+sources/web-view/engine/src/test/kotlin/app/katari/webview/engine/cookie/FakeChromiumCookies.kt
+  s_5d784648d18064::t_dd467892fc60b0 8-9,23
+sources/web-view/engine/src/test/kotlin/app/katari/webview/engine/cookie/MirroredCookiesTest.kt
+  s_5d784648d18064::t_317048d681fe38 30-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "152a379e52b99adfb846fe3198c9a8f0837d2168",
+  "prompts": {},
+  "sessions": {
+    "s_1428adfe5a308a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03acbe6f-ef81-42c2-915a-e286cc9a09a4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    },
+    "s_5d784648d18064": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "41ef6d3b-ad24-430b-b682-39fd7b6b4db6",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
