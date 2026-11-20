@@ -65,9 +65,9 @@
             <sha256 value="fd54508e3dc5125af0f99aa9b368a04ec35ecdbae402021a0a3763f886d938b4" origin="build.sh"/>
          </artifact>
       </component>
-      <component group="app.katari.libarchive" name="libarchive-linux-x86-64" version="3.8.11">
-         <artifact name="libarchive-linux-x86-64-3.8.11.jar">
-            <sha256 value="e5ad22bea331f376eba0ec915e4017aac677b7ac795a232ccdbf33767a93c069" origin="build-jar.sh"/>
+      <component group="app.katari.libarchive" name="libarchive-linux-x86-64" version="3.8.11-1">
+         <artifact name="libarchive-linux-x86-64-3.8.11-1.jar">
+            <sha256 value="13ff55d859c4df9256d6c82cf5f6a37520085e3f46f6f9488fa38a05ef55e9d3" origin="build-jar.sh"/>
          </artifact>
       </component>
       <component group="app.katari.libmpv" name="libmpv-linux-x86-64" version="2026-11-20-1">
