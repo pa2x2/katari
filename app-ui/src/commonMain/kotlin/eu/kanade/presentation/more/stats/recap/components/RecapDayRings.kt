@@ -3,6 +3,7 @@ package eu.kanade.presentation.more.stats.recap.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,13 +35,10 @@ internal fun RecapDayRings(durationMillis: Long, order: Int, modifier: Modifier 
     val count = rememberRecapCount(order)
     val hours = (durationMillis / HOUR_MILLIS).toInt()
     val rings = List(ceil(hours / HOURS_IN_DAY.toFloat()).toInt()) { minOf(HOURS_IN_DAY, hours - it * HOURS_IN_DAY) }
-    // Sized from the page's fixed width rather than measured: the page measures its content's natural height to fit
-    // it, which a layout that composes from its constraints can't report.
-    val width = StoryMetrics.pageContentWidth
-    val size = ringSize(rings.size, width)
-    val gap = size / 5
-    val columns = columnsFor(size, width)
-    Box(modifier.fillMaxWidth()) {
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val size = ringSize(rings.size, maxWidth)
+        val gap = size / 5
+        val columns = columnsFor(size, maxWidth)
         Column(verticalArrangement = Arrangement.spacedBy(gap)) {
             rings.withIndex().chunked(columns).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(gap)) {

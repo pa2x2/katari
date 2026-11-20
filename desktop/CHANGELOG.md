@@ -1,5 +1,11 @@
 # Desktop Changelog
 
+## [1.1.3] - 2026-11-20
+
+### 🐛 Fixed
+
+- Recap pages that show covers appear at full size instead of shrunk.
+
 ## [1.1.2] - 2026-11-20
 
 ### 🐛 Fixed
@@ -444,7 +450,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.2...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.3...HEAD
+[1.1.3]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.3
 [1.1.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.2
 [1.1.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.1
 [1.1.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.0

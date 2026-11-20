@@ -1,10 +1,7 @@
 package app.katari.showcase.capture.reader
 
-import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.BySelector
-import androidx.test.uiautomator.Until
 import app.katari.showcase.capture.ShowcaseDevice.appId
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.device
@@ -13,7 +10,6 @@ import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.ShowcaseDevice.shell
 import app.katari.showcase.capture.ShowcaseDevice.tap
-import app.katari.showcase.capture.ShowcaseDevice.tapToShow
 import app.katari.showcase.capture.openEntry
 import app.katari.showcase.capture.openProfile
 import org.junit.Test
@@ -24,8 +20,8 @@ class PlayerScenes {
     /**
      * Sintel paused on the cliff at sunset. Neither a tap on the timeline nor a pause lands on the same frame twice, so
      * the open player is sent the benchmark build's paused-start extra, which seeks it there exactly and pauses it. The
-     * extra also keeps the controls up until they are next used, as they hide by themselves sooner than the still is
-     * taken.
+     * extra also shows the controls and keeps them up until they are next used, as they hide by themselves sooner than
+     * the still is taken.
      */
     @Test
     fun player() = onShot { capture("player") }
@@ -45,10 +41,7 @@ class PlayerScenes {
         openEntry("Sintel")
         // The episode row's other text changes with how much of it was watched.
         tap(By.textStartsWith("9/27/10"))
-        // The controls show as the player opens and hide while it buffers and plays, which a busy runner does before
-        // they are first looked for, so they are tapped back once the film's surface is up.
         find(By.pkg(appId).clazz("android.view.SurfaceView"))
-        showControls()
         device.setOrientationLandscape()
         try {
             settle()
@@ -56,28 +49,17 @@ class PlayerScenes {
             // takes the intent as a new one.
             val started = shell("am start -n $appId/$PLAYER --el paused_start_position_ms $SHOT_MS")
             if ("Error" in started) fail(started)
-            // The finished film shows Play too, until the seek moves the label and buffers, which shows a spinner in
-            // its place; a CI runner's emulator takes over half a minute to.
-            awaitWithControls(By.text(SHOT_LABEL))
-            awaitWithControls(By.desc("Play"))
+            // Nothing touches the screen from here on: a tap is a use of the controls, which ends the paused start's
+            // hold on them, and one landing as they show hides them. The finished film shows Play too, until the seek
+            // moves the label and buffers, which shows a spinner in its place; a CI runner's emulator takes over half a
+            // minute to.
+            find(By.text(SHOT_LABEL), BUFFERING_TIMEOUT_MS)
+            find(By.desc("Play"), BUFFERING_TIMEOUT_MS)
             block()
         } finally {
             device.setOrientationNatural()
         }
     }
-
-    /** Waits for [selector] among the controls, which hide by themselves while the player buffers. */
-    private fun awaitWithControls(selector: BySelector) {
-        val deadline = SystemClock.uptimeMillis() + BUFFERING_TIMEOUT_MS
-        while (true) {
-            showControls()
-            if (device.wait(Until.hasObject(selector), CONTROLS_WAIT_MS)) return
-            if (SystemClock.uptimeMillis() > deadline) fail("The player never showed $selector")
-        }
-    }
-
-    /** With a tap where none of the controls is: the middle of the screen is the play button. */
-    private fun showControls() = tapToShow(EMPTY_SPOT_X, EMPTY_SPOT_Y, By.desc("Lock controls"))
 
     private companion object {
         const val PLAYER = "eu.kanade.tachiyomi.ui.video.player.VideoPlayerActivity"
@@ -87,10 +69,5 @@ class PlayerScenes {
         // A version of the film the showcase extension offers besides the one playing, which it never fetches.
         const val OTHER_QUALITY = "480p"
         const val BUFFERING_TIMEOUT_MS = 2 * 60_000L
-        const val CONTROLS_WAIT_MS = 2_000L
-
-        // Between the title bar and the playback buttons of the landscape screen.
-        const val EMPTY_SPOT_X = 0.25f
-        const val EMPTY_SPOT_Y = 0.3f
     }
 }
