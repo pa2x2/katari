@@ -1,0 +1,21 @@
+desktop/licences/libraries/chromium-desktop-jcef.json
+  s_5d784648d18064::t_bc53fa8cc27bec 3
+gradle/katari.versions.toml
+  s_5d784648d18064::t_57ecc97b751d14 14-17,20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b21b866b5764476a0a374628294e0550f04be012",
+  "prompts": {},
+  "sessions": {
+    "s_5d784648d18064": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "41ef6d3b-ad24-430b-b682-39fd7b6b4db6",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
