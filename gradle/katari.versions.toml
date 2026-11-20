@@ -11,13 +11,13 @@ java = "17"
 # carries the Chromium the desktop web view runs on: after a bump, :desktop:updateChromiumLicences writes that Chromium's
 # versions into the licences screen, which checkChromiumLicences holds them to. Used in
 # [/gradle/build-logic/src/main/kotlin/app/katari/gradle/jetbrainsruntime/JetBrainsRuntime.kt].
-jbr = "25.0.4.1"
-jbr-build = "b635.79"
-jbr-linux-x64-sha512 = "b85de554ec25d6e87b306ad6eb6027e705049d3e6b2264da2b7778276c971f926d1b0a1064197a363beea43f51cf70e247ae74d4c9b481f628e35306dbaf48b4"
-jbr-linux-aarch64-sha512 = "da337b8554517189af6ca70ecbab40e63932b41bef84282f88d62fb0db1190d4570b152116f8d46ad178642cb84abc1628ff93123fca365b28b24ee4c4b6be12"
+jbr = "25.0.5.0.3"
+jbr-build = "b700.17"
+jbr-linux-x64-sha512 = "872831a0a6adcb56a511dbff195d08769d624189056add5dbda769c0caf84a233226f5601e4357a059e22f710d587ea11fbc93021c1c6b148b180bd3fc3ec285"
+jbr-linux-aarch64-sha512 = "ebdbb5dfa2b37c4266da0cb901818458a9aa806e2415fa83da1bbf909fe85652a87dad265fa3e9946481b5f9fbde7db17f3965701eecf44a3c2aa8b4c6259418"
 # The same runtime's SDK (jbrsdk_jcef), whose jmods and jlink link the smaller runtime the AppImage ships. x86_64 only,
 # as the AppImage is. Used in [/gradle/build-logic/src/main/kotlin/app/katari/gradle/appimage/DesktopAppImage.kt].
-jbr-sdk-linux-x64-sha512 = "bd828d009f11c14fe85fbe2ad74169a21692f3e0bdb2124c74f0a9f98b5d16e878fa806974a62186e52096a3c7ea1556eabd9481fe8f2ad384b7cb980357be5e"
+jbr-sdk-linux-x64-sha512 = "873acb2d2f2dc80cf34e7105a8684dd0ba31de274aa0a794461ce2c16deef7fd8dc89b3fd02f913326f318744984a94a4bcbce8b1798d4169e3393638d6c2e64"
 # The Temurin runtime the sync server's image ships, which the server's tests run on: the JRE archives of Adoptium's
 # temurin<feature version>-binaries releases on GitHub, with the SHA-256 sums Adoptium publishes beside each archive.
 # The image's base in features/sync/server/Dockerfile must carry this version, which the build workflow's image check
