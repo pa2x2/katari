@@ -9,7 +9,6 @@ import app.katari.appupdate.check.GithubAsset
 import app.katari.appupdate.check.ReleaseVersion
 import app.katari.appupdate.download.UpdateDownloader
 import app.katari.appupdate.download.sha256
-import app.katari.core.common.platform.DesktopOperatingSystem
 import app.katari.desktop.application.AppRestart
 import app.katari.desktop.application.DesktopBuildInfo
 import app.katari.desktop.application.installation.AppInstallation
@@ -34,7 +33,6 @@ class DesktopAppUpdatePlatform(
     directories: DesktopDirectories,
     private val restart: AppRestart,
     private val installation: AppInstallation,
-    private val operatingSystem: DesktopOperatingSystem,
 ) : AppUpdatePlatform {
 
     private val downloader = UpdateDownloader(directories.cache.resolve("app-update").toFile(), network)
@@ -45,6 +43,8 @@ class DesktopAppUpdatePlatform(
 
     override val installedVersion: String = DesktopBuildInfo.VERSION_NAME
 
+    override val updatesItself: Boolean get() = installation.update != null
+
     /** The downloaded package of the update being installed. */
     @Volatile
     private var downloaded: File? = null
@@ -53,8 +53,6 @@ class DesktopAppUpdatePlatform(
         val update = installation.update ?: return null
         return assets.find { update.isPackageName(it.name) }
     }
-
-    override fun elapsedRealtime(): Long = sleepCountingMillis(operatingSystem)
 
     override suspend fun removeInstalledDownloads() {
         ReleaseVersion.parse(installedVersion)?.let(downloader::removeInstalled)

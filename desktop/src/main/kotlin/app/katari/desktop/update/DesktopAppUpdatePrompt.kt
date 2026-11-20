@@ -9,8 +9,8 @@ import app.katari.appupdate.ui.AppUpdateSheet
 import app.katari.desktop.application.installation.AppInstallation
 
 /**
- * Hosts the update prompt over the home, which [DesktopAppUpdateChecks] opens. Only an [installation] that updates
- * itself shows it.
+ * Hosts the update prompt over the home, which the automatic checks and the check in Settings open. Only an
+ * [installation] that updates itself shows it.
  */
 @Composable
 fun DesktopAppUpdatePrompt(installation: AppInstallation, controller: AppUpdateController) {

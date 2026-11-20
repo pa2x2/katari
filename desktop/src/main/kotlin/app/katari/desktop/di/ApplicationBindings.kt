@@ -8,7 +8,9 @@ import app.katari.desktop.application.DesktopBuildInfo
 import app.katari.desktop.application.installation.AppInstallation
 import app.katari.desktop.application.installation.systemAppInstallation
 import app.katari.desktop.logging.DesktopLogDestinations
+import app.katari.desktop.time.BootTimeClock
 import app.katari.domain.app.AppIdentity
+import app.katari.ui.automaticcheck.SleepCountingClock
 import app.katari.ui.host.LogDestinations
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
@@ -23,6 +25,9 @@ interface ApplicationBindings {
 
     @Binds
     val DesktopLogDestinations.logDestinations: LogDestinations
+
+    @Binds
+    val BootTimeClock.sleepCountingClock: SleepCountingClock
 
     companion object {
         @Provides

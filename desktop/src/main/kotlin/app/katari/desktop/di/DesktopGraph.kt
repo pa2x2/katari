@@ -24,7 +24,7 @@ import app.katari.desktop.security.signin.SignInPrompts
 import app.katari.desktop.security.signin.SystemSignIn
 import app.katari.desktop.storage.DesktopDirectories
 import app.katari.desktop.tray.AppTray
-import app.katari.desktop.update.DesktopAppUpdateChecks
+import app.katari.desktop.update.AppUpdateTrayNotification
 import app.katari.desktop.webview.DownloadedChromiumRemoval
 import app.katari.desktop.window.MainWindowVisibility
 import app.katari.desktop.window.OpenWindow
@@ -115,7 +115,7 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val windowActivity: WindowActivity
     val windowExtensionDialogs: WindowExtensionDialogs
     val appUpdateController: AppUpdateController
-    val appUpdateChecks: DesktopAppUpdateChecks
+    val appUpdateTrayNotification: AppUpdateTrayNotification
     val windowAnimePlayer: WindowAnimePlayer
     val activeProfileLock: ActiveProfileLock
     val profileRelock: ProfileRelock

@@ -6,7 +6,6 @@ import app.katari.appupdate.check.selectUpdate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,9 +15,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 
 /**
  * The app's one update flow: finds a newer GitHub release of the running app, then downloads, checks and installs it
@@ -34,11 +30,6 @@ class AppUpdateController(
     private val mutableState = MutableStateFlow(AppUpdateState())
     val state: StateFlow<AppUpdateState> = mutableState.asStateFlow()
 
-    private val launchHandled = AtomicBoolean(false)
-
-    /** [AppUpdatePlatform.elapsedRealtime] at which the next automatic check falls due. */
-    @Volatile
-    private var nextAutomaticCheckAt = 0L
     private var checkJob: Job? = null
     private var updateJob: Job? = null
 
@@ -50,33 +41,15 @@ class AppUpdateController(
         platform.foregrounds.onEach { onForeground() }.launchIn(scope)
     }
 
-    /** Runs once per process when the app is first ready for a prompt. */
-    fun onLaunch() {
-        if (!launchHandled.compareAndSet(false, true)) return
-        nextAutomaticCheckAt = platform.elapsedRealtime() + AUTOMATIC_CHECK_INTERVAL.inWholeMilliseconds
-        scope.launch {
-            platform.removeInstalledDownloads()
-            checkAutomatically()
-        }
-    }
-
     /**
-     * Repeats the automatic check every [AUTOMATIC_CHECK_INTERVAL] until cancelled, because Katari can stay open for
-     * days and the launch check alone would rarely run. Callers keep it running for as long as a found update can reach
-     * the user: on Android while the app is visible, on desktop for as long as the app runs.
+     * The check the app makes by itself, which [app.katari.core.metro.AutomaticCheck] repeats: a found update opens the
+     * prompt unless its version was skipped, and a failure stays quiet. Returns false when it failed.
      */
-    suspend fun recheckPeriodically() {
-        while (true) {
-            val untilDue = nextAutomaticCheckAt - platform.elapsedRealtime()
-            if (untilDue > 0) {
-                // In steps rather than all at once: delay's clock stops while the device sleeps, the platform's
-                // doesn't, so a check that fell due during sleep runs soon after waking instead of hours later
-                delay(minOf(untilDue, AUTOMATIC_CHECK_STEP.inWholeMilliseconds))
-                continue
-            }
-            nextAutomaticCheckAt = platform.elapsedRealtime() + AUTOMATIC_CHECK_INTERVAL.inWholeMilliseconds
-            checkAutomatically()
-        }
+    suspend fun checkAutomatically(): Boolean {
+        if (!platform.updatesItself) return true
+        platform.removeInstalledDownloads()
+        if (!preferences.checksAutomatically.get()) return true
+        return check(CheckMode.Automatic)
     }
 
     /** Checks on the user's request: a found update opens the prompt, and a failure is reported. */
@@ -166,15 +139,6 @@ class AppUpdateController(
         scope.launch { check(mode) }
     }
 
-    private suspend fun checkAutomatically() {
-        if (!preferences.checkOnLaunch.get()) return
-        // Soon rather than a whole interval later: a check made before the network is up, as after a login start or
-        // waking from sleep, fails
-        if (!check(CheckMode.Automatic)) {
-            nextAutomaticCheckAt = platform.elapsedRealtime() + AUTOMATIC_CHECK_RETRY.inWholeMilliseconds
-        }
-    }
-
     /** Returns false when the check failed; one that had no need to run, or that a newer check replaced, didn't. */
     private suspend fun check(mode: CheckMode): Boolean {
         // Never swap the update out from under a download or install.
@@ -251,10 +215,6 @@ class AppUpdateController(
 
     private enum class CheckMode { Automatic, User, Refresh }
 }
-
-private val AUTOMATIC_CHECK_INTERVAL = 6.hours
-private val AUTOMATIC_CHECK_STEP = 15.minutes
-private val AUTOMATIC_CHECK_RETRY = 15.minutes
 
 /** A download or install is under way, or done and waiting for a restart, which a check must not replace. */
 private val AppUpdateStatus.isBusy: Boolean

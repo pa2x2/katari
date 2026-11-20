@@ -10,6 +10,7 @@ import app.katari.android.network.LocalizedWebViewInterceptorMessages
 import app.katari.android.power.AndroidPowerSource
 import app.katari.android.storage.AndroidStorageFolderProvider
 import app.katari.android.storage.ContextAppPrivateDirectories
+import app.katari.android.time.ElapsedRealtimeClock
 import app.katari.appupdate.AndroidAppUpdatePlatform
 import app.katari.appupdate.AppUpdatePlatform
 import app.katari.appupdate.AppUpdatePreferences
@@ -23,6 +24,7 @@ import app.katari.appupdate.mpvaddon.MpvAddonUpdatePreferences
 import app.katari.core.archive.AndroidArchiveOpener
 import app.katari.core.archive.ArchiveOpener
 import app.katari.core.metro.AppCoroutineScope
+import app.katari.core.metro.AutomaticCheck
 import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.core.platform.power.PowerSource
 import app.katari.core.platform.storage.AppPrivateDirectories
@@ -40,6 +42,7 @@ import app.katari.sourcemigration.work.AndroidSourceMigrationReviewVisibility
 import app.katari.sourcemigration.work.AndroidSourceMigrationWork
 import app.katari.sourcemigration.work.SourceMigrationReviewVisibility
 import app.katari.sourcemigration.work.SourceMigrationWork
+import app.katari.ui.automaticcheck.SleepCountingClock
 import app.katari.ui.host.LogDestinations
 import app.katari.video.engine.mpv.addon.MpvAddon
 import app.katari.video.engine.mpv.addon.MpvAddonPackage
@@ -87,6 +90,9 @@ interface AppBindings {
 
     @Binds
     val LogcatLogDestinations.logDestinations: LogDestinations
+
+    @Binds
+    val ElapsedRealtimeClock.sleepCountingClock: SleepCountingClock
 
     @Binds
     val ContextAppPrivateDirectories.appPrivateDirectories: AppPrivateDirectories
@@ -267,5 +273,10 @@ interface AppBindings {
 
         @Provides
         internal fun mpvAddonInstallation(controller: MpvAddonController): MpvAddonInstallation = controller
+
+        @Provides
+        @IntoSet
+        internal fun mpvAddonCheck(controller: MpvAddonController): AutomaticCheck =
+            AutomaticCheck(controller::checkAutomatically)
     }
 }

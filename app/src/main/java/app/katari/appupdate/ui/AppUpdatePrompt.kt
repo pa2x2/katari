@@ -1,15 +1,11 @@
 package app.katari.appupdate.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
 import app.katari.android.di.appGraph
 import app.katari.appupdate.AndroidAppUpdatePlatform
 import app.katari.appupdate.AppUpdateBuild
@@ -22,14 +18,12 @@ import app.katari.appupdate.mpvaddon.restartKatari
 import app.katari.appupdate.mpvaddon.ui.MpvAddonBroughtAlongNotes
 import app.katari.appupdate.mpvaddon.ui.MpvAddonRestartDialog
 import app.katari.appupdate.mpvaddon.ui.MpvAddonUpdateSheet
-import kotlinx.coroutines.flow.first
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.shortFileSize
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * Hosts the update prompts in MainActivity and starts the automatic checks once onboarding is done, so a found update
- * never lands on top of the first-run setup. Rechecks run only while MainActivity is visible to show their prompt.
+ * Hosts in MainActivity the update prompts that the automatic checks and the checks in Settings open.
  *
  * Katari's own update comes first; the mpv add-on's sheet waits for it, and doesn't show when Katari's update brings
  * the add-on along. Builds that can't update themselves still keep the add-on current.
@@ -38,18 +32,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun AppUpdatePrompt() {
     val context = LocalContext.current
     val services = remember { context.appGraph.appUpdateServices }
-    val onboardingPreferences = remember { context.appGraph.onboardingPreferences }
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    LaunchedEffect(Unit) {
-        onboardingPreferences.shownOnboardingFlow.changes().first { it }
-        services.mpvAddonController.onLaunch()
-        if (!AppUpdateBuild.isSupported) return@LaunchedEffect
-        services.controller.onLaunch()
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            services.controller.recheckPeriodically()
-        }
-    }
 
     val appState by services.controller.state.collectAsState()
     val appUpdate = appState.update

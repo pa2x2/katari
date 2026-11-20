@@ -23,6 +23,7 @@ import app.katari.video.engine.mpv.install.MpvAddonInstallation
 import app.katari.video.engine.mpv.install.MpvAddonOffer
 import app.katari.video.engine.mpv.install.isBusy
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.util.system.isBenchmarkBuildType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,11 +40,10 @@ import kotlinx.coroutines.plus
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Installs and updates the mpv add-on from the libmpv releases: on request from the player or Settings, and through
- * the add-on update sheet the launch check or Settings' check opens. Katari's own update uses its download, check and
+ * the add-on update sheet the automatic check or Settings' check opens. Katari's own update uses its download, check and
  * install steps when the new Katari needs another add-on.
  *
  * A new add-on only takes effect after Katari restarts when this process has already loaded the libraries, so an
@@ -77,8 +77,6 @@ internal class MpvAddonController(
     /** The APK waiting for the install permission. */
     private var waitingApk: File? = null
 
-    private val launchHandled = AtomicBoolean(false)
-
     init {
         ProcessLifecycleOwner.get().lifecycle.eventFlow
             .filter { it == Lifecycle.Event.ON_START }
@@ -87,23 +85,23 @@ internal class MpvAddonController(
     }
 
     /**
-     * With the launch check for Katari's own update: opens the add-on update sheet when the add-on is behind. Runs once
-     * per process, so a recreated MainActivity doesn't reopen a sheet closed with "Not now".
+     * The check the app makes by itself, alongside Katari's own update check: opens the add-on update sheet when the
+     * add-on is behind, unless its version was skipped. An install under way isn't looked past. Returns false when the
+     * check failed, which stays quiet.
      */
-    fun onLaunch() {
-        if (!launchHandled.compareAndSet(false, true)) return
-        if (!CHECKS_AUTOMATICALLY || !preferences.checkOnLaunch.get()) return
-        scope.launch {
-            try {
-                val update = findUpdate() ?: return@launch
+    suspend fun checkAutomatically(): Boolean {
+        if (!CHECKS_AUTOMATICALLY || !preferences.checksAutomatically.get() || state.value.status.isBusy) return true
+        return try {
+            findUpdate()?.let { update ->
                 val skipped = !update.required && update.release.version == addonPreferences.skippedVersion.get()
                 mutablePrompt.update { it.copy(update = update, sheetOpen = !skipped) }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                // Nobody asked for this check, so its failure stays quiet.
-                logcat(LogPriority.WARN, e) { "mpv add-on update check failed" }
             }
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logcat(LogPriority.WARN, e) { "mpv add-on update check failed" }
+            false
         }
     }
 
@@ -308,9 +306,10 @@ internal class MpvAddonController(
     private companion object {
         /**
          * GitHub's add-on is signed with the release key, which a locally built Katari rejects, so debug builds only
-         * check by themselves against a local release list.
+         * check by themselves against a local release list. Benchmark builds have no prompt to offer an update in.
          */
-        val CHECKS_AUTOMATICALLY = !BuildConfig.DEBUG || BuildConfig.MPV_ADDON_RELEASES_URL.isNotEmpty()
+        val CHECKS_AUTOMATICALLY = !isBenchmarkBuildType &&
+            (!BuildConfig.DEBUG || BuildConfig.MPV_ADDON_RELEASES_URL.isNotEmpty())
     }
 }
 

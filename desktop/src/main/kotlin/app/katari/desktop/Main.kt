@@ -121,8 +121,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     graph.appTray.start()
     graph.loginStart.start()
     if (launch.startsInTray) graph.mainWindowVisibility.startInTray()
-    // After the window is known to start hidden, so an update found at once is told of rather than taken as seen
-    graph.appUpdateChecks.start()
+    graph.appUpdateTrayNotification.start()
     runWindow(graph, laterLaunches = instance.requests) {
         HomeWindowContent(startup, graph.activeProfileLock, graph.homeDestinations) { navigator ->
             graph.windowAnimePlayer.Host(navigator)

@@ -8,7 +8,8 @@ import tachiyomi.core.common.preference.getEnum
 /** App-wide, not per profile: there is one installed app to update. */
 class AppUpdatePreferences(preferenceStore: PreferenceStore) {
 
-    val checkOnLaunch: Preference<Boolean> = preferenceStore.getBoolean("app_update_check_on_launch", true)
+    /** Covers the mpv add-on's automatic check too. */
+    val checksAutomatically: Preference<Boolean> = preferenceStore.getBoolean("app_update_check_on_launch", true)
 
     val channel: Preference<AppUpdateChannel> = preferenceStore.getEnum("app_update_channel", AppUpdateChannel.STABLE)
 

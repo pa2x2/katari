@@ -7,6 +7,7 @@ import app.katari.sync.client.extension.InstalledExtensionLog
 import app.katari.sync.client.restore.RestoreStamping
 import app.katari.sync.client.trigger.SyncTriggers
 import app.katari.sync.ui.notice.SyncNotices
+import app.katari.ui.automaticcheck.AutomaticChecks
 import app.katari.ui.buildinfo.AppBuild
 import app.katari.ui.telemetry.AppStateReader
 import app.katari.upgrade.MigrationGraph
@@ -40,6 +41,7 @@ interface AppProcessGraph : MigrationGraph {
     val restoreStamping: RestoreStamping
     val syncTriggers: SyncTriggers
     val syncNotices: SyncNotices
+    val automaticChecks: AutomaticChecks
     val installedExtensionLog: InstalledExtensionLog
     val appStateReader: AppStateReader
 

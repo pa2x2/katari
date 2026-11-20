@@ -7,17 +7,20 @@ package app.katari.ui.host
  *
  * Sync keeps its live channel open while the app is open, so an open window gets other devices' changes within seconds
  * (D021). It pulls when the app comes to the front and sends what is left when it goes (D021), and tells what
- * needs the person by notification only while the app is away from the front (D028).
+ * needs the person by notification only while the app is away from the front (D028). The automatic checks, such as
+ * for updates, run while the app is open.
  */
 object AppVisibility {
     @HostEntryPoint
     fun opened(graph: AppProcessGraph) {
         graph.syncTriggers.appOpened()
+        graph.automaticChecks.appOpened()
     }
 
     @HostEntryPoint
     fun closed(graph: AppProcessGraph) {
         graph.syncTriggers.appClosed()
+        graph.automaticChecks.appClosed()
     }
 
     @HostEntryPoint

@@ -323,10 +323,10 @@ class ExtensionManager(
     /**
      * Refreshes the stores and their listings like [findAvailableExtensions], then installs or prompts the
      * updates of the installed extensions, loaded or not, as the user chose. Stays silent when the stores
-     * can't be reached.
+     * can't be reached, and returns false then.
      */
-    suspend fun checkForUpdates() {
-        if (!updateCheckInProgress.compareAndSet(false, true)) return
+    suspend fun checkForUpdates(): Boolean {
+        if (!updateCheckInProgress.compareAndSet(false, true)) return true
 
         try {
             val extensions = try {
@@ -334,7 +334,7 @@ class ExtensionManager(
                 fetchExtensions()
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e)
-                return
+                return false
             }
 
             isInitialized.first { it }
@@ -347,7 +347,7 @@ class ExtensionManager(
                     installed.findUpdate(availableExtensions, kinds)
                         ?.let { ExtensionAutoUpdater.Candidate(installed, it) }
                 }
-            if (candidates.isEmpty()) return
+            if (candidates.isEmpty()) return true
 
             if (customPreferences.extensionsAutoUpdates.get()) {
                 // Install events may still be on their way when the installs finish
@@ -355,6 +355,7 @@ class ExtensionManager(
             } else {
                 notices.promptUpdates(candidates.map { it.installed.name })
             }
+            return true
         } finally {
             updateCheckInProgress.set(false)
         }

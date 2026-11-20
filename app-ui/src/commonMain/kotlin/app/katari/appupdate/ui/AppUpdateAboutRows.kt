@@ -19,7 +19,7 @@ fun appUpdateAboutRows(
     preferences: AppUpdatePreferences,
 ): List<@Composable () -> Unit> = listOf(
     { CheckForUpdatesItem(controller, preferences) },
-    { CheckOnLaunchItem(preferences) },
+    { CheckAutomaticallyItem(preferences) },
     { UpdateChannelItem(controller, preferences) },
 )
 
@@ -43,13 +43,13 @@ private fun CheckForUpdatesItem(controller: AppUpdateController, preferences: Ap
 }
 
 @Composable
-private fun CheckOnLaunchItem(preferences: AppUpdatePreferences) {
-    val checkOnLaunch by preferences.checkOnLaunch.collectAsState()
+private fun CheckAutomaticallyItem(preferences: AppUpdatePreferences) {
+    val checksAutomatically by preferences.checksAutomatically.collectAsState()
     SwitchPreferenceWidget(
-        title = stringResource(MR.strings.app_update_check_on_launch),
-        subtitle = stringResource(MR.strings.app_update_check_on_launch_summary),
-        checked = checkOnLaunch,
-        onCheckedChanged = preferences.checkOnLaunch::set,
+        title = stringResource(MR.strings.app_update_check_automatically),
+        subtitle = stringResource(MR.strings.app_update_check_automatically_summary),
+        checked = checksAutomatically,
+        onCheckedChanged = preferences.checksAutomatically::set,
     )
 }
 
