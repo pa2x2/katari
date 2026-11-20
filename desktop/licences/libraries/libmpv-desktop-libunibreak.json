@@ -1,6 +1,6 @@
 {
   "uniqueId": "app.katari.libmpv:libunibreak",
-  "artifactVersion": "8.0",
+  "artifactVersion": "8.0.1",
   "name": "libunibreak",
   "description": "Built into the desktop app's libmpv.",
   "website": "https://github.com/adah1972/libunibreak",
