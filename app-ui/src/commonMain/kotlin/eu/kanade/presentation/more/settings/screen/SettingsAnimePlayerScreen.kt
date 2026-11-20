@@ -34,7 +34,7 @@ class SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         val windowLayout = currentWindowLayout()
         val animePlayerPreferences = surfaceSettings() as AnimePlayerPreferences
         val devicePreferences = graph.animePlayerDevicePreferences
-        val engineAddon = graph.playerEngineAddon
+        val engineAddonItems = graph.playerEngineAddon.settingsItems()
         val deviceControls = graph.viewerDeviceControls
         val settingBinder = graph.viewerSettingBinder
         val pictureInPicture = remember(animePlayerPreferences, settingBinder) {
@@ -202,12 +202,8 @@ class SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
             // chip from its title onto the playback group.
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.mpv_addon_section),
-                visible = engineAddon.isOffered,
-                preferenceItems = listOf(
-                    Preference.PreferenceItem.CustomPreference(title = stringResource(MR.strings.mpv_addon)) {
-                        engineAddon.SettingsRow()
-                    },
-                ),
+                visible = engineAddonItems.isNotEmpty(),
+                preferenceItems = engineAddonItems,
             ),
         )
     }

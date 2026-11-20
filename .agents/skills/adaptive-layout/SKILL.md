@@ -34,8 +34,8 @@ A raw `LazyColumn`, a `GridCells` or `StaggeredGridCells` built outside the kit,
 ## 3. Navigation
 
 - The home destinations float in one dock: at the bottom in Compact windows (inside `HomeScreen`), at the start edge otherwise, beside every screen of the root navigator (`ui/home/navigation/HomeSideNavigationHost`). Screens get the room through the kit `Scaffold`; don't pad for it.
-- A screen that must take the whole window (onboarding, WebView) implements `FullWindowScreen`. Readers and the player are separate activities.
-- A screen or home tab that takes the window for a while, such as an immersive view or a selection, calls `HideHomeNavigation(hidden = …)`.
+- Content that fills the whole window rather than sitting beside the dock (an immersive view, a story, onboarding, the web view, the desktop readers and player) is built in the kit's `FullWindowContent`: the docks step aside by themselves while it shows, so a screen never asks for that separately. Any view that draws edge to edge goes in it.
+- A screen or home tab that keeps its layout but takes the window for a while, such as during a selection, calls `HideDocks(hidden = …)`.
 
 ## 4. Insets
 

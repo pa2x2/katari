@@ -15,17 +15,21 @@ class UpstreamCallsTest {
 
     private val request = Request.Builder().url("https://host.example/segment-220.ts").build()
 
-    /** A host the network fails for the first [failures] attempts, which then answers with a segment. */
-    private fun upstream(failures: Int, attempts: AtomicInteger) = UpstreamCalls(
+    /**
+     * A host that fails the first [failures] attempts, with [failureStatus] or through the network when it's null, and
+     * then answers with a segment.
+     */
+    private fun upstream(failures: Int, attempts: AtomicInteger, failureStatus: Int? = null) = UpstreamCalls(
         OkHttpClient.Builder()
             .addInterceptor { chain ->
-                if (attempts.incrementAndGet() <= failures) throw IOException("timeout")
+                val failed = attempts.incrementAndGet() <= failures
+                if (failed && failureStatus == null) throw IOException("timeout")
                 Response.Builder()
                     .request(chain.request())
                     .protocol(Protocol.HTTP_1_1)
-                    .code(200)
-                    .message("OK")
-                    .body("segment".toResponseBody())
+                    .code(if (failed) failureStatus!! else 200)
+                    .message(if (failed) "Error" else "OK")
+                    .body((if (failed) "" else "segment").toResponseBody())
                     .build()
             }
             .build(),
@@ -35,6 +39,22 @@ class UpstreamCallsTest {
     fun `a request the network failed is answered once the network works again`() {
         val attempts = AtomicInteger()
         val calls = upstream(failures = 1, attempts)
+
+        val body = calls.answerMpv(request, mpvWaits = { true }, unanswered = { "unanswered" }) { response ->
+            response.use { it.body.string() }
+        }
+
+        body shouldBe "segment"
+        attempts.get() shouldBe 2
+        calls.close()
+    }
+
+    // Cloudflare answers 522 when the origin is slow to answer it: passed on, it made mpv skip a separate audio
+    // track's segment and play the audio seconds ahead of the video.
+    @Test
+    fun `a segment the host can't serve for now is asked for again`() {
+        val attempts = AtomicInteger()
+        val calls = upstream(failures = 1, attempts, failureStatus = 522)
 
         val body = calls.answerMpv(request, mpvWaits = { true }, unanswered = { "unanswered" }) { response ->
             response.use { it.body.string() }

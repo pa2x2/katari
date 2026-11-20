@@ -13,7 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import app.katari.presentation.kit.content.StoryMetrics
 import app.katari.presentation.kit.theme.ContentTone
@@ -60,17 +63,48 @@ internal fun RecapPageFrame(
                             bottom = StoryMetrics.pageBottomMargin,
                         ),
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-                        content = content,
-                    )
+                    PageContent(modifier = Modifier.weight(1f).fillMaxWidth(), content = content)
                     RecapText(
                         text = footer.uppercase(),
                         role = TextRole.Badge,
                         tone = ContentTone.Secondary,
                         modifier = Modifier.padding(top = KatariTheme.spacing.l),
                     )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A page's content in the room above its footer. Its text's height isn't fixed by the type scale alone: a platform
+ * sets a line no shorter than its font, so the desktop gives the large figures' tight lines their font's full height,
+ * and fonts differ between systems. Content that comes out taller than the room is scaled down to fit, from its top
+ * start, instead of losing its last lines at the foot of the page. Its natural height is its intrinsic height, so a
+ * page can't hold a layout that composes from its constraints, such as BoxWithConstraints or a lazy list.
+ */
+@Composable
+private fun PageContent(modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
+    Layout(
+        content = {
+            Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l), content = content)
+        },
+        modifier = modifier,
+    ) { measurables, constraints ->
+        val column = measurables.single()
+        val room = constraints.maxHeight
+        val natural = column.minIntrinsicHeight(constraints.maxWidth)
+        if (natural <= room) {
+            val placeable = column.measure(Constraints.fixed(constraints.maxWidth, room))
+            layout(constraints.maxWidth, room) { placeable.place(0, 0) }
+        } else {
+            val placeable = column.measure(Constraints.fixed(constraints.maxWidth, natural))
+            val scale = room / natural.toFloat()
+            layout(constraints.maxWidth, room) {
+                placeable.placeWithLayer(0, 0) {
+                    scaleX = scale
+                    scaleY = scale
+                    transformOrigin = TransformOrigin(0f, 0f)
                 }
             }
         }

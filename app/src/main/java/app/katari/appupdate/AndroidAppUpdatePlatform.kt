@@ -3,7 +3,6 @@ package app.katari.appupdate
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.os.SystemClock
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.eventFlow
@@ -56,6 +55,8 @@ class AndroidAppUpdatePlatform internal constructor(
 
     override val installedVersion: String get() = AppUpdateBuild.versionName
 
+    override val updatesItself: Boolean get() = AppUpdateBuild.isSupported
+
     /** The add-on the last found update brings along, by that update's version. */
     @Volatile
     private var addon: Pair<String, MpvAddonRelease>? = null
@@ -74,9 +75,6 @@ class AndroidAppUpdatePlatform internal constructor(
 
     override fun selectAsset(assets: List<GithubAsset>): GithubAsset? =
         selectReleaseApk(assets, AppUpdateBuild.isFoss, Build.SUPPORTED_ABIS.first())
-
-    /** Keeps counting while the device sleeps. */
-    override fun elapsedRealtime(): Long = SystemClock.elapsedRealtime()
 
     override suspend fun removeInstalledDownloads() {
         ReleaseVersion.parse(installedVersion)?.let(downloader::removeInstalled)

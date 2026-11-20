@@ -18,7 +18,7 @@ sealed interface UpstreamFailure {
 
 /**
  * The latest request for the stream itself that the proxy couldn't serve, and whether it has served the stream's media
- * in full since. FFmpeg's HLS demuxer skips a segment that doesn't load, so with the host refusing the rest it runs
+ * in full since. FFmpeg's HLS demuxer skips a segment that doesn't load, so with the rest failing too it runs
  * through the playlist and mpv reaches the end of the file as if the episode had finished: an end with nothing served
  * since the failure is the failure's.
  */

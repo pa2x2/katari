@@ -27,8 +27,9 @@ class MirroredCookiesTest {
         store.flush()
     }
 
-    // JCEF carries no SameSite and Chromium rounds and caps expiries, so a store that took back what Chromium reports
-    // would lose a cookie's SameSite, cut its expiry, and set the poorer copy in Chromium again on the next change.
+    // JCEF carries no SameSite and Chromium's server drops the expiry of every cookie set through it, so a store that
+    // took back what Chromium reports would lose a cookie's SameSite and expiry, keep a cookie the site meant to expire
+    // for good, and set the poorer copy in Chromium again on the next change.
     @Test
     fun `a round trip through Chromium keeps what JCEF can't carry and sets nothing back`() {
         val chromium = FakeChromiumCookies()

@@ -20,16 +20,13 @@ interface AppUpdatePlatform {
 
     val installedVersion: String
 
+    /** Whether this build can update itself; one that can't makes no automatic checks. */
+    val updatesItself: Boolean
+
     /** The file of a release that installs over this build, or null when the release has none for it. */
     fun selectAsset(assets: List<GithubAsset>): GithubAsset?
 
-    /**
-     * Milliseconds on a clock that only moves forward and keeps counting while the device sleeps, for spacing the
-     * automatic checks.
-     */
-    fun elapsedRealtime(): Long
-
-    /** Deletes downloads the running app has already been updated past; runs once a process. */
+    /** Deletes downloads the running app has already been updated past; runs before each automatic check. */
     suspend fun removeInstalledDownloads()
 
     /** Deletes every download, once a check finds nothing to update to. */

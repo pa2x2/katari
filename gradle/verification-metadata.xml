@@ -30,14 +30,14 @@
             <sha256 value="5cad8197d5056c3bcc0fb10b21db9c1a8637aa224b8a080893ba15cac9fd0fc5" origin="intellij-dependencies .sha256"/>
          </artifact>
       </component>
-      <component group="io.github.pa2x2" name="image-decoder-android" version="1.1.0">
-         <artifact name="image-decoder-android-1.1.0.aar">
-            <sha256 value="74d90675e49b36974b771003ea4441eb1445a5bff0aad5e6dda7ebf64308af3e" origin="image-decoder-1.1.0-SHA256SUMS.txt"/>
+      <component group="io.github.pa2x2" name="image-decoder-android" version="1.2.0">
+         <artifact name="image-decoder-android-1.2.0.aar">
+            <sha256 value="f624d083990503980f4d533dd001e99ecb79a631d5a9689374d434acc1bbde45" origin="image-decoder-1.2.0-SHA256SUMS.txt"/>
          </artifact>
       </component>
-      <component group="io.github.pa2x2" name="image-decoder-jvm" version="1.1.0">
-         <artifact name="image-decoder-jvm-1.1.0.jar">
-            <sha256 value="dec76c92ef2ee7dabb4c5c50d5316024167e701f343c25d50ebf9f69b3e128fe" origin="image-decoder-1.1.0-SHA256SUMS.txt"/>
+      <component group="io.github.pa2x2" name="image-decoder-jvm" version="1.2.0">
+         <artifact name="image-decoder-jvm-1.2.0.jar">
+            <sha256 value="a57347613b7b796169a10a2c091190ce92bf8e176925d3e62ec00cb51d86c874" origin="image-decoder-1.2.0-SHA256SUMS.txt"/>
          </artifact>
       </component>
       <component group="io.github.pa2x2" name="quickjs-kt-android" version="1.0.18-fork.1">
@@ -65,14 +65,14 @@
             <sha256 value="fd54508e3dc5125af0f99aa9b368a04ec35ecdbae402021a0a3763f886d938b4" origin="build.sh"/>
          </artifact>
       </component>
-      <component group="app.katari.libarchive" name="libarchive-linux-x86-64" version="3.8.11">
-         <artifact name="libarchive-linux-x86-64-3.8.11.jar">
-            <sha256 value="e5ad22bea331f376eba0ec915e4017aac677b7ac795a232ccdbf33767a93c069" origin="build-jar.sh"/>
+      <component group="app.katari.libarchive" name="libarchive-linux-x86-64" version="3.8.11-1">
+         <artifact name="libarchive-linux-x86-64-3.8.11-1.jar">
+            <sha256 value="13ff55d859c4df9256d6c82cf5f6a37520085e3f46f6f9488fa38a05ef55e9d3" origin="build-jar.sh"/>
          </artifact>
       </component>
-      <component group="app.katari.libmpv" name="libmpv-linux-x86-64" version="2026-11-07-1">
-         <artifact name="libmpv-linux-x86-64-2026-11-07-1.jar">
-            <sha256 value="2bd6728271f37d531c44e56be8c29fc8652707085a63528f5c57281eb8611f0a" origin="build-jar.sh"/>
+      <component group="app.katari.libmpv" name="libmpv-linux-x86-64" version="2026-11-20-1">
+         <artifact name="libmpv-linux-x86-64-2026-11-20-1.jar">
+            <sha256 value="666e4152d0f8cf934411716a20eedf5f9c21cd6ee413c9689b437391f024c248" origin="build-jar.sh"/>
          </artifact>
       </component>
    </components>

@@ -4,11 +4,9 @@ import androidx.compose.runtime.Composable
 import app.katari.appupdate.AppUpdateError
 import app.katari.appupdate.AppUpdateStatus
 import app.katari.appupdate.check.AvailableUpdate
-import eu.kanade.presentation.util.relativeTimeSpan
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.shortFileSize
 import tachiyomi.presentation.core.i18n.stringResource
-import kotlin.time.Duration.Companion.minutes
 
 @Composable
 internal fun AppUpdateError.message(): String = when (this) {
@@ -49,7 +47,7 @@ internal fun downloadingText(progress: Float?): String =
 @Composable
 internal fun AppUpdateStatus.subtitle(update: AvailableUpdate?, lastCheckedAt: Long): String? = when (this) {
     AppUpdateStatus.Checking -> stringResource(MR.strings.app_update_checking)
-    AppUpdateStatus.UpToDate -> stringResource(MR.strings.app_update_up_to_date, relativeTime(lastCheckedAt))
+    AppUpdateStatus.UpToDate -> stringResource(MR.strings.app_update_up_to_date, checkedTime(lastCheckedAt))
     AppUpdateStatus.Available -> update?.let { stringResource(MR.strings.app_update_version_available, it.version) }
     is AppUpdateStatus.Downloading -> downloadingText(progress)
     AppUpdateStatus.NeedsPermission -> stringResource(MR.strings.app_update_waiting_permission)
@@ -57,13 +55,5 @@ internal fun AppUpdateStatus.subtitle(update: AvailableUpdate?, lastCheckedAt: L
     AppUpdateStatus.ReadyToRestart -> update?.let { stringResource(MR.strings.app_update_restart_needed, it.version) }
     is AppUpdateStatus.Failed -> error.message()
     AppUpdateStatus.Idle -> lastCheckedAt.takeIf { it > 0 }
-        ?.let { stringResource(MR.strings.app_update_last_checked, relativeTime(it)) }
-}
-
-@Composable
-private fun relativeTime(epochMillis: Long): String {
-    val now = System.currentTimeMillis()
-    // The relative time would say "0 minutes ago" right after a check.
-    if (now - epochMillis < 1.minutes.inWholeMilliseconds) return stringResource(MR.strings.app_update_just_now)
-    return relativeTimeSpan(epochMillis, now)
+        ?.let { stringResource(MR.strings.app_update_last_checked, checkedTime(it)) }
 }

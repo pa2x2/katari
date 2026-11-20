@@ -1,14 +1,16 @@
 package app.katari.desktop.reader
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import app.katari.entry.interactions.reader.window.BookReaderWindowRequest
+import app.katari.presentation.kit.navigation.FullWindowContent
 import app.katari.ui.telemetry.ReportEntryType
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
 
 /**
  * The book reader's place in the window's navigation: the dock steps aside, back leaves it, and screens it opens go
@@ -18,7 +20,7 @@ import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
 internal class BookReaderScreen(
     private val request: BookReaderWindowRequest,
     private val windowReader: WindowBookReader,
-) : Screen(), FullWindowScreen {
+) : Screen() {
     @Composable
     override fun Content() {
         ReportEntryType(this, EntryType.BOOK)
@@ -26,6 +28,6 @@ internal class BookReaderScreen(
         val navigation = remember(navigator) {
             WindowBookReaderNavigation(navigator, this, windowReader.webViewDestination)
         }
-        windowReader.reader.Content(request, navigation)
+        FullWindowContent(Modifier.fillMaxSize()) { windowReader.reader.Content(request, navigation) }
     }
 }

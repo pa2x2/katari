@@ -71,6 +71,14 @@ class DesktopCookieStore(directory: Path) {
         cookies.toList()
     }
 
+    /**
+     * Removes the cookies that have expired, as reading them does, for a listener whose copy doesn't expire them itself
+     * and would otherwise keep them until something reads the store.
+     */
+    fun removeExpired() {
+        synchronized(cookies) { dropExpired() }
+    }
+
     /** Removes the cookies [url] gets, or only those named in [names]; returns how many. */
     fun remove(url: HttpUrl, names: List<String>?): Int =
         removeWhere { it.matches(url) && (names == null || it.name in names) }

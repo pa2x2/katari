@@ -20,9 +20,9 @@ ZIG_VERSION=0.17.1
 ZIG_URL=https://ziglang.org/download/$ZIG_VERSION/zig-x86_64-linux-$ZIG_VERSION.tar.xz
 ZIG_SHA256=3581863e3cbcfd0fce0efc682ce7e9e93da96668a977791d356a26d2a7e9b17a
 
-FORK_VERSION=2026-11-07-1
+FORK_VERSION=2026-11-20-1
 FORK_SOURCES_URL=https://github.com/pa2x2/mpv-android/releases/download/libmpv-$FORK_VERSION/libmpv-android-$FORK_VERSION-sources.tar
-FORK_SOURCES_SHA256=1c2d9194c324376c7ee1c595623e51612ca5645bf8f5cc19e657a25432e03356
+FORK_SOURCES_SHA256=edf7d0a31d44240edd36954e8d04f435f89e06a4e4cd09d81540820567704d2a
 
 # name version url sha256; what the desktop build needs beyond the fork's sources. zlib, libdrm and libdisplay-info are
 # built in. The rest give only the headers of libraries libmpv takes from the system (see system-libraries.txt): libva

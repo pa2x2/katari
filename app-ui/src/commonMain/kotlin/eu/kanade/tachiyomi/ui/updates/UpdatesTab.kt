@@ -14,6 +14,7 @@ import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.download.EntryDownloadState
 import app.katari.presentation.kit.feedback.EmptyScreen
 import app.katari.presentation.kit.layout.FramedContent
+import app.katari.presentation.kit.navigation.HideDocks
 import app.katari.sync.ui.download.ProvideDownloadElsewhere
 import app.katari.ui.di.LocalAppUiGraph
 import app.katari.upcoming.UpcomingScreen
@@ -44,7 +45,6 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
-import eu.kanade.tachiyomi.ui.home.navigation.HideHomeNavigation
 import eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import kotlinx.coroutines.channels.Channel
@@ -253,7 +253,7 @@ data object UpdatesTab : Tab {
             null -> {}
         }
 
-        HideHomeNavigation(hidden = state.selectionMode)
+        HideDocks(hidden = state.selectionMode)
 
         LaunchedEffect(state.isLoading) {
             if (!state.isLoading) {

@@ -549,7 +549,7 @@ internal class MpvPlayer(
     }
 
     /**
-     * The network failed media mpv waited for, which FFmpeg skips: mpv would play on past the gap, and an audio track
+     * Media mpv waited for failed to load, which FFmpeg skips: mpv would play on past the gap, and an audio track
      * played from a playlist of its own would fall out of step with the video. The player fails instead, keeping the
      * position a retry resumes from.
      */

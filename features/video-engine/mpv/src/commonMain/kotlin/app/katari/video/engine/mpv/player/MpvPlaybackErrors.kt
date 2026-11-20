@@ -53,7 +53,7 @@ internal fun mpvEndedEarlyError(
     return upstream?.toPlaybackError(details) ?: ErrorCode.IoUnspecified.error(details, null)
 }
 
-/** The network failed the [upstream] request for media mpv waited for, with mpv's last error lines in [log]. */
+/** The [upstream] request for media mpv waited for failed, with mpv's last error lines in [log]. */
 internal fun mpvMediaLostError(upstream: UpstreamFailure, log: List<String>): VideoPlayerError =
     upstream.toPlaybackError(log.joinToString("\n").ifBlank { null })
 

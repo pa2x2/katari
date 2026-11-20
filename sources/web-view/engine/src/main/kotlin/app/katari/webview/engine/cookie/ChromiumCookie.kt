@@ -8,7 +8,8 @@ import okhttp3.Cookie
  * a domain cookie of the same name and path are two, where the app's store keeps one.
  *
  * @property expiresAt milliseconds since the epoch; null for a session cookie. Chromium keeps at most 400 days from
- * when the cookie was set, and of a cookie set through JCEF only whole seconds.
+ * when the cookie was set. JetBrains' Chromium server drops the expiry of a cookie set through JCEF, so Chromium holds
+ * every cookie the app sets as a session cookie.
  */
 data class ChromiumCookie(
     val name: String,
@@ -29,14 +30,12 @@ data class ChromiumCookie(
 
     /**
      * Whether [seen], read back from Chromium, is still this cookie as it was set: the same but for an expiry Chromium
-     * rounded down or capped. A page that set it again with a later expiry or another value has changed it.
+     * capped, or dropped as it does for every cookie set through JCEF ([expiresAt]). A page that set it again with a
+     * later expiry or another value has changed it; one that set it again only without its expiry can't be told apart.
      */
     fun isHeldAs(seen: ChromiumCookie): Boolean {
         if (seen.copy(expiresAt = expiresAt) != this) return false
-        return when (expiresAt) {
-            null -> seen.expiresAt == null
-            else -> seen.expiresAt != null && seen.expiresAt <= expiresAt
-        }
+        return seen.expiresAt == null || (expiresAt != null && seen.expiresAt <= expiresAt)
     }
 
     /** Whether a request to [other]'s host and path carries this cookie too (RFC 6265 domain and path match). */

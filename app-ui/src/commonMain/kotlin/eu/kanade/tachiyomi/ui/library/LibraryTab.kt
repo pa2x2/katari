@@ -25,6 +25,7 @@ import app.katari.missingextensions.ui.OtherDeviceExtensionsLibraryNotice
 import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.navigation.HideDocks
 import app.katari.presentation.kit.navigation.Scaffold
 import app.katari.presentation.kit.navigation.rememberAppBarScrollBehavior
 import app.katari.presentation.kit.selection.ItemSelection
@@ -65,7 +66,6 @@ import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
-import eu.kanade.tachiyomi.ui.home.navigation.HideHomeNavigation
 import eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import kotlinx.coroutines.channels.Channel
@@ -435,7 +435,7 @@ data object LibraryTab : Tab {
             },
         )
 
-        HideHomeNavigation(hidden = state.selectionMode)
+        HideDocks(hidden = state.selectionMode)
 
         val contentReadiness = LocalHomeContentReadiness.current
         LaunchedEffect(state.isLoading) {

@@ -20,6 +20,7 @@ class AccountDevices(
     private val connected: ConnectedDevices,
     private val clock: Clock,
     private val random: SecureRandom,
+    private val descriptions: DeviceDescriptions,
 ) {
     fun list(accountId: Long): LinkedDevices = LinkedDevices(
         storage.devices.activeIn(accountId).map {
@@ -35,8 +36,9 @@ class AccountDevices(
 
     /** Keeps how [device] presents itself now, when that changed since it registered or last said so. */
     fun describe(device: Device, description: DeviceDescription) {
-        if (description == device.description) return
-        storage.devices.describe(device.id, description)
+        val kept = descriptions.kept(description)
+        if (kept == device.description) return
+        storage.devices.describe(device.id, kept)
         changes.announceDevicesChanged(device.accountId)
     }
 

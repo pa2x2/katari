@@ -5,10 +5,12 @@ import app.katari.appupdate.AppUpdatePlatform
 import app.katari.appupdate.AppUpdatePreferences
 import app.katari.appupdate.check.GithubReleaseSource
 import app.katari.core.metro.AppCoroutineScope
+import app.katari.core.metro.AutomaticCheck
 import app.katari.core.metro.BasePreferenceStore
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -39,4 +41,9 @@ object AppUpdateControllerBindings {
         platform = platform,
         scope = scope,
     )
+
+    @Provides
+    @IntoSet
+    fun appUpdateCheck(controller: AppUpdateController): AutomaticCheck =
+        AutomaticCheck(controller::checkAutomatically)
 }
