@@ -46,9 +46,9 @@ import java.util.concurrent.atomic.AtomicReference
  * Playlists and manifests are rewritten so their references come back here ([rewriteHlsPlaylist],
  * [routeDashManifest]). The variants of the stream's HLS master playlist that can switch at any segment reach mpv as
  * one per set, whose segments the proxy serves from the variant chosen for each ([variantSets]). A request the network
- * fails is made again while mpv waits ([UpstreamCalls]). The stream's latest upstream failure is kept as
- * [latestStreamFailure], which tells the engine why mpv stopped and whether the end it reached is the stream's. It runs
- * until [close].
+ * or the host fails for now is made again while mpv waits ([UpstreamCalls]), and media that fails stops playback
+ * ([onMediaLost]). The stream's latest upstream failure is kept as [latestStreamFailure], which tells the engine why
+ * mpv stopped and whether the end it reached is the stream's. It runs until [close].
  */
 internal class StreamProxy(
     private val localMedia: LocalMediaFiles,
@@ -62,8 +62,9 @@ internal class StreamProxy(
     private val variantPick: (HlsVariantSet) -> HlsVariantPick,
     private val relayLog: RelayLog,
     /**
-     * Called on a proxy thread when the stream's or an audio track's request that mpv waited for got no answer through
-     * the network in time. FFmpeg goes on without what it asked for, so playback would skip a stretch.
+     * Called on a proxy thread when the stream's or an audio track's request that mpv waited for failed: the host
+     * refused it, or the network or the host failed it until the time to answer ran out. FFmpeg goes on without what
+     * it asked for, so playback would skip a stretch.
      */
     private val onMediaLost: (UpstreamFailure) -> Unit,
 ) : Closeable {
@@ -228,13 +229,16 @@ internal class StreamProxy(
     ): Boolean = upstreamCalls.answerMpv(
         upstreamRequest(target.url, target.headers, request.headers["range"], head = request.method == "HEAD"),
         mpvWaits,
-        unanswered = { unanswered(target.headers, UpstreamFailure.Network(target.url.toString(), it), output) },
+        unanswered = { failed(target.headers, it, output) },
     ) { response ->
         response.use { relay(request, target, it, output) }
     } ?: false
 
-    /** Answers mpv that the network failed its request for [headers]; returns false, as the connection is done. */
-    private fun unanswered(headers: HeaderSet, failure: UpstreamFailure, output: MpvConnectionOutput): Boolean {
+    /**
+     * Answers mpv that its request for [headers] failed; returns false, as the connection is done. FFmpeg goes on
+     * without media that fails, so the stream's and its audio tracks' failures stop playback ([onMediaLost]).
+     */
+    private fun failed(headers: HeaderSet, failure: UpstreamFailure, output: MpvConnectionOutput): Boolean {
         recordFailure(headers, failure)
         if (headers == HeaderSet.Stream || headers is HeaderSet.Audio) onMediaLost(failure)
         output.writeText(BAD_GATEWAY, "Bad Gateway", "text/plain", "", keepAlive = false)
@@ -248,11 +252,12 @@ internal class StreamProxy(
         output: MpvConnectionOutput,
     ): Boolean {
         val url = target.url.toString()
-        if (!response.isSuccessful) {
-            recordFailure(target.headers, UpstreamFailure.Status(url, response.code))
+        if (response.code == RANGE_NOT_SATISFIABLE) {
+            // A range past the end of the file, which FFmpeg takes as the end rather than as media it lost.
             output.writeText(response.code, response.message, "text/plain", "", keepAlive = false)
             return false
         }
+        if (!response.isSuccessful) return failed(target.headers, UpstreamFailure.Status(url, response.code), output)
         val contentType = response.header("Content-Type")
         val manifest = declaredManifests[target.headers to target.url]
             ?: manifestKind(target.url.encodedPath, contentType)
@@ -405,15 +410,12 @@ internal class StreamProxy(
         return upstreamCalls.answerMpv(
             upstreamRequest(url, HeaderSet.Stream, range, head = request.method == "HEAD"),
             mpvWaits,
-            unanswered = { unanswered(HeaderSet.Stream, UpstreamFailure.Network(url.toString(), it), output) },
+            unanswered = { failed(HeaderSet.Stream, it, output) },
         ) { response ->
             response.use {
                 when {
-                    !it.isSuccessful || (part != null && it.code != PARTIAL_CONTENT) -> {
-                        recordFailure(HeaderSet.Stream, UpstreamFailure.Status(url.toString(), it.code))
-                        output.writeText(BAD_GATEWAY, "Bad Gateway", "text/plain", "", keepAlive = false)
-                        false
-                    }
+                    !it.isSuccessful || (part != null && it.code != PARTIAL_CONTENT) ->
+                        failed(HeaderSet.Stream, UpstreamFailure.Status(url.toString(), it.code), output)
                     part == null -> relayBody(
                         request,
                         HeaderSet.Stream,
@@ -599,6 +601,7 @@ internal class StreamProxy(
         const val SNIFF_BYTES = 16L
         const val OK = 200
         const val PARTIAL_CONTENT = 206
+        const val RANGE_NOT_SATISFIABLE = 416
         const val BAD_GATEWAY = 502
         val SIBLING_NAME = Regex("[A-Za-z0-9._-]+")
 

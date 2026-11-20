@@ -43,7 +43,7 @@ private val OPTIONS = listOf(
     // A stream reads ahead 50 s, as ExoPlayer does: a quality Auto chooses plays once what was buffered has, so a
     // deeper buffer would delay it by minutes. Each platform sizes the buffer, which caps what high bitrates hold.
     "cache-secs" to "50",
-    // The stream proxy answers within it, asking a host the network failed again meanwhile.
+    // The stream proxy answers within it, asking again meanwhile for what the network or the host failed.
     "network-timeout" to MPV_NETWORK_TIMEOUT_SECONDS.toString(),
 )
 
