@@ -14,6 +14,9 @@ object StoryMetrics {
     val pageWidth: Dp = 360.dp
     val pageHeight: Dp = 640.dp
     val pageSideMargin: Dp = 28.dp
+
+    /** Width of a page's content between its side margins, which every page has whatever it shows. */
+    val pageContentWidth: Dp = pageWidth - pageSideMargin * 2
     val pageTopMargin: Dp = 40.dp
     val pageBottomMargin: Dp = 22.dp
 
