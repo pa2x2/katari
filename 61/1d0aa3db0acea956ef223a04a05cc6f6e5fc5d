@@ -1,0 +1,31 @@
+features/video-engine/mpv/src/commonMain/kotlin/app/katari/video/engine/mpv/player/MpvPlaybackErrors.kt
+  s_1786e77dedf0f1::t_f03a0b6f77de9f 56
+features/video-engine/mpv/src/commonMain/kotlin/app/katari/video/engine/mpv/player/MpvPlayer.kt
+  s_1786e77dedf0f1::t_305add8375bf0d 552
+features/video-engine/mpv/src/commonMain/kotlin/app/katari/video/engine/mpv/player/MpvWatchedPlayerSetup.kt
+  s_1786e77dedf0f1::t_b41499fb5aafd0 46
+features/video-engine/mpv/src/commonMain/kotlin/app/katari/video/engine/mpv/proxy/StreamProxy.kt
+  s_1786e77dedf0f1::t_c636aacc2a60ee 49-51,65-67,232,237-241,255-256,260,413,417-418,604
+features/video-engine/mpv/src/commonMain/kotlin/app/katari/video/engine/mpv/proxy/UpstreamCalls.kt
+  s_1786e77dedf0f1::t_7016bc33292505 26-31,54-57,62,72,79,94-96,116,122,127,131-134,143-150,161,171-175
+features/video-engine/mpv/src/commonMain/kotlin/app/katari/video/engine/mpv/proxy/UpstreamFailure.kt
+  s_1786e77dedf0f1::t_461cb23dd9235c 21
+features/video-engine/mpv/src/commonTest/kotlin/app/katari/video/engine/mpv/proxy/UpstreamCallsTest.kt
+  s_1786e77dedf0f1::t_0a20a4a5fda852 18-22,25-26,30-32,52-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "611d0aa3db0acea956ef223a04a05cc6f6e5fc5d",
+  "prompts": {},
+  "sessions": {
+    "s_1786e77dedf0f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "020f9731-9482-4d7d-9354-e8963eb413fb",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
