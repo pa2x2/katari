@@ -50,6 +50,9 @@ internal class RelayLog(private val player: String, private val connectionBreaks
 /** A body relayed to mpv, [expected] bytes long or -1 when the host didn't say, of which [copied] were written. */
 internal class RelayedBody(val headers: HeaderSet, private val name: String, val expected: Long) {
     var copied = 0L
+
+    /** When mpv last got bytes of it: mpv gives up on a read that waits [MPV_NETWORK_TIMEOUT_SECONDS] from then. */
+    var copiedAtNanos = System.nanoTime()
     var state = State.Copying
 
     enum class State { Copying, Ended, UpstreamFailed }

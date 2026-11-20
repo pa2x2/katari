@@ -52,17 +52,18 @@ internal class UpstreamCalls(private val client: OkHttpClient) : Closeable {
 
     /**
      * Runs [use] on the response to [request] for mpv, asking again after network failures and [asksAgainLater]
-     * statuses for as long as [mpvWaits] says mpv still waits for it. Once there is no time left to answer mpv,
-     * [unanswered] gets the last failure instead. Returns null without calling either once mpv stopped waiting or the
-     * proxy closed.
+     * statuses for as long as [mpvWaits] says mpv still waits for it, which it has since [mpvWaitsSinceNanos]. Once
+     * there is no time left to answer mpv, [unanswered] gets the last failure instead. Returns null without calling
+     * either once mpv stopped waiting or the proxy closed.
      */
     fun <T : Any> answerMpv(
         request: Request,
         mpvWaits: () -> Boolean,
         unanswered: (UpstreamFailure) -> T,
+        mpvWaitsSinceNanos: Long = System.nanoTime(),
         use: (Response) -> T,
     ): T? {
-        val deadlineNanos = System.nanoTime() + ANSWER_DEADLINE_NANOS
+        val deadlineNanos = mpvWaitsSinceNanos + ANSWER_DEADLINE_NANOS
         var retries = 0
         while (true) {
             val call = client.newCall(request)

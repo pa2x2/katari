@@ -21,16 +21,20 @@ import java.util.zip.Inflater
 
 /** [source], this response's body or a peek at it, with the body's Content-Encoding undone. */
 internal fun Response.decoded(source: BufferedSource): BufferedSource {
-    val encodings = header("Content-Encoding").orEmpty()
-        .split(',')
-        .map { it.trim().lowercase() }
-        .filter { it.isNotEmpty() && it != "identity" }
     // Listed in the order they were applied.
-    return encodings.foldRight(source) { encoding, encoded ->
+    return contentEncodings.foldRight(source) { encoding, encoded ->
         val algorithm = DECODERS[encoding] ?: throw IOException("Unsupported content encoding '$encoding'")
         algorithm.decompress(encoded).buffer()
     }
 }
+
+internal val Response.isEncoded: Boolean get() = contentEncodings.isNotEmpty()
+
+private val Response.contentEncodings: List<String>
+    get() = header("Content-Encoding").orEmpty()
+        .split(',')
+        .map { it.trim().lowercase() }
+        .filter { it.isNotEmpty() && it != "identity" }
 
 private object Deflate : DecompressionAlgorithm {
     override val encoding: String get() = "deflate"
