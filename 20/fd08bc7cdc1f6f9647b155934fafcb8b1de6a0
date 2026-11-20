@@ -1,0 +1,19 @@
+desktop/build.gradle.kts
+  s_1786e77dedf0f1::t_75c171a141b6ea 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "20fd08bc7cdc1f6f9647b155934fafcb8b1de6a0",
+  "prompts": {},
+  "sessions": {
+    "s_1786e77dedf0f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "020f9731-9482-4d7d-9354-e8963eb413fb",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
