@@ -1,0 +1,67 @@
+.agents/skills/adaptive-layout/SKILL.md
+  s_685d7e06b43e9f::t_245a016adcb2d7 37-38
+.agents/skills/ui-kit/components.md
+  s_685d7e06b43e9f::t_0eeffb05d27b49 34-35
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/stats/recap/story/RecapStoryPlayer.kt
+  s_5d784648d18064::t_81f171d2c6e016 50,173
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/catalog/CatalogScreen.kt
+  s_5d784648d18064::t_4e62baa1d67c0b 28,192-204
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/feed/FeedsTab.kt
+  s_5d784648d18064::t_5afebcd7ebbc75 49,327-343
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/home/HomeScreen.kt
+  s_685d7e06b43e9f::t_b1a945e545abd2 121
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/home/navigation/HomeSideNavigationHost.kt
+  s_685d7e06b43e9f::t_21ee25dacdc7a6 42,66-67
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/library/LibraryTab.kt
+  s_685d7e06b43e9f::t_3a76d41c724875 28,438
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/more/OnboardingScreen.kt
+  s_5d784648d18064::t_5d9498ae89aa94 3,7,13,25,60-71
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/updates/UpdatesTab.kt
+  s_685d7e06b43e9f::t_3d1882f81b25a5 17,256
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/webview/WebViewScreen.kt
+  s_5d784648d18064::t_ddd7d6d62ee950 3,6-7,24,36-46
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/layout/ContentSides.kt
+  s_685d7e06b43e9f::t_ede06bbdee5a85 18,70,77
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/navigation/FloatingDock.kt
+  s_685d7e06b43e9f::t_de491b98b33ad1 29,31,33-36,58-60,75-78,81-83,89-90,96,102,205-212,215,221-226,228-230,236-237,245-246,249-254
+desktop/src/main/kotlin/app/katari/desktop/player/AnimePlayerScreen.kt
+  s_685d7e06b43e9f::t_83579ccb17b9a4 6,17,21
+desktop/src/main/kotlin/app/katari/desktop/reader/BookReaderScreen.kt
+  s_685d7e06b43e9f::t_94276a0fbfa013 3,6,8,23,31
+desktop/src/main/kotlin/app/katari/desktop/reader/MangaReaderScreen.kt
+  s_685d7e06b43e9f::t_5f3c6c515c4ce8 3,6,8,23,31
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/navigation/FullWindowContent.kt
+  s_50e65413633d38::t_0b87e788bd8bfe 1,3-4,6,8-13,16-19,22-31,35-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2dda4e72906105059632923a5af63e20037f3932",
+  "prompts": {},
+  "sessions": {
+    "s_50e65413633d38": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a03832d7157eeb6de",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    },
+    "s_5d784648d18064": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "41ef6d3b-ad24-430b-b682-39fd7b6b4db6",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    },
+    "s_685d7e06b43e9f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e33d7ae2-cf04-4606-b80f-43a7a66c5c79",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
