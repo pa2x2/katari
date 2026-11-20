@@ -1,5 +1,14 @@
 # Desktop Changelog
 
+## [1.1.2] - 2026-11-20
+
+### 🐛 Fixed
+
+- Video no longer skips a stretch or falls out of step with its audio when the host briefly refuses a segment or stops sending one partway.
+- WebView no longer repeats a site's check over and over once the pass from an earlier check has expired.
+- Recap pages too tall for the system's fonts shrink to fit instead of cutting off their last lines.
+- The recap story fills the whole window. On wide windows the side navigation no longer stays beside it.
+
 ## [1.1.1] - 2026-11-16
 
 ### 🐛 Fixed
@@ -435,7 +444,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.2...HEAD
+[1.1.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.2
 [1.1.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.1
 [1.1.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.0
 [1.0.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.2

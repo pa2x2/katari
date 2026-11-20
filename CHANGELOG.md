@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.4.2] - 2026-11-20
+
+### ✨ Added
+
+- The mpv add-on has a Check for updates row in the anime player settings.
+
+### 🐛 Fixed
+
+- Video no longer skips a stretch or falls out of step with its audio when the host briefly refuses a segment or stops sending one partway.
+- The recap story fills the whole window. On wide windows the side navigation no longer stays beside it.
+
 ## [3.4.1] - 2026-11-17
 
 ### 🐛 Fixed
@@ -1331,7 +1342,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.2...HEAD
+[3.4.2]: https://github.com/pa2x2/katari/releases/tag/v3.4.2
 [3.4.1]: https://github.com/pa2x2/katari/releases/tag/v3.4.1
 [3.4.0]: https://github.com/pa2x2/katari/releases/tag/v3.4.0
 [3.3.3]: https://github.com/pa2x2/katari/releases/tag/v3.3.3
