@@ -1,0 +1,19 @@
+tools/showcase/capture/src/main/kotlin/app/katari/showcase/capture/reader/PlayerScenes.kt
+  s_690380a04047a4::t_ed8a5dab900cca 23-24,52-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "262be4282ee8f03f6b6376b36a8cfd5e2872e2c8",
+  "prompts": {},
+  "sessions": {
+    "s_690380a04047a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab60dac9-f1cf-4a28-8e05-0d47a251b472",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
