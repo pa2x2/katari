@@ -19,8 +19,8 @@ import app.katari.entry.interactions.manga.reader.image.tiles.drawTiles
 
 /**
  * Draws a still page [image] in [layout], stretched over the composable's size, from strips decoded once for [width],
- * the page's width on screen in pixels. [onFailed] is told when the image can't be decoded. The caller sizes the
- * composable to the displayed page's aspect ratio.
+ * the page's width on screen in pixels, or taken from [prepared] when it has them decoded for that already. [onFailed]
+ * is told when the image can't be decoded. The caller sizes the composable to the displayed page's aspect ratio.
  *
  * The width comes from the caller rather than from measuring: a page composed ahead of the screen is not measured
  * again until it scrolls in, so a decode waiting for its size would start only once the page is already in view.
@@ -32,11 +32,12 @@ internal fun StripPageImage(
     width: Int,
     onFailed: () -> Unit,
     modifier: Modifier = Modifier,
+    prepared: suspend () -> PageStrips? = { null },
 ) {
     var strips by remember(image, layout) { mutableStateOf<PageStrips?>(null) }
     LaunchedEffect(image, layout, width) {
         if (width <= 0) return@LaunchedEffect
-        val decoded = image.decodeStrips(layout, width)
+        val decoded = prepared() ?: image.decodeStrips(layout, width)
         if (decoded == null) {
             // A closed image is being replaced by the page loading again, not unreadable
             if (!image.isClosed) onFailed()

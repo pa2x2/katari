@@ -15,7 +15,14 @@ import app.katari.entry.interactions.manga.reader.image.source.PageImage
 import app.katari.entry.interactions.manga.reader.image.tiles.DecodedTile
 import app.katari.entry.interactions.manga.reader.image.tiles.PageTile
 import app.katari.entry.interactions.manga.reader.image.tiles.sampleSizeFor
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
@@ -32,8 +39,13 @@ internal class PageStrips(
     /** Each band as a tile spanning the image's width, in the image's own pixels. */
     val bands: Map<PageTile, DecodedTile>,
 ) {
-    /** Frees every band; the strips are not drawn afterwards. */
-    fun release() = bands.values.forEach { it.pixels.release() }
+    /**
+     * Frees every band, away from the calling thread: unmapping a tall page's bands takes tens of milliseconds, which
+     * on the main thread drops frames as the page leaves the strip. The strips are not drawn afterwards.
+     */
+    fun release() {
+        releases.launch { bands.values.forEach { it.pixels.release() } }
+    }
 }
 
 /**
@@ -48,9 +60,25 @@ internal suspend fun PageImage.Still.decodeStrips(layout: PageImageLayout, displ
     while (decodedBytes(size, sampleSize) > MAX_PAGE_BYTES) sampleSize *= 2
 
     return stripDecodes.withPermit {
-        val page = decode(IntRect(0, 0, size.width, size.height), sampleSize) ?: return@withPermit null
+        // A native decode runs to its end whether its caller still waits or not, so the strips cut for a caller that
+        // has left are freed here rather than dropped
+        val strips = withContext(NonCancellable) { decodeWhole(layout, displayedSize, sampleSize) }
+        if (!currentCoroutineContext().isActive) strips?.release()
+        currentCoroutineContext().ensureActive()
+        strips
+    }
+}
+
+private suspend fun PageImage.Still.decodeWhole(
+    layout: PageImageLayout,
+    displayedSize: IntSize,
+    sampleSize: Int,
+): PageStrips? {
+    val page = decode(IntRect(0, 0, size.width, size.height), sampleSize) ?: return null
+    // The whole page is freed here too rather than on the caller's thread, the main one for a page being composed
+    return withContext(Dispatchers.Default) {
         try {
-            withContext(Dispatchers.Default) { PageStrips(layout.pieces(size), displayedSize, page.cutIntoBands(size)) }
+            PageStrips(layout.pieces(size), displayedSize, page.cutIntoBands(size))
         } finally {
             page.release()
         }
@@ -92,3 +120,5 @@ private const val MAX_PAGE_BYTES = 128L * 1024 * 1024
 
 // Each decode holds the whole page until its bands are copied, and the long strip shows several pages at once
 private val stripDecodes = Semaphore(1)
+
+private val releases = CoroutineScope(SupervisorJob() + Dispatchers.Default)

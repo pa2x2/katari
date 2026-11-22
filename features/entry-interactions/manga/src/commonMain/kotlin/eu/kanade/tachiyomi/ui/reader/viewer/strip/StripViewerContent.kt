@@ -151,6 +151,7 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
         val insetDp = with(density) { inset.toDp() }
         val pageWidth = width - 2 * with(density) { insetDp.roundToPx() }
         val placeholderHeight = constraints.maxHeight
+        PrepareUpcomingPages(pageWidth)
 
         PageStrip(
             state = state,
