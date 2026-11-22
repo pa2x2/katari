@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -45,6 +46,10 @@ internal fun StripPage(
     modifier: Modifier = Modifier,
 ) {
     val settingsKey = viewer.imageSettingsKey()
+    DisposableEffect(page) {
+        viewer.preparation.claim(page)
+        onDispose { viewer.preparation.unclaim(page) }
+    }
     val contentState = rememberReaderPageContent(page, settingsKey, viewer::pageRequest, viewer::onPageShown)
     val textSurface = viewer.textSurfaces.rememberSurface(page)
     val content = contentState.content
@@ -90,6 +95,7 @@ internal fun StripPage(
                         width = width,
                         onFailed = contentState::fail,
                         modifier = Modifier.fillMaxSize(),
+                        prepared = { viewer.preparation.take(page, shown.cropBorders, shown.layout, width) },
                     )
                     PageTextLayer(
                         surface = textSurface,

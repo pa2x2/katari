@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.4.4] - 2026-11-22
+
+### ⚡️ Performance
+
+- In the Long strip and Long strip with gaps modes, upcoming pages are decoded ahead, so tall pages show as soon as they scroll into view instead of staying blank during a fast scroll. Pages leaving the screen no longer make the scroll stutter.
+
 ## [3.4.3] - 2026-11-20
 
 ### 🐛 Fixed
@@ -1348,7 +1354,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.3...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.4...HEAD
+[3.4.4]: https://github.com/pa2x2/katari/releases/tag/v3.4.4
 [3.4.3]: https://github.com/pa2x2/katari/releases/tag/v3.4.3
 [3.4.2]: https://github.com/pa2x2/katari/releases/tag/v3.4.2
 [3.4.1]: https://github.com/pa2x2/katari/releases/tag/v3.4.1

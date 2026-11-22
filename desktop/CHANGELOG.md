@@ -1,5 +1,11 @@
 # Desktop Changelog
 
+## [1.1.4] - 2026-11-22
+
+### ⚡️ Performance
+
+- In the Long strip and Long strip with gaps modes, upcoming pages are decoded ahead, so tall pages show as soon as they scroll into view instead of staying blank during a fast scroll. Pages leaving the screen no longer make the scroll stutter.
+
 ## [1.1.3] - 2026-11-20
 
 ### 🐛 Fixed
@@ -450,7 +456,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.3...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.4...HEAD
+[1.1.4]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.4
 [1.1.3]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.3
 [1.1.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.2
 [1.1.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.1

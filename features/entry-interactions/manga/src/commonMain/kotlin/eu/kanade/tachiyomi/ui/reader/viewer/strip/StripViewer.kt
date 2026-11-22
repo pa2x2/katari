@@ -82,6 +82,8 @@ internal class StripViewer(
 
     internal val backdrops = StripBackdrops(items = { items })
 
+    internal val preparation = StripPagePreparation()
+
     internal val textSurfaces = ViewerTextSurfaces(decorations = { viewModel.textSession.decoration(it) })
 
     override fun visibleTextSurfaces(): List<MangaPageTextSurface> = textSurfaces.visible()

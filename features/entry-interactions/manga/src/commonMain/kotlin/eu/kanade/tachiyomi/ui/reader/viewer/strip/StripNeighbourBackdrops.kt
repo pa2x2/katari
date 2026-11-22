@@ -4,10 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
-import app.katari.entry.interactions.manga.reader.image.profile.DisplayProfile
 import app.katari.entry.interactions.manga.reader.image.source.PageImage
-import app.katari.entry.interactions.manga.reader.image.source.openPageImage
-import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderViewerItem
 import eu.kanade.tachiyomi.ui.reader.viewer.automaticBackgroundState
@@ -15,13 +12,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
-import java.io.InputStream
 
 /**
  * Reads the profiles of the pages right above and below those on screen, which the strip hasn't laid out, so the top
@@ -56,10 +49,8 @@ private fun StripViewer.neighbourPages(): List<ReaderPage> {
 
 /** Opens [page]'s image as the strip would show it and keeps its pieces' profiles. */
 private suspend fun StripViewer.readBackdrop(page: ReaderPage) {
-    val stream = page.readyStream() ?: return
     try {
-        val bytes = withIOContext { stream().use { it.readBytes() } }
-        val image = openPageImage(bytes, settings.cropBorders, DisplayProfile.bytes) ?: return
+        val image = openOffScreenPage(page, settings.cropBorders) ?: return
         try {
             if (image is PageImage.Still) {
                 backdrops.keep(page, image.pieceProfiles(stripPageLayout(image.size, settings.bindings)))
@@ -70,20 +61,5 @@ private suspend fun StripViewer.readBackdrop(page: ReaderPage) {
     } catch (e: Throwable) {
         if (e is CancellationException) throw e
         page.logcat(LogPriority.ERROR, e) { "The background beside page ${page.number} could not be read" }
-    }
-}
-
-/**
- * The stream of the page's image once its chapter's loader has it, asking the loader for it alone, or null when it
- * fails to load.
- */
-private suspend fun ReaderPage.readyStream(): (() -> InputStream)? {
-    if (status == Page.State.Ready) return stream
-    val loader = chapter.pageLoader ?: return null
-    return coroutineScope {
-        val loading = launchIO { loader.loadPage(this@readyStream, 0) }
-        val state = statusFlow.first { it == Page.State.Ready || it is Page.State.Error }
-        loading.cancel()
-        stream.takeIf { state == Page.State.Ready }
     }
 }
