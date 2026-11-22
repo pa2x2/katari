@@ -1,0 +1,33 @@
+features/entry-interactions/manga/src/commonMain/kotlin/app/katari/entry/interactions/manga/reader/image/strips/PageStrips.kt
+  s_5c697e08ed0cfc::t_cb0a73247c6cb3 18,20-25,42-48,63-79,81,123-124
+features/entry-interactions/manga/src/commonMain/kotlin/app/katari/entry/interactions/manga/reader/image/strips/StripPageImage.kt
+  s_5c697e08ed0cfc::t_036e105ce7e620 22-23,35,40
+features/entry-interactions/manga/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/reader/viewer/strip/StripNeighbourBackdrops.kt
+  s_5c697e08ed0cfc::t_ec14705520323f 53
+features/entry-interactions/manga/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/reader/viewer/strip/StripOffScreenPages.kt
+  s_5c697e08ed0cfc::t_c82ec7d8d09b62 1-37
+features/entry-interactions/manga/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/reader/viewer/strip/StripPage.kt
+  s_5c697e08ed0cfc::t_24418fbc7994e9 8,49-52,98
+features/entry-interactions/manga/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/reader/viewer/strip/StripPagePreparation.kt
+  s_5c697e08ed0cfc::t_eeb643432e1022 1-191
+features/entry-interactions/manga/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/reader/viewer/strip/StripViewer.kt
+  s_5c697e08ed0cfc::t_4eb3255fa2bf85 85-86
+features/entry-interactions/manga/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/reader/viewer/strip/StripViewerContent.kt
+  s_5c697e08ed0cfc::t_c7377b072048df 154
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "11f07c2da75285218254c6794f52eec0ac116bd9",
+  "prompts": {},
+  "sessions": {
+    "s_5c697e08ed0cfc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "65a37a63-128c-4bc5-bd7a-2ba99aece5e4",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
