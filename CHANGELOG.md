@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.4.5] - 2026-11-23
+
+### 🧩 Improved
+
+- Changed on other devices says what each change was, such as the old and new value or the filter that was turned on.
+
+### 🐛 Fixed
+
+- Signing in to sync no longer fails when you have reading time in chapters that were later deleted.
+- Duplicate detection's settings show up in settings search, and What syncs lists them so you can choose them one by one.
+
 ## [3.4.4] - 2026-11-22
 
 ### ⚡️ Performance
@@ -1354,7 +1365,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.4...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.5...HEAD
+[3.4.5]: https://github.com/pa2x2/katari/releases/tag/v3.4.5
 [3.4.4]: https://github.com/pa2x2/katari/releases/tag/v3.4.4
 [3.4.3]: https://github.com/pa2x2/katari/releases/tag/v3.4.3
 [3.4.2]: https://github.com/pa2x2/katari/releases/tag/v3.4.2
