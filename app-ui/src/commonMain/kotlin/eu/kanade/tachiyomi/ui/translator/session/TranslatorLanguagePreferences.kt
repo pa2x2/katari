@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.translator.session
 
-import app.katari.language.api.tag.LanguageTag
+import app.katari.translation.api.preference.getSourceLanguageSelection
+import app.katari.translation.api.preference.getTargetLanguageSelection
 import app.katari.translation.api.request.TranslationSourceLanguageSelection
 import app.katari.translation.api.request.TranslationTargetLanguageSelection
 import tachiyomi.core.common.preference.Preference
@@ -11,42 +12,9 @@ import tachiyomi.core.common.preference.PreferenceStore
  * the profile's default target never read or write them.
  */
 class TranslatorLanguagePreferences(preferenceStore: PreferenceStore) {
-    val sourceLanguage: Preference<TranslationSourceLanguageSelection> = preferenceStore.getObjectFromString(
-        key = "translator_source_language",
-        defaultValue = TranslationSourceLanguageSelection.Automatic,
-        serializer = { selection ->
-            when (selection) {
-                TranslationSourceLanguageSelection.Automatic -> AUTOMATIC_SOURCE_VALUE
-                is TranslationSourceLanguageSelection.Explicit -> selection.language.value
-            }
-        },
-        deserializer = { value ->
-            value.takeUnless { it == AUTOMATIC_SOURCE_VALUE }
-                ?.let(LanguageTag::parse)
-                ?.let(TranslationSourceLanguageSelection::Explicit)
-                ?: TranslationSourceLanguageSelection.Automatic
-        },
-    )
+    val sourceLanguage: Preference<TranslationSourceLanguageSelection> =
+        preferenceStore.getSourceLanguageSelection("translator_source_language")
 
-    val targetLanguage: Preference<TranslationTargetLanguageSelection> = preferenceStore.getObjectFromString(
-        key = "translator_target_language",
-        defaultValue = TranslationTargetLanguageSelection.Default,
-        serializer = { selection ->
-            when (selection) {
-                TranslationTargetLanguageSelection.Default -> DEFAULT_TARGET_VALUE
-                is TranslationTargetLanguageSelection.Explicit -> selection.language.value
-            }
-        },
-        deserializer = { value ->
-            value.takeUnless { it == DEFAULT_TARGET_VALUE }
-                ?.let(LanguageTag::parse)
-                ?.let(TranslationTargetLanguageSelection::Explicit)
-                ?: TranslationTargetLanguageSelection.Default
-        },
-    )
-
-    private companion object {
-        const val AUTOMATIC_SOURCE_VALUE = "automatic"
-        const val DEFAULT_TARGET_VALUE = "default"
-    }
+    val targetLanguage: Preference<TranslationTargetLanguageSelection> =
+        preferenceStore.getTargetLanguageSelection("translator_target_language")
 }
