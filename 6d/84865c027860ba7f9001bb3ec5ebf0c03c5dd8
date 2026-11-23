@@ -1,0 +1,29 @@
+core/data/src/commonMain/sqldelight/app/katari/sync/data/sync_apply.sq
+  s_c2223b09e01ee8::t_64dd9b9309c72a 339-340
+core/data/src/commonMain/sqldelight/tachiyomi/data/activity.sq
+  s_c2223b09e01ee8::t_0af7dab30a8fd9 43-105
+core/data/src/commonMain/sqldelight/tachiyomi/migrations/99.sqm
+  s_c2223b09e01ee8::t_f5cce922722990 1-86
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/kind/activity/ActivityKinds.kt
+  s_c2223b09e01ee8::t_1e06956ade825d 75-76,95-97
+features/sync/client/src/desktopTest/kotlin/app/katari/sync/client/capture/ChangeCaptureTest.kt
+  s_c2223b09e01ee8::t_98ab6d65114329 49,112,115-116,212-213,215,246-247
+core/data/src/commonTest/kotlin/tachiyomi/data/history/activity/DeletedChapterActivityTest.kt
+  s_c2223b09e01ee8::t_53e0a658dedc43 1-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6d84865c027860ba7f9001bb3ec5ebf0c03c5dd8",
+  "prompts": {},
+  "sessions": {
+    "s_c2223b09e01ee8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b48a3cec-fae1-4546-945f-416bf11e45cf",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
