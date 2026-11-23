@@ -17,7 +17,9 @@ import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.address.ServerAddressDialog
 import app.katari.sync.ui.arrival.ArrivedSettingsScreen
 import app.katari.sync.ui.arrival.ArrivedSettingsViewModel
+import app.katari.sync.ui.arrival.arrivedRows
 import app.katari.sync.ui.choice.WhatSyncsScreen
+import app.katari.sync.ui.choice.settingRows
 import app.katari.sync.ui.firstsync.FirstSyncScreen
 import app.katari.sync.ui.guide.SyncGuide
 import app.katari.sync.ui.link.LinkDeviceDialog
@@ -119,7 +121,9 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
                             choices = choices,
                             profilesNotSynced = profilesNotSynced,
                             missingExtensions = missingExtensions,
-                            arrived = arrived.size,
+                            // Counted as Changed on other devices lists them, without the ones that read as before
+                            arrived = arrivedRows(arrived, settingRows(), LocalAppUiGraph.current.changeLookups)
+                                .sumOf { it.settings.size },
                             actions = actions,
                         )
                     }

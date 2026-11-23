@@ -72,7 +72,8 @@ object ActivitySessionKind : SyncedKind<ActivitySessionPayload>(
 
 /**
  * Session segments, keyed by session id, chapter key, local date and time zone. Local ref:
- * `[session_id, chapter_id, local_date, time_zone_id]`, with `chapter_id` null for time spent outside a chapter.
+ * `[session_id, chapter_id, local_date, time_zone_id]`, with `chapter_id` null for the time read in chapters that were
+ * deleted.
  */
 object ActivitySegmentKind : SyncedKind<ActivitySegmentPayload>(
     "activity.segment",
@@ -91,6 +92,9 @@ object ActivitySegmentKind : SyncedKind<ActivitySegmentPayload>(
             Event.UPDATE,
             ref,
             fields = listOf(Field(5, "started_at"), Field(6, "ended_at"), Field(7, "duration")),
+            // A segment without a chapter grows by taking in the time of chapters deleted here, whose own records
+            // keep that time everywhere; sent again under this record, it would count twice where they are still there.
+            condition = "NEW.chapter_id IS NOT NULL",
         ),
     )
 

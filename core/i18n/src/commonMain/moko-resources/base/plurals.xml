@@ -505,6 +505,10 @@
         <item quantity="one">%1$d setting changed on %2$s</item>
         <item quantity="other">%1$d settings changed on %2$s</item>
     </plurals>
+    <plurals name="sync_arrived_list_more">
+        <item quantity="one">%1$s and %2$d more</item>
+        <item quantity="other">%1$s and %2$d more</item>
+    </plurals>
     <plurals name="sync_held_aside">
         <item quantity="one">%d synced change couldn’t be applied on this device. It’s set aside and tried again once Katari is updated; everything else syncs as usual.</item>
         <item quantity="other">%d synced changes couldn’t be applied on this device. They’re set aside and tried again once Katari is updated; everything else syncs as usual.</item>

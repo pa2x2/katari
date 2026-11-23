@@ -21,6 +21,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.offset
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.KeyboardArrowDown
+import app.katari.icons.materialsymbols.rounded.KeyboardArrowUp
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.LogoSize
 import app.katari.presentation.kit.content.Text
@@ -49,6 +52,9 @@ import kotlin.math.roundToInt
  *
  * A [nested] row belongs to the logo-led row above it, such as a source's feeds under the source: it starts where that
  * row's text does.
+ *
+ * [expanded] marks a row that opens rows under it in its card, such as the changes behind a setting another device
+ * changed, with an arrow after its controls that says whether they are open; [onClick] opens and closes them.
  */
 @Composable
 fun SettingsRow(
@@ -70,6 +76,7 @@ fun SettingsRow(
     onLongClick: (() -> Unit)? = null,
     below: (@Composable () -> Unit)? = null,
     nested: Boolean = false,
+    expanded: Boolean? = null,
 ) {
     val mark = rememberRowSettingMark(setting, title, LocalRowDensity.current.titleRole, titleSuffix)
     RowFrame(
@@ -115,7 +122,24 @@ fun SettingsRow(
                     )
                 }
             },
-            trailing = { if (trailing != null) RowTrailing(trailing) },
+            trailing = {
+                if (trailing != null || expanded != null) {
+                    RowTrailing {
+                        trailing?.invoke()
+                        if (expanded != null) {
+                            Icon(
+                                imageVector = if (expanded) {
+                                    MaterialSymbols.Rounded.KeyboardArrowUp
+                                } else {
+                                    MaterialSymbols.Rounded.KeyboardArrowDown
+                                },
+                                contentDescription = null,
+                                tone = ContentTone.Secondary,
+                            )
+                        }
+                    }
+                }
+            },
             leadingGap = KatariTheme.spacing.l,
             trailingGap = KatariTheme.spacing.l,
             below = { below?.invoke() },

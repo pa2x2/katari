@@ -108,7 +108,7 @@ internal class BookDocumentReaderSettingsProvider(
 
     override val textRules = preferences.textRules
 
-    val publisherStylesSetting = ViewerSettingDefinition(
+    override val publisherStylesSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.PUBLISHER_STYLES_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
         processorDefault = true,

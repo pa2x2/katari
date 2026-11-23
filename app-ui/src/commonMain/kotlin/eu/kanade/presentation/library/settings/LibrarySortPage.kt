@@ -37,19 +37,16 @@ internal fun LibrarySortPage(
 
     val options = remember(progressSummaryAvailable) {
         listOfNotNull(
-            MR.strings.action_sort_alpha to LibrarySort.Type.Alphabetical,
-            (MR.strings.action_sort_total to LibrarySort.Type.TotalChapters)
-                .takeIf { progressSummaryAvailable },
-            (MR.strings.action_sort_last_read to LibrarySort.Type.LastRead)
-                .takeIf { progressSummaryAvailable },
-            MR.strings.action_sort_last_manga_update to LibrarySort.Type.LastUpdate,
-            (MR.strings.action_sort_unread_count to LibrarySort.Type.UnreadCount)
-                .takeIf { progressSummaryAvailable },
-            MR.strings.action_sort_latest_chapter to LibrarySort.Type.LatestChapter,
-            MR.strings.action_sort_chapter_fetch_date to LibrarySort.Type.ChapterFetchDate,
-            MR.strings.action_sort_date_added to LibrarySort.Type.DateAdded,
-            MR.strings.action_sort_random to LibrarySort.Type.Random,
-        )
+            LibrarySort.Type.Alphabetical,
+            LibrarySort.Type.TotalChapters.takeIf { progressSummaryAvailable },
+            LibrarySort.Type.LastRead.takeIf { progressSummaryAvailable },
+            LibrarySort.Type.LastUpdate,
+            LibrarySort.Type.UnreadCount.takeIf { progressSummaryAvailable },
+            LibrarySort.Type.LatestChapter,
+            LibrarySort.Type.ChapterFetchDate,
+            LibrarySort.Type.DateAdded,
+            LibrarySort.Type.Random,
+        ).map { it.label to it }
     }
 
     MenuSyncHeader(MenuSettings.LIBRARY_SORT)

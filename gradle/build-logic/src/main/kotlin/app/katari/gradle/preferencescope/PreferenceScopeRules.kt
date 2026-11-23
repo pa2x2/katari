@@ -95,6 +95,10 @@ internal val PREFERENCE_SCOPE_EXEMPT_FILES = mapOf(
         "writes the person-level keys other devices synced, which the scope tables already mark",
     "app/src/main/java/app/katari/profiles/core/AndroidLegacyProfilePreferenceKeys.kt" to
         "moves keys of earlier versions into profiles",
+    "app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/NamedSetting.kt" to
+        "reads synced values of settings other classes own, by the keys of their preferences",
+    "app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/TranslationNamedSettings.kt" to
+        "reads synced values of the translation runtime's languages, by the keys of its preferences",
     "app-ui/src/commonMain/kotlin/app/katari/upgrade/migrations/TrackerDataCleanupMigration.kt" to
         "deletes the keys trackers kept, which nothing owns since Katari dropped trackers",
     "features/entry-interactions/src/commonMain/kotlin/app/katari/entry/interactions/media/" +

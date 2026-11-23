@@ -221,7 +221,7 @@ internal class ApplySession(
             null -> settingReads.sharedValue(key)
             else -> settingReads.profileValue(profileId, key)
         }
-        if (previous != value) notes.note(profileId, key, previous, at)
+        if (previous != value) notes.note(profileId, key, previous, value, at)
     }
 
     /** What [chapterRead] noted, by entry. */

@@ -216,12 +216,12 @@ class SettingsBrowseScreen : SearchableSettings() {
             preferenceItems = items,
         )
     }
-
-    private val EntryPreviewSize.previewSizeTitleRes
-        get() = when (this) {
-            EntryPreviewSize.SMALL -> MR.strings.pref_manga_preview_size_small
-            EntryPreviewSize.MEDIUM -> MR.strings.pref_manga_preview_size_medium
-            EntryPreviewSize.LARGE -> MR.strings.pref_manga_preview_size_large
-            EntryPreviewSize.EXTRA_LARGE -> MR.strings.pref_manga_preview_size_extra_large
-        }
 }
+
+internal val EntryPreviewSize.previewSizeTitleRes
+    get() = when (this) {
+        EntryPreviewSize.SMALL -> MR.strings.pref_manga_preview_size_small
+        EntryPreviewSize.MEDIUM -> MR.strings.pref_manga_preview_size_medium
+        EntryPreviewSize.LARGE -> MR.strings.pref_manga_preview_size_large
+        EntryPreviewSize.EXTRA_LARGE -> MR.strings.pref_manga_preview_size_extra_large
+    }

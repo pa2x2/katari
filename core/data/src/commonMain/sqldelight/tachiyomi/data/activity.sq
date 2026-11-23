@@ -40,6 +40,69 @@ ON activity_segments(local_date, session_id);
 CREATE INDEX idx_activity_segments_chapter
 ON activity_segments(chapter_id);
 
+-- The key lets a session hold several segments without a chapter for one day and time zone, as SQLite never counts
+-- NULLs as equal; sync reads a segment by its key and needs it to be one row.
+CREATE UNIQUE INDEX idx_activity_segments_without_chapter
+ON activity_segments(session_id, local_date, time_zone_id)
+WHERE chapter_id IS NULL;
+
+-- The time read in a chapter that goes stays the session's: each of its segments joins the session's segment without
+-- a chapter for that day and time zone, the way a segment grows while its session goes on. The foreign key's SET NULL
+-- alone would leave two such segments for one key once a second chapter read on that day goes.
+CREATE TRIGGER activity_segments_chapter_deleted
+BEFORE DELETE ON chapters
+FOR EACH ROW
+BEGIN
+    UPDATE activity_segments
+    SET
+        started_at = min(started_at, (
+            SELECT GONE.started_at
+            FROM activity_segments GONE
+            WHERE GONE.chapter_id = old._id
+            AND GONE.session_id = activity_segments.session_id
+            AND GONE.local_date = activity_segments.local_date
+            AND GONE.time_zone_id = activity_segments.time_zone_id
+        )),
+        ended_at = max(ended_at, (
+            SELECT GONE.ended_at
+            FROM activity_segments GONE
+            WHERE GONE.chapter_id = old._id
+            AND GONE.session_id = activity_segments.session_id
+            AND GONE.local_date = activity_segments.local_date
+            AND GONE.time_zone_id = activity_segments.time_zone_id
+        )),
+        duration = duration + (
+            SELECT GONE.duration
+            FROM activity_segments GONE
+            WHERE GONE.chapter_id = old._id
+            AND GONE.session_id = activity_segments.session_id
+            AND GONE.local_date = activity_segments.local_date
+            AND GONE.time_zone_id = activity_segments.time_zone_id
+        )
+    WHERE chapter_id IS NULL
+    AND EXISTS (
+        SELECT 1
+        FROM activity_segments GONE
+        WHERE GONE.chapter_id = old._id
+        AND GONE.session_id = activity_segments.session_id
+        AND GONE.local_date = activity_segments.local_date
+        AND GONE.time_zone_id = activity_segments.time_zone_id
+    );
+    DELETE FROM activity_segments
+    WHERE chapter_id = old._id
+    AND EXISTS (
+        SELECT 1
+        FROM activity_segments KEPT
+        WHERE KEPT.chapter_id IS NULL
+        AND KEPT.session_id = activity_segments.session_id
+        AND KEPT.local_date = activity_segments.local_date
+        AND KEPT.time_zone_id = activity_segments.time_zone_id
+    );
+    UPDATE activity_segments
+    SET chapter_id = NULL
+    WHERE chapter_id = old._id;
+END;
+
 CREATE TABLE activity_completion_events(
     event_id TEXT NOT NULL PRIMARY KEY,
     entry_id INTEGER NOT NULL,

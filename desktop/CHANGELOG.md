@@ -1,5 +1,16 @@
 # Desktop Changelog
 
+## [1.1.5] - 2026-11-23
+
+### 🧩 Improved
+
+- Changed on other devices says what each change was, such as the old and new value or the filter that was turned on.
+
+### 🐛 Fixed
+
+- Signing in to sync no longer fails when you have reading time in chapters that were later deleted.
+- Duplicate detection's settings show up in settings search, and What syncs lists them so you can choose them one by one.
+
 ## [1.1.4] - 2026-11-22
 
 ### ⚡️ Performance
@@ -456,7 +467,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.4...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.5...HEAD
+[1.1.5]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.5
 [1.1.4]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.4
 [1.1.3]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.3
 [1.1.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.2

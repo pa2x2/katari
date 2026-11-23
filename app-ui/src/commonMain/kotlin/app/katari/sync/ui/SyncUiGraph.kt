@@ -3,6 +3,7 @@ package app.katari.sync.ui
 import app.katari.sync.client.account.SyncAccount
 import app.katari.sync.client.arrival.SettingArrivals
 import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.ui.arrival.change.ChangeLookups
 import app.katari.sync.ui.instant.InstantSyncSetup
 import app.katari.sync.ui.notice.SyncNotices
 import app.katari.sync.ui.status.SyncStatusState
@@ -15,4 +16,5 @@ interface SyncUiGraph {
     val syncAccount: SyncAccount
     val instantSyncSetup: InstantSyncSetup
     val settingArrivals: SettingArrivals
+    val changeLookups: ChangeLookups
 }

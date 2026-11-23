@@ -77,6 +77,9 @@ private val GETTERS = setOf(
     "getEnum",
     "getEnumSet",
     "getLongArray",
+    "getSourceLanguageSelection",
+    "getTargetLanguageSelection",
+    "getLanguageTags",
 )
 
 /** Classes whose constructor takes a key that a store is later asked for, with the parameters that hold one. */

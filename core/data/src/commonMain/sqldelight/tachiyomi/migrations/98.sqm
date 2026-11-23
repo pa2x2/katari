@@ -1,0 +1,3 @@
+-- The value a setting another device changed arrived with, to tell what changed
+-- (app/katari/sync/data/sync_arrived_settings.sq).
+ALTER TABLE sync_arrived_settings ADD COLUMN arrived BLOB;

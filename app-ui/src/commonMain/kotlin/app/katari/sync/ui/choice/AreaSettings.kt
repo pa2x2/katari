@@ -40,7 +40,7 @@ internal fun areaSettings(area: SettingsArea): List<AreaSetting> {
     val onSeveralScreens = found.distinctBy { (screenTitle) -> screenTitle }.size > 1
     return found.map { (screenTitle, setting, mark) ->
         val screen = stringResource(screenTitle).takeIf { onSeveralScreens && screenTitle != area.titleRes }
-        AreaSetting(setting.key, setting.title, screen, setting.group, mark)
+        AreaSetting(setting.key, setting.row.title, screen, setting.group, mark)
     }
 }
 
@@ -53,8 +53,12 @@ internal val SettingsArea.hasPage: Boolean
 
 /** The title of each setting the Settings screens show, by its key: the first row that shows it. */
 @Composable
-internal fun settingTitles(): Map<String, String> =
-    shownSettings().reversed().associate { (_, setting) -> setting.key to setting.title }
+internal fun settingTitles(): Map<String, String> = settingRows().mapValues { (_, row) -> row.title }
+
+/** The row that shows each setting on the Settings screens, by its key: the first one that does. */
+@Composable
+internal fun settingRows(): Map<String, Preference.PreferenceItem<*, *>> =
+    shownSettings().reversed().associate { (_, setting) -> setting.key to setting.row }
 
 /** Every row of the Settings screens that stores its value in a preference, with its screen's title. */
 @Composable
@@ -67,7 +71,7 @@ private fun shownSettings(): List<Pair<StringResource, StoredSetting>> {
     }
 }
 
-private class StoredSetting(val key: String, val title: String, val group: String?)
+private class StoredSetting(val key: String, val row: Preference.PreferenceItem<*, *>, val group: String?)
 
 /** Every row that stores its value in a preference, with the heading of the group it is in. */
 private fun List<Preference>.storedSettings(profileStore: ProfileStore): List<StoredSetting> =
@@ -78,6 +82,6 @@ private fun List<Preference>.storedSettings(profileStore: ProfileStore): List<St
         }
     }.mapNotNull { (item, group) ->
         item.storedPreference?.let {
-            StoredSetting(profileStore.preferenceKey(it), item.title, group?.takeIf(String::isNotBlank))
+            StoredSetting(profileStore.preferenceKey(it), item, group?.takeIf(String::isNotBlank))
         }
     }

@@ -85,32 +85,16 @@ data class Entry(
         get() = chapterFlags and CHAPTER_HIDE_PREVIEWS == 0L
 
     val unreadFilter: TriState
-        get() = when (unreadFilterRaw) {
-            CHAPTER_SHOW_UNREAD -> TriState.ENABLED_IS
-            CHAPTER_SHOW_READ -> TriState.ENABLED_NOT
-            else -> TriState.DISABLED
-        }
+        get() = chapterFilter(unreadFilterRaw, show = CHAPTER_SHOW_UNREAD, hide = CHAPTER_SHOW_READ)
 
     val downloadedFilter: TriState
-        get() = when (downloadedFilterRaw) {
-            CHAPTER_SHOW_DOWNLOADED -> TriState.ENABLED_IS
-            CHAPTER_SHOW_NOT_DOWNLOADED -> TriState.ENABLED_NOT
-            else -> TriState.DISABLED
-        }
+        get() = chapterFilter(downloadedFilterRaw, show = CHAPTER_SHOW_DOWNLOADED, hide = CHAPTER_SHOW_NOT_DOWNLOADED)
 
     val bookmarkedFilter: TriState
-        get() = when (bookmarkedFilterRaw) {
-            CHAPTER_SHOW_BOOKMARKED -> TriState.ENABLED_IS
-            CHAPTER_SHOW_NOT_BOOKMARKED -> TriState.ENABLED_NOT
-            else -> TriState.DISABLED
-        }
+        get() = chapterFilter(bookmarkedFilterRaw, show = CHAPTER_SHOW_BOOKMARKED, hide = CHAPTER_SHOW_NOT_BOOKMARKED)
 
     val fillerFilter: TriState
-        get() = when (fillerFilterRaw) {
-            CHAPTER_SHOW_FILLER -> TriState.ENABLED_IS
-            CHAPTER_SHOW_NOT_FILLER -> TriState.ENABLED_NOT
-            else -> TriState.DISABLED
-        }
+        get() = chapterFilter(fillerFilterRaw, show = CHAPTER_SHOW_FILLER, hide = CHAPTER_SHOW_NOT_FILLER)
 
     fun sortDescending(): Boolean {
         return chapterFlags and CHAPTER_SORT_DIR_MASK == CHAPTER_SORT_DESC
@@ -154,6 +138,13 @@ data class Entry(
         const val CHAPTER_DISPLAY_MASK = 0x00100000L
 
         const val DEFAULT_CHAPTER_FLAGS = CHAPTER_SORTING_NUMBER
+
+        /** A chapter filter's state from [flags], [show] and [hide] being the filter's two flags. */
+        fun chapterFilter(flags: Long, show: Long, hide: Long): TriState = when (flags and (show or hide)) {
+            show -> TriState.ENABLED_IS
+            hide -> TriState.ENABLED_NOT
+            else -> TriState.DISABLED
+        }
 
         fun create() = Entry(
             id = -1L,

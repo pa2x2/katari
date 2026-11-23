@@ -18,18 +18,8 @@ internal fun TtsPitchSetting(
     range: TtsParameterRange,
     onChange: (Float) -> Unit,
 ) {
-    val options = listOf(
-        PitchOption(
-            stringResource(MR.strings.tts_settings_pitch_low),
-            (range.default * 0.8f).coerceAtLeast(range.minimum),
-        ),
-        PitchOption(stringResource(MR.strings.tts_settings_pitch_natural), range.default),
-        PitchOption(
-            stringResource(MR.strings.tts_settings_pitch_high),
-            (range.default * 1.2f).coerceAtMost(range.maximum),
-        ),
-    ).distinctBy(PitchOption::value)
-    val selected = options.minBy { abs(it.value - value) }
+    val options = pitchOptions(range)
+    val selected = options.nearest(value)
 
     ControlRow(modifier = Modifier.preferenceHighlight(), title = stringResource(MR.strings.tts_settings_pitch)) {
         SegmentedButtons(
@@ -42,7 +32,24 @@ internal fun TtsPitchSetting(
     }
 }
 
-private data class PitchOption(
+/** The three pitch steps around [range]'s default, as far apart as the range lets them be. */
+@Composable
+internal fun pitchOptions(range: TtsParameterRange): List<PitchOption> = listOf(
+    PitchOption(
+        stringResource(MR.strings.tts_settings_pitch_low),
+        (range.default * 0.8f).coerceAtLeast(range.minimum),
+    ),
+    PitchOption(stringResource(MR.strings.tts_settings_pitch_natural), range.default),
+    PitchOption(
+        stringResource(MR.strings.tts_settings_pitch_high),
+        (range.default * 1.2f).coerceAtMost(range.maximum),
+    ),
+).distinctBy(PitchOption::value)
+
+/** The step a pitch of [value] shows as: the nearest one. */
+internal fun List<PitchOption>.nearest(value: Float): PitchOption = minBy { abs(it.value - value) }
+
+internal data class PitchOption(
     val label: String,
     val value: Float,
 )

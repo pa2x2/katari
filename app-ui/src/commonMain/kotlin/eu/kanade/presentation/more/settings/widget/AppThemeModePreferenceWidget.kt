@@ -9,7 +9,7 @@ import eu.kanade.domain.ui.model.ThemeMode
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-private val options = mapOf(
+internal val themeModeLabels = mapOf(
     ThemeMode.SYSTEM to MR.strings.theme_system,
     ThemeMode.LIGHT to MR.strings.theme_light,
     ThemeMode.DARK to MR.strings.theme_dark,
@@ -22,10 +22,10 @@ fun AppThemeModePreferenceWidget(
 ) {
     ControlRow {
         SegmentedButtons(
-            options = options.keys.toList(),
+            options = themeModeLabels.keys.toList(),
             selected = value,
             onSelect = onItemClick,
-            label = { stringResource(options.getValue(it)) },
+            label = { stringResource(themeModeLabels.getValue(it)) },
             modifier = Modifier.fillMaxWidth(),
         )
     }
