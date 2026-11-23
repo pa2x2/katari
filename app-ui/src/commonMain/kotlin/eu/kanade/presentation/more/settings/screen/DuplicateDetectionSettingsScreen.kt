@@ -102,112 +102,109 @@ class DuplicateDetectionSettingsScreen : SearchableSettings() {
                     ),
                 ),
             ),
-        ) + buildList {
-            if (extendedEnabled) {
-                add(
-                    Preference.PreferenceGroup(
-                        title = stringResource(MR.strings.pref_duplicate_detection_confidence_budget),
-                        preferenceItems = persistentListOf(
-                            Preference.PreferenceItem.InfoPreference(
-                                title = stringResource(
-                                    MR.strings.pref_duplicate_detection_unused_budget,
-                                    budget.remainingBudget,
-                                    DuplicatePreferences.TOTAL_SCORE_BUDGET,
-                                ),
-                                showIcon = false,
-                            ),
-                            Preference.PreferenceItem.SliderPreference(
-                                preference = duplicatePreferences.descriptionWeight,
-                                title = stringResource(MR.strings.pref_duplicate_detection_weight_description),
-                                subtitle = stringResource(
-                                    MR.strings.pref_duplicate_detection_weight_summary_description,
-                                    budget.description,
-                                    budget.description + budget.remainingBudget,
-                                ),
-                                visible = true,
-                                valueRange = 0..(budget.description + budget.remainingBudget),
-                            ),
-                            Preference.PreferenceItem.SliderPreference(
-                                preference = duplicatePreferences.authorWeight,
-                                title = stringResource(MR.strings.pref_duplicate_detection_weight_author),
-                                subtitle = stringResource(
-                                    MR.strings.pref_duplicate_detection_weight_summary_author,
-                                    budget.author,
-                                    budget.author + budget.remainingBudget,
-                                ),
-                                visible = true,
-                                valueRange = 0..(budget.author + budget.remainingBudget),
-                            ),
-                            Preference.PreferenceItem.SliderPreference(
-                                preference = duplicatePreferences.artistWeight,
-                                title = stringResource(MR.strings.pref_duplicate_detection_weight_artist),
-                                subtitle = stringResource(
-                                    MR.strings.pref_duplicate_detection_weight_summary_artist,
-                                    budget.artist,
-                                    budget.artist + budget.remainingBudget,
-                                ),
-                                visible = true,
-                                valueRange = 0..(budget.artist + budget.remainingBudget),
-                            ),
-                            Preference.PreferenceItem.SliderPreference(
-                                preference = duplicatePreferences.coverWeight,
-                                title = stringResource(MR.strings.pref_duplicate_detection_weight_cover),
-                                subtitle = stringResource(
-                                    MR.strings.pref_duplicate_detection_weight_summary_cover,
-                                    budget.cover,
-                                    budget.cover + budget.remainingBudget,
-                                ),
-                                visible = true,
-                                valueRange = 0..(budget.cover + budget.remainingBudget),
-                            ),
-                            Preference.PreferenceItem.SliderPreference(
-                                preference = duplicatePreferences.genreWeight,
-                                title = stringResource(MR.strings.pref_duplicate_detection_weight_genre),
-                                subtitle = stringResource(
-                                    MR.strings.pref_duplicate_detection_weight_summary_genre,
-                                    budget.genre,
-                                    budget.genre + budget.remainingBudget,
-                                ),
-                                visible = true,
-                                valueRange = 0..(budget.genre + budget.remainingBudget),
-                            ),
-                            Preference.PreferenceItem.SliderPreference(
-                                preference = duplicatePreferences.statusWeight,
-                                title = stringResource(MR.strings.pref_duplicate_detection_weight_status),
-                                subtitle = stringResource(
-                                    MR.strings.pref_duplicate_detection_weight_summary_status,
-                                    budget.status,
-                                    budget.status + budget.remainingBudget,
-                                ),
-                                visible = true,
-                                valueRange = 0..(budget.status + budget.remainingBudget),
-                            ),
-                            Preference.PreferenceItem.SliderPreference(
-                                preference = duplicatePreferences.chapterCountWeight,
-                                title = stringResource(MR.strings.pref_duplicate_detection_weight_chapter_count),
-                                subtitle = stringResource(
-                                    MR.strings.pref_duplicate_detection_weight_summary_chapter_count,
-                                    budget.chapterCount,
-                                    budget.chapterCount + budget.remainingBudget,
-                                ),
-                                visible = true,
-                                valueRange = 0..(budget.chapterCount + budget.remainingBudget),
-                            ),
-                            Preference.PreferenceItem.SliderPreference(
-                                preference = duplicatePreferences.titleWeight,
-                                title = stringResource(MR.strings.pref_duplicate_detection_weight_title),
-                                subtitle = stringResource(
-                                    MR.strings.pref_duplicate_detection_weight_summary_title,
-                                    budget.title,
-                                    budget.title + budget.remainingBudget,
-                                ),
-                                visible = true,
-                                valueRange = 0..(budget.title + budget.remainingBudget),
-                            ),
+            // Built while hidden too, so the weights are known wherever these screens list the settings
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.pref_duplicate_detection_confidence_budget),
+                visible = extendedEnabled,
+                preferenceItems = persistentListOf(
+                    Preference.PreferenceItem.InfoPreference(
+                        title = stringResource(
+                            MR.strings.pref_duplicate_detection_unused_budget,
+                            budget.remainingBudget,
+                            DuplicatePreferences.TOTAL_SCORE_BUDGET,
                         ),
+                        showIcon = false,
                     ),
-                )
-            }
-        }
+                    Preference.PreferenceItem.SliderPreference(
+                        preference = duplicatePreferences.descriptionWeight,
+                        title = stringResource(MR.strings.pref_duplicate_detection_weight_description),
+                        subtitle = stringResource(
+                            MR.strings.pref_duplicate_detection_weight_summary_description,
+                            budget.description,
+                            budget.description + budget.remainingBudget,
+                        ),
+                        visible = true,
+                        valueRange = 0..(budget.description + budget.remainingBudget),
+                    ),
+                    Preference.PreferenceItem.SliderPreference(
+                        preference = duplicatePreferences.authorWeight,
+                        title = stringResource(MR.strings.pref_duplicate_detection_weight_author),
+                        subtitle = stringResource(
+                            MR.strings.pref_duplicate_detection_weight_summary_author,
+                            budget.author,
+                            budget.author + budget.remainingBudget,
+                        ),
+                        visible = true,
+                        valueRange = 0..(budget.author + budget.remainingBudget),
+                    ),
+                    Preference.PreferenceItem.SliderPreference(
+                        preference = duplicatePreferences.artistWeight,
+                        title = stringResource(MR.strings.pref_duplicate_detection_weight_artist),
+                        subtitle = stringResource(
+                            MR.strings.pref_duplicate_detection_weight_summary_artist,
+                            budget.artist,
+                            budget.artist + budget.remainingBudget,
+                        ),
+                        visible = true,
+                        valueRange = 0..(budget.artist + budget.remainingBudget),
+                    ),
+                    Preference.PreferenceItem.SliderPreference(
+                        preference = duplicatePreferences.coverWeight,
+                        title = stringResource(MR.strings.pref_duplicate_detection_weight_cover),
+                        subtitle = stringResource(
+                            MR.strings.pref_duplicate_detection_weight_summary_cover,
+                            budget.cover,
+                            budget.cover + budget.remainingBudget,
+                        ),
+                        visible = true,
+                        valueRange = 0..(budget.cover + budget.remainingBudget),
+                    ),
+                    Preference.PreferenceItem.SliderPreference(
+                        preference = duplicatePreferences.genreWeight,
+                        title = stringResource(MR.strings.pref_duplicate_detection_weight_genre),
+                        subtitle = stringResource(
+                            MR.strings.pref_duplicate_detection_weight_summary_genre,
+                            budget.genre,
+                            budget.genre + budget.remainingBudget,
+                        ),
+                        visible = true,
+                        valueRange = 0..(budget.genre + budget.remainingBudget),
+                    ),
+                    Preference.PreferenceItem.SliderPreference(
+                        preference = duplicatePreferences.statusWeight,
+                        title = stringResource(MR.strings.pref_duplicate_detection_weight_status),
+                        subtitle = stringResource(
+                            MR.strings.pref_duplicate_detection_weight_summary_status,
+                            budget.status,
+                            budget.status + budget.remainingBudget,
+                        ),
+                        visible = true,
+                        valueRange = 0..(budget.status + budget.remainingBudget),
+                    ),
+                    Preference.PreferenceItem.SliderPreference(
+                        preference = duplicatePreferences.chapterCountWeight,
+                        title = stringResource(MR.strings.pref_duplicate_detection_weight_chapter_count),
+                        subtitle = stringResource(
+                            MR.strings.pref_duplicate_detection_weight_summary_chapter_count,
+                            budget.chapterCount,
+                            budget.chapterCount + budget.remainingBudget,
+                        ),
+                        visible = true,
+                        valueRange = 0..(budget.chapterCount + budget.remainingBudget),
+                    ),
+                    Preference.PreferenceItem.SliderPreference(
+                        preference = duplicatePreferences.titleWeight,
+                        title = stringResource(MR.strings.pref_duplicate_detection_weight_title),
+                        subtitle = stringResource(
+                            MR.strings.pref_duplicate_detection_weight_summary_title,
+                            budget.title,
+                            budget.title + budget.remainingBudget,
+                        ),
+                        visible = true,
+                        valueRange = 0..(budget.title + budget.remainingBudget),
+                    ),
+                ),
+            ),
+        )
     }
 }

@@ -23,6 +23,7 @@ private fun mainSettingsScreens() = listOf(
     SettingsTtsScreen(),
     SettingsTextRecognitionScreen(),
     SettingsBrowseScreen(),
+    DuplicateDetectionSettingsScreen(),
     SettingsDataScreen(),
     SettingsNotificationsScreen(),
     SettingsSecurityScreen(),
