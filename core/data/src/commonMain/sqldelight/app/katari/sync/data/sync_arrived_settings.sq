@@ -12,12 +12,14 @@ CREATE TABLE sync_arrived_settings(
     previous BLOB NOT NULL,
     -- When the sync that applied the change ran, in epoch milliseconds: the changes one sync applied are told as one.
     batch INTEGER NOT NULL,
-    kept INTEGER AS Boolean NOT NULL DEFAULT 0
+    kept INTEGER AS Boolean NOT NULL DEFAULT 0,
+    -- The value the last of those changes wrote, in the same form; null on rows noted before the app kept it.
+    arrived BLOB
 );
 
 insert:
-INSERT INTO sync_arrived_settings(profile_id, setting_key, from_device_id, previous, batch)
-VALUES (:profileId, :settingKey, :fromDeviceId, :previous, :batch);
+INSERT INTO sync_arrived_settings(profile_id, setting_key, from_device_id, previous, arrived, batch)
+VALUES (:profileId, :settingKey, :fromDeviceId, :previous, :arrived, :batch);
 
 waiting:
 SELECT _id
@@ -26,13 +28,18 @@ WHERE profile_id IS :profileId AND setting_key = :settingKey AND kept = 0;
 
 changedAgain:
 UPDATE sync_arrived_settings
-SET from_device_id = :fromDeviceId, batch = :batch
+SET from_device_id = :fromDeviceId, arrived = :arrived, batch = :batch
 WHERE _id = :id;
 
 all:
 SELECT *
 FROM sync_arrived_settings
 ORDER BY batch DESC, _id DESC;
+
+unkept:
+SELECT *
+FROM sync_arrived_settings
+WHERE kept = 0;
 
 inBatch:
 SELECT *

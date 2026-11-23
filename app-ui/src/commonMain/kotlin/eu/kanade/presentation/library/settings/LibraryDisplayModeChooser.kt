@@ -15,6 +15,7 @@ import app.katari.presentation.kit.control.ChoiceTile
 import app.katari.presentation.kit.list.RowGroupHeader
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
+import dev.icerock.moko.resources.StringResource
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.i18n.*
@@ -63,15 +64,7 @@ private fun LibraryDisplayModeChoice(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val label = stringResource(
-        when (mode) {
-            LibraryDisplayMode.CompactGrid -> MR.strings.action_display_grid
-            LibraryDisplayMode.ComfortableGrid -> MR.strings.action_display_comfortable_grid
-            LibraryDisplayMode.ComfortableList -> MR.strings.action_display_comfortable_list
-            LibraryDisplayMode.CoverOnlyGrid -> MR.strings.action_display_cover_only_grid
-            LibraryDisplayMode.List -> MR.strings.action_display_list
-        },
-    )
+    val label = stringResource(mode.labelRes)
     ChoiceTile(selected = selected, onClick = onClick, modifier = modifier) {
         Column(
             modifier = Modifier.padding(KatariTheme.spacing.xs),
@@ -89,3 +82,12 @@ private fun LibraryDisplayModeChoice(
         }
     }
 }
+
+internal val LibraryDisplayMode.labelRes: StringResource
+    get() = when (this) {
+        LibraryDisplayMode.CompactGrid -> MR.strings.action_display_grid
+        LibraryDisplayMode.ComfortableGrid -> MR.strings.action_display_comfortable_grid
+        LibraryDisplayMode.ComfortableList -> MR.strings.action_display_comfortable_list
+        LibraryDisplayMode.CoverOnlyGrid -> MR.strings.action_display_cover_only_grid
+        LibraryDisplayMode.List -> MR.strings.action_display_list
+    }

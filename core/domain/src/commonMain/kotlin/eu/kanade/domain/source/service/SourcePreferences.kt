@@ -56,10 +56,14 @@ class SourcePreferences(
         fun migrationRemoveDownloads(preferenceStore: PreferenceStore): Preference<Boolean> =
             preferenceStore.getBoolean("migration_remove_downloads", true)
 
+        /** Whether extensions without a content rating are left out: "Not rated" in the allowed content warnings. */
+        fun hideNotRatedExtensions(preferenceStore: PreferenceStore): Preference<Boolean> =
+            preferenceStore.getBoolean("hide_not_rated_extensions", false)
+
         fun enabledContentWarnings(preferenceStore: PreferenceStore): Preference<Set<ContentWarning>> {
             return AllowedContentWarnings(
                 rated = preferenceStore.getEnumSet("enabled_content_warnings", ContentWarning.entries.toSet()),
-                hideNotRated = preferenceStore.getBoolean("hide_not_rated_extensions", false),
+                hideNotRated = hideNotRatedExtensions(preferenceStore),
             )
         }
     }

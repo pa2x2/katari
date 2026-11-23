@@ -23,8 +23,8 @@ import kotlin.time.Clock
  * this device, then puts back the value it had. Kept here first, the value written back is held back like any edit of
  * a setting this device doesn't sync, and switching the setting on again later asks whose value it keeps.
  *
- * A setting of a menu ([ArrivedSetting.menu]) is kept with the rest of its menu that the same sync changed, as its
- * settings sync or stay as one.
+ * A setting of a menu ([ArrivedSetting.menu]) is kept with every other change to its menu not kept yet, whichever sync
+ * brought it, as the menu's settings sync or stay as one.
  */
 @Inject
 class SettingArrivals(
@@ -42,26 +42,30 @@ class SettingArrivals(
     ) { rows, choices ->
         val since = now() - ArrivalNotes.KEPT_FOR.inWholeMilliseconds
         val names = directory.listed()
-        rows.filter { it.batch >= since }.map { it.arrived(names, choices) }
+        rows.filter { it.batch >= since }.map { it.toArrived(names, choices) }
     }
 
     /** The settings each sync changes here from now on, as that sync is committed. */
     fun arrivals(): Flow<List<ArrivedSetting>> = batches.batches.map { batch ->
         val names = directory.listed()
         val choices = preferences.choices()
-        handler.await { sync_arrived_settingsQueries.inBatch(batch).awaitAsList() }.map { it.arrived(names, choices) }
+        handler.await { sync_arrived_settingsQueries.inBatch(batch).awaitAsList() }.map { it.toArrived(names, choices) }
     }
 
-    /** Keeps [setting] on this device with the value it had, along with the rest of its menu that its sync changed. */
+    /** Keeps [setting] on this device with the value it had, along with the rest of its menu's changes. */
     suspend fun keepMine(setting: ArrivedSetting) {
-        val rows = handler.await { sync_arrived_settingsQueries.inBatch(setting.batch).awaitAsList() }
-        keep(rows.filter { it._id == setting.id || (setting.menu != null && it.arrivedMenu == setting.menu) })
+        val menu = setting.menu
+        keep(unkept().filter { it._id == setting.id || (menu != null && it.arrivedMenu == menu) })
     }
 
-    /** Keeps every setting [batch]'s sync changed here, as a notice of them offers. */
+    /** Keeps every setting [batch]'s sync changed here, as a notice of them offers, with the rest of their menus. */
     suspend fun keepMine(batch: Long) {
-        keep(handler.await { sync_arrived_settingsQueries.inBatch(batch).awaitAsList() })
+        val rows = unkept()
+        val menus = rows.filter { it.batch == batch }.mapNotNull { it.arrivedMenu }.toSet()
+        keep(rows.filter { it.batch == batch || it.arrivedMenu in menus })
     }
+
+    private suspend fun unkept() = handler.await { sync_arrived_settingsQueries.unkept().awaitAsList() }
 
     /**
      * Keeps [rows]' settings here, then puts back their values. The choices' writes take in this device's edits first,
@@ -79,7 +83,7 @@ class SettingArrivals(
             .filter { !it.kept }
         handler.await { sync_arrived_settingsQueries.markKept(waiting.map { it._id }) }
         waiting.forEach { row ->
-            val previous = ProtoBuf.decodeFromByteArray(SettingValue.serializer(), row.previous).stored
+            val previous = decode(row.previous)
             val profileId = row.profile_id
             if (profileId == null) {
                 settings.writeSharedValue(row.setting_key, previous)
@@ -92,7 +96,7 @@ class SettingArrivals(
     private val Sync_arrived_settings.arrivedMenu
         get() = PreferenceScopes.markOf(setting_key)?.menu
 
-    private fun Sync_arrived_settings.arrived(names: Map<DeviceId, String>, choices: ChoiceSet) = ArrivedSetting(
+    private fun Sync_arrived_settings.toArrived(names: Map<DeviceId, String>, choices: ChoiceSet) = ArrivedSetting(
         id = _id,
         profileId = profile_id,
         key = setting_key,
@@ -103,7 +107,10 @@ class SettingArrivals(
             choices.syncsSetting(setting_key) -> KeepMine.SYNCED_AGAIN
             else -> KeepMine.KEPT_HERE
         },
+        change = arrived?.let { ArrivedChange(before = decode(previous), after = decode(it)) },
     )
+
+    private fun decode(value: ByteArray) = ProtoBuf.decodeFromByteArray(SettingValue.serializer(), value).stored
 
     private fun now() = Clock.System.now().toEpochMilliseconds()
 }

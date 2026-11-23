@@ -15,6 +15,9 @@ interface BookDocumentReaderSettings : ViewerSettingsProvider {
     val invertVolumeKeysSetting: ViewerSettingDefinition<Boolean>
     val themeSetting: ViewerSettingDefinition<BookDocumentReaderTheme>
 
+    /** Whether a book's own colours, boxes and borders show, kept readable on the theme. */
+    val publisherStylesSetting: ViewerSettingDefinition<Boolean>
+
     /** The profile's saved colours, offered as extra themes after the presets. */
     val savedColors: Preference<List<BookDocumentReaderTheme.Custom>>
 

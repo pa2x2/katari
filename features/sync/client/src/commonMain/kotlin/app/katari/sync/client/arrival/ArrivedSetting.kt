@@ -15,11 +15,20 @@ data class ArrivedSetting(
     val from: String?,
     val batch: Long,
     val keepMine: KeepMine,
+    /** What the other devices changed; null on a change noted before the app kept the value it arrived with. */
+    val change: ArrivedChange?,
 ) {
     /** The menu whose settings [key] syncs with, whose arrival is told and kept as one. */
     val menu: MenuSettings?
         get() = PreferenceScopes.markOf(key)?.menu
 }
+
+/**
+ * The value this device had before the other devices changed the setting, which Keep mine puts back, and the value
+ * their last change wrote, both as the store holds them: with this device's source keys and record IDs, and null for a
+ * setting that isn't set and reads as its default.
+ */
+data class ArrivedChange(val before: Any?, val after: Any?)
 
 /** What Keep mine can do for an arrived setting, or did, as this device's choices stand now. */
 enum class KeepMine {

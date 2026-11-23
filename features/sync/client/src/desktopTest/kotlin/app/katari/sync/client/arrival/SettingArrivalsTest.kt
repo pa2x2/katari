@@ -64,22 +64,29 @@ class SettingArrivalsTest {
     }
 
     @Test
-    fun `Keep mine on a menu's setting keeps the rest of the menu its sync changed`(): Unit = runBlocking {
-        synced { a, b ->
-            b.filter(DOWNLOADED).set(1)
-            b.filter(UNREAD).set(2)
-            b.sync() shouldBe SyncOutcome.SYNCED
-            a.sync() shouldBe SyncOutcome.SYNCED
-            val arrived = a.arrivals.changes().first().filter { it.menu == MenuSettings.LIBRARY_FILTERS }
-            arrived.map { it.key }.toSet() shouldBe setOf(DOWNLOADED, UNREAD)
+    fun `Keep mine on a menu's setting keeps every change to its menu, whichever sync brought it`(): Unit =
+        runBlocking {
+            synced { a, b ->
+                b.filter(DOWNLOADED).set(1)
+                b.sync() shouldBe SyncOutcome.SYNCED
+                a.sync() shouldBe SyncOutcome.SYNCED
+                b.filter(UNREAD).set(2)
+                b.sync() shouldBe SyncOutcome.SYNCED
+                a.sync() shouldBe SyncOutcome.SYNCED
+                val arrived = a.arrivals.changes().first().filter { it.menu == MenuSettings.LIBRARY_FILTERS }
+                arrived.map { it.key }.toSet() shouldBe setOf(DOWNLOADED, UNREAD)
+                arrived.map { it.batch }.toSet().size shouldBe 2
 
-            a.arrivals.keepMine(arrived.first())
-            a.filter(DOWNLOADED).get() shouldBe 0
-            a.filter(UNREAD).get() shouldBe 0
-            a.preferences.choices() shouldBe ChoiceSet(menusOff = setOf(MenuSettings.LIBRARY_FILTERS))
-            (a.arrived(DOWNLOADED) + a.arrived(UNREAD)).map { it.keepMine }.toSet() shouldBe setOf(KeepMine.KEPT_HERE)
+                a.arrivals.keepMine(arrived.first())
+                a.filter(DOWNLOADED).get() shouldBe 0
+                a.filter(UNREAD).get() shouldBe 0
+                a.preferences.choices() shouldBe ChoiceSet(menusOff = setOf(MenuSettings.LIBRARY_FILTERS))
+                val kept = a.arrived(DOWNLOADED) + a.arrived(UNREAD)
+                kept.map { it.keepMine }.toSet() shouldBe setOf(KeepMine.KEPT_HERE)
+                // What arrived is still told once this device's values are back
+                kept.map { it.change?.after }.toSet() shouldBe setOf(1, 2)
+            }
         }
-    }
 
     @Test
     fun `a kept setting that syncs again no longer says it is kept here`(): Unit = runBlocking {

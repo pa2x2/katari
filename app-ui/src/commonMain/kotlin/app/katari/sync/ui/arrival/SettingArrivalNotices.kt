@@ -11,8 +11,10 @@ import app.katari.presentation.kit.feedback.LocalAppMessages
 import app.katari.presentation.kit.feedback.MessageAction
 import app.katari.sync.client.arrival.ArrivedSetting
 import app.katari.sync.ui.SyncUiGraph
-import app.katari.sync.ui.choice.settingTitles
-import app.katari.sync.ui.choice.title
+import app.katari.sync.ui.arrival.change.ChangeLookups
+import app.katari.sync.ui.arrival.change.itemsText
+import app.katari.sync.ui.arrival.change.line
+import app.katari.sync.ui.choice.settingRows
 import app.katari.ui.di.LocalAppUiGraph
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.*
@@ -31,36 +33,52 @@ fun SettingArrivalNotices(graph: SyncUiGraph = LocalAppUiGraph.current) {
     var arrived by remember { mutableStateOf<List<ArrivedSetting>?>(null) }
     LaunchedEffect(graph) { graph.settingArrivals.arrivals().collect { if (it.isNotEmpty()) arrived = it } }
     val told = arrived ?: return
-    val text = arrivalText(told)
+    val text = arrivalText(told, graph.changeLookups)
     val keepMine = stringResource(MR.strings.sync_keep_mine)
     LaunchedEffect(told) {
-        val batch = told.first().batch
-        messages.show(
-            text,
-            long = true,
-            action = MessageAction(keepMine) {
-                scope.launch { graph.settingArrivals.keepMine(batch) }
-            },
-        )
+        if (text != null) {
+            val batch = told.first().batch
+            messages.show(
+                text,
+                long = true,
+                action = MessageAction(keepMine) {
+                    scope.launch { graph.settingArrivals.keepMine(batch) }
+                },
+            )
+        }
         arrived = null
     }
 }
 
-/** What one sync changed, by its name when it changed one setting or one menu, and the device it came from. */
+/**
+ * What one sync changed and the device it came from: what happened when it is one setting or menu and that fits in one
+ * part ("From expertbook: Hid MangaDex and Comick"), else the names of the parts that changed, else how many settings.
+ * Null when every setting reads as it did before ([arrivedRows]).
+ */
 @Composable
-private fun arrivalText(arrived: List<ArrivedSetting>): String {
-    val first = arrived.first()
-    val device = if (arrived.all { it.from == first.from }) {
+private fun arrivalText(arrived: List<ArrivedSetting>, lookups: ChangeLookups): String? {
+    val settingRows = settingRows()
+    val rows = arrivedRows(arrived, settingRows, lookups)
+    val told = rows.flatMap { it.settings }.ifEmpty { return null }
+    val first = told.first()
+    val device = if (told.all { it.from == first.from }) {
         first.fromName()
     } else {
         stringResource(MR.strings.sync_arrived_other_devices)
     }
-    val menu = first.menu?.takeIf { menu -> arrived.all { it.menu == menu } }
-    val name = menu?.title() ?: first.name(settingTitles()).takeIf { arrived.size == 1 }
-    val area = first.areaTitle().takeIf { arrived.size == 1 }
+    val single = rows.singleOrNull()
+    val parts = single?.parts.orEmpty()
+    val part = parts.singleOrNull()?.takeIf { it.full == it.text }
+    val name = when {
+        parts.isNotEmpty() -> itemsText(parts.map { it.name }.distinct())
+        single != null -> first.name(settingRows, lookups)
+        else -> null
+    }
+    val area = first.areaTitle().takeIf { single != null }
     return when {
+        part != null -> stringResource(MR.strings.sync_arrived_change_from, device, parts.line(rowTitle = null))
         name != null -> stringResource(MR.strings.sync_arrived_named, name, device)
         area != null -> stringResource(MR.strings.sync_arrived_area, area, device)
-        else -> pluralStringResource(MR.plurals.sync_arrived_settings, arrived.size, arrived.size, device)
+        else -> pluralStringResource(MR.plurals.sync_arrived_settings, told.size, told.size, device)
     }
 }
