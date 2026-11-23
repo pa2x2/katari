@@ -46,6 +46,7 @@ class ChangeCaptureTest {
                 """,
                 "INSERT INTO chapters(_id, entry_id, url, name) VALUES (10, 1, '/show/1', 'Episode 1')",
                 "INSERT INTO chapters(_id, entry_id, url, name) VALUES (12, 1, '/show/0', 'Recap')",
+                "INSERT INTO chapters(_id, entry_id, url, name) VALUES (13, 1, '/show/00', 'Second recap')",
                 "INSERT INTO chapters(_id, entry_id, url, name) VALUES (11, 3, 'folder/1', 'Local chapter')",
             )
             val entries = EntryRepositoryImpl(device.handler, device.defaultProfile)
@@ -108,9 +109,11 @@ class ChangeCaptureTest {
                 // Kept, so the episode removed by the refresh and the entry removed as cache take one with them
                 subtitleTimings.set(SubtitleTiming(chapterId = 12, subtitleKey = "external:English", delayMs = 400))
             }
-            expect("activity session and segment", "activity.session", "activity.segment") {
+            expect("activity session and segments", "activity.session", *Array(3) { "activity.segment" }) {
                 db.activityQueries.insertActivitySession("session", 1, 100, 200)
                 db.activityQueries.upsertActivitySegment("session", 10, "2026-11-06", "UTC", 100, 200, 100)
+                db.activityQueries.upsertActivitySegment("session", 12, "2026-11-06", "UTC", 100, 150, 50)
+                db.activityQueries.upsertActivitySegment("session", 13, "2026-11-06", "UTC", 150, 200, 50)
             }
             // The first activity of a profile also starts its statistics.
             expect("completion", "activity.completion", "statistics.epoch") {
@@ -206,9 +209,10 @@ class ChangeCaptureTest {
                     updateTitle = true,
                 )
                 val episode = chapters.getChapterById(10)!!
-                // The source no longer lists the recap, whose history goes with it
+                // The source no longer lists the recaps, whose history goes with them, and whose time joins one
+                // segment without a chapter
                 chapters.applySourceSync(
-                    removedIds = listOf(12),
+                    removedIds = listOf(12, 13),
                     updated = listOf(episode.copy(name = "Episode 1: Pilot")),
                     inserted = listOf(
                         EntryChapter.create().copy(entryId = 1, url = "/show/2", name = "Episode 2", dateFetch = 1000),
@@ -239,8 +243,8 @@ class ChangeCaptureTest {
             }
             // Preferences aren't in the database; their kinds have no triggers
             stored.toSet() shouldBe SyncKinds.all.filter { it.capture.isNotEmpty() }.map { it.name }.toSet()
-            withClue("both episodes and the new release, not the local chapter") {
-                stored.count { it == "chapter" } shouldBe 3
+            withClue("both episodes, the second recap with its time, and the new release, not the local chapter") {
+                stored.count { it == "chapter" } shouldBe 4
             }
         }
     }

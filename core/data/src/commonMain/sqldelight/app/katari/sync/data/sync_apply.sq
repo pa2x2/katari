@@ -336,7 +336,8 @@ SELECT count(*) > 0
 FROM activity_sessions
 WHERE session_id = :sessionId;
 
--- chapter_id is part of the key and may be null, which SQLite never counts as a conflict, so the row is replaced.
+-- chapter_id may be null, and the rows without one are kept unique by an index of their own rather than by the key,
+-- so the row is replaced rather than upserted.
 deleteActivitySegment:
 DELETE FROM activity_segments
 WHERE session_id = :sessionId

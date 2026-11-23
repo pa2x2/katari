@@ -1,0 +1,86 @@
+-- Segments that deleted chapters left without one, several for a session, day and time zone, merge into one, as
+-- deleting a chapter merges them from now on (tachiyomi/data/activity.sq).
+UPDATE activity_segments
+SET
+    started_at = SAME.started_at,
+    ended_at = SAME.ended_at,
+    duration = SAME.duration
+FROM (
+    SELECT session_id, local_date, time_zone_id, min(started_at) AS started_at, max(ended_at) AS ended_at,
+        sum(duration) AS duration
+    FROM activity_segments
+    WHERE chapter_id IS NULL
+    GROUP BY session_id, local_date, time_zone_id
+    HAVING count(*) > 1
+) SAME
+WHERE activity_segments.chapter_id IS NULL
+AND activity_segments.session_id = SAME.session_id
+AND activity_segments.local_date = SAME.local_date
+AND activity_segments.time_zone_id = SAME.time_zone_id;
+
+DELETE FROM activity_segments
+WHERE chapter_id IS NULL
+AND rowid NOT IN (
+    SELECT min(rowid)
+    FROM activity_segments
+    WHERE chapter_id IS NULL
+    GROUP BY session_id, local_date, time_zone_id
+);
+
+CREATE UNIQUE INDEX idx_activity_segments_without_chapter
+ON activity_segments(session_id, local_date, time_zone_id)
+WHERE chapter_id IS NULL;
+
+CREATE TRIGGER activity_segments_chapter_deleted
+BEFORE DELETE ON chapters
+FOR EACH ROW
+BEGIN
+    UPDATE activity_segments
+    SET
+        started_at = min(started_at, (
+            SELECT GONE.started_at
+            FROM activity_segments GONE
+            WHERE GONE.chapter_id = old._id
+            AND GONE.session_id = activity_segments.session_id
+            AND GONE.local_date = activity_segments.local_date
+            AND GONE.time_zone_id = activity_segments.time_zone_id
+        )),
+        ended_at = max(ended_at, (
+            SELECT GONE.ended_at
+            FROM activity_segments GONE
+            WHERE GONE.chapter_id = old._id
+            AND GONE.session_id = activity_segments.session_id
+            AND GONE.local_date = activity_segments.local_date
+            AND GONE.time_zone_id = activity_segments.time_zone_id
+        )),
+        duration = duration + (
+            SELECT GONE.duration
+            FROM activity_segments GONE
+            WHERE GONE.chapter_id = old._id
+            AND GONE.session_id = activity_segments.session_id
+            AND GONE.local_date = activity_segments.local_date
+            AND GONE.time_zone_id = activity_segments.time_zone_id
+        )
+    WHERE chapter_id IS NULL
+    AND EXISTS (
+        SELECT 1
+        FROM activity_segments GONE
+        WHERE GONE.chapter_id = old._id
+        AND GONE.session_id = activity_segments.session_id
+        AND GONE.local_date = activity_segments.local_date
+        AND GONE.time_zone_id = activity_segments.time_zone_id
+    );
+    DELETE FROM activity_segments
+    WHERE chapter_id = old._id
+    AND EXISTS (
+        SELECT 1
+        FROM activity_segments KEPT
+        WHERE KEPT.chapter_id IS NULL
+        AND KEPT.session_id = activity_segments.session_id
+        AND KEPT.local_date = activity_segments.local_date
+        AND KEPT.time_zone_id = activity_segments.time_zone_id
+    );
+    UPDATE activity_segments
+    SET chapter_id = NULL
+    WHERE chapter_id = old._id;
+END;
