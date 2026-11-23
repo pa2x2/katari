@@ -1,0 +1,99 @@
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/SyncUiGraph.kt
+  s_08ab6b3940def9::t_cd984b1f14d15b 6,19
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/ArrivalNames.kt
+  s_08ab6b3940def9::t_e595853238edb6 6,8,17-19,22-23
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/ArrivedSettingsScreen.kt
+  s_08ab6b3940def9::t_d98fe18d6280e8 3,7-9,14,18-21,36-37,46,50,58,61-65,71-77,82-85,87-90,92-105,107-109,114,125-130,132-134
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/SettingArrivalNotices.kt
+  s_08ab6b3940def9::t_5a08cf4e295304 14-17,36,39-48,53-57,59-64,69-77,79,82
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/ArrivedChanges.kt
+  s_08ab6b3940def9::t_0fd43a8f629940 1-60
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/ChangeLookups.kt
+  s_08ab6b3940def9::t_f52ded99c5b178 1-59
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/KeyChange.kt
+  s_08ab6b3940def9::t_b7a69161ea14dc 1-26
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/SettingRowChanges.kt
+  s_08ab6b3940def9::t_c4a441f972a6b8 1-55
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/AppearanceNamedSettings.kt
+  s_08ab6b3940def9::t_0d06adde0f9c73 1-29
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/NamedSettings.kt
+  s_08ab6b3940def9::t_54b651d48cfabb 1-33
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/PlayerNamedSettings.kt
+  s_08ab6b3940def9::t_45ef1cbb27c962 1-10
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/SpeechNamedSettings.kt
+  s_08ab6b3940def9::t_4e1339ec587907 1-22
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/TranslationNamedSettings.kt
+  s_08ab6b3940def9::t_8c6ac3f59fd48f 1-47
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/choice/AreaSettings.kt
+  s_08ab6b3940def9::t_2d249fe2817457 43,56-61,74,85
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/page/SyncScreen.kt
+  s_08ab6b3940def9::t_16cacde700cd1f 20,22,124-126
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/settings/LibrarySortLabels.kt
+  s_08ab6b3940def9::t_6884d90fc234b1 1-19
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/settings/LibrarySortPage.kt
+  s_08ab6b3940def9::t_c229e0ba389738 40-49
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/SettingsBrowseScreen.kt
+  s_08ab6b3940def9::t_498e5ac04b69ef 220-227
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/tts/presentation/TtsPitchSetting.kt
+  s_08ab6b3940def9::t_896e75ba7a1deb 21-22,35-52
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/widget/AppThemeModePreferenceWidget.kt
+  s_08ab6b3940def9::t_857ff3e30bc36f 12,25,28
+core/data/src/commonMain/sqldelight/app/katari/sync/data/sync_arrived_settings.sq
+  s_08ab6b3940def9::t_d79a32b4a4b436 15-17,21-22,31,39-43
+core/data/src/commonMain/sqldelight/tachiyomi/migrations/98.sqm
+  s_08ab6b3940def9::t_50a248b478f477 1-3
+core/domain/src/commonMain/kotlin/eu/kanade/domain/source/service/SourcePreferences.kt
+  s_08ab6b3940def9::t_7e67944aa16588 59-62,66
+core/domain/src/commonMain/kotlin/tachiyomi/domain/entry/model/Entry.kt
+  s_08ab6b3940def9::t_741829d3453552 88,91,94,97,142-148
+core/i18n/src/commonMain/moko-resources/base/plurals.xml
+  s_08ab6b3940def9::t_5e89963779169f 508-511
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_08ab6b3940def9::t_4b996bffd7a1f8 3508-3555
+features/entry-interactions/api/src/commonMain/kotlin/app/katari/entry/interactions/reader/settings/BookDocumentReaderSettings.kt
+  s_08ab6b3940def9::t_9345fa70f4f748 18-20
+features/entry-interactions/book/src/commonMain/kotlin/app/katari/entry/interactions/book/document/reader/settings/BookDocumentReaderSettingsProvider.kt
+  s_08ab6b3940def9::t_c093f9402900aa 111
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/apply/ApplySession.kt
+  s_08ab6b3940def9::t_7035ab07caaa18 224
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/arrival/ArrivalNotes.kt
+  s_08ab6b3940def9::t_98bd04b201a87d 12-15,21,28,37-38,45-46
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/arrival/ArrivedSetting.kt
+  s_08ab6b3940def9::t_e6b54ff1674215 18-19,26-32
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/arrival/SettingArrivals.kt
+  s_08ab6b3940def9::t_edfa98a98933ff 26-27,45,52,55,57-58,61,63-65,68-69,86,99,110,113-114
+features/sync/client/src/desktopTest/kotlin/app/katari/sync/client/arrival/SettingArrivalsTest.kt
+  s_08ab6b3940def9::t_c7858648a9c320 67-78,80-88
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/ArrivedRow.kt
+  s_08ab6b3940def9::t_2b287a54079afb 1-42
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/BrowseNamedSettings.kt
+  s_08ab6b3940def9::t_3aa81463483782 1-130
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/LibraryNamedSettings.kt
+  s_08ab6b3940def9::t_7bcaaae4b91f75 1-87
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/NamedSetting.kt
+  s_08ab6b3940def9::t_3ccc93a17477c5 1-138
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/ReaderNamedSettings.kt
+  s_08ab6b3940def9::t_d4a3a3ce13bed2 1-117
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/StatisticsNamedSettings.kt
+  s_08ab6b3940def9::t_f1dbfa495c7781 1-96
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/settings/LibraryDisplayModeChooser.kt
+  s_08ab6b3940def9::t_2d84fce5563e58 18,67,85-93
+gradle/build-logic/src/main/kotlin/app/katari/gradle/preferencescope/PreferenceScopeRules.kt
+  s_08ab6b3940def9::t_32ef9c8654771c 98-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "246c13a49012c5bd3d7cde7c71b02c30658faaef",
+  "prompts": {},
+  "sessions": {
+    "s_08ab6b3940def9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "08c3be5c-2d4c-4af5-af52-99d30cbffaaa",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
