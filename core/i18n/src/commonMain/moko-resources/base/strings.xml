@@ -1745,7 +1745,6 @@
     <string name="pref_home_screen_tabs">Home screen tabs</string>
     <string name="pref_startup_screen">Application startup screen</string>
     <string name="home_navigation_editor_title">Navigation</string>
-    <string name="home_navigation_editor_instructions">Press and hold a destination, then drop it exactly where you want it.</string>
     <string name="home_navigation_overflow">Overflow</string>
     <string name="home_navigation_drop_here">Drop items here</string>
     <string name="home_navigation_startup">Startup</string>

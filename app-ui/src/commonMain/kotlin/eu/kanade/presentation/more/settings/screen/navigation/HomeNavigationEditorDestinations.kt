@@ -21,6 +21,7 @@ import app.katari.core.common.HomeScreenTabs
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.DragIndicator
 import app.katari.icons.materialsymbols.roundedfilled.Home
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.control.DragPreview
@@ -78,10 +79,9 @@ private fun DestinationTile(
     modifier: Modifier = Modifier,
 ) {
     val title = homeNavigationTitle(tab)
+    val moveHint = stringResource(platformPresentation.navigationDestinationMoveHint, title)
     Card(
-        modifier = modifier.semantics {
-            contentDescription = "$title. Press and hold to move"
-        },
+        modifier = modifier.semantics { contentDescription = moveHint },
         style = CardStyle.Outlined,
         highlighted = isDropPreview,
     ) {

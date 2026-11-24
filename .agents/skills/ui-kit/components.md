@@ -158,7 +158,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A file or folder from the system's picker | `rememberDocumentPicker` | |
 | Whether an item is in the selection, shown on the item | `SelectionMark` | |
 | Mouse selection and right-click menus over a screen's items | `SelectableItems`, `Modifier.selectableItem` | |
-| Drag and drop | `DragPreview`, `DropTargetPanel` | |
+| Drag and drop | `DragPreview`, `DropTargetPanel` | Modifier.dragSource picks an item up: at once with a mouse, after a long press by touch. Modifier.dropInsertionIndicator marks where it would land |
 
 ## Sheets, dialogs and menus
 

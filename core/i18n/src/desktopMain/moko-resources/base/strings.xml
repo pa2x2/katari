@@ -77,6 +77,8 @@
     <string name="pref_browse_long_press_action_open_settings">Press-and-hold actions</string>
     <string name="browse_feed_long_press_actions_for_source">Press-and-hold actions for %1$s</string>
     <string name="filter_tristate_chip_hint">Click to include, click again to exclude. Press and hold to exclude.</string>
+    <string name="home_navigation_editor_instructions">Drag a destination and drop it exactly where you want it.</string>
+    <string name="home_navigation_destination_move_hint">%1$s. Drag to move</string>
     <string name="pref_category_touchpad">Touchpad</string>
     <string name="pref_touchpad_summary">Natural scrolling</string>
     <string name="pref_natural_scrolling">Natural scrolling</string>
