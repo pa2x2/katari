@@ -1,0 +1,59 @@
+.agents/skills/ui-kit/components.md
+  s_d9af1158cdf779::t_33b846422bbfdb 266
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/SettingsAnimePlayerScreen.kt
+  s_d9af1158cdf779::t_24c12ebaff6688 15-16,18,80,193-207
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/animeplayer/DefaultSubtitleLookScreen.kt
+  s_d9af1158cdf779::t_1f4e7968f5c88b 1-17
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/animeplayer/PlayerSettingsGraph.kt
+  s_d9af1158cdf779::t_a565ab044c4147 4,10
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_d9af1158cdf779::t_0f31a2d651fc11 1896,2168-2173
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/content/VideoFrameSample.kt
+  s_d9af1158cdf779::t_4a63b61c53759d 1-82
+features/entry-interactions/anime/src/commonMain/kotlin/app/katari/entry/interactions/anime/media/immersive/AnimeImmersiveClips.kt
+  s_d9af1158cdf779::t_01614819e41425 8,16-18,39,72,94,117
+features/entry-interactions/anime/src/commonMain/kotlin/app/katari/entry/interactions/anime/media/immersive/AnimeImmersivePlayerSurface.kt
+  s_d9af1158cdf779::t_934af0c3d101b0 77,229,236
+features/entry-interactions/anime/src/commonMain/kotlin/app/katari/entry/interactions/anime/media/immersive/AnimeImmersiveRenderer.kt
+  s_d9af1158cdf779::t_468ea2ee8c7968 34,48,203
+features/entry-interactions/anime/src/commonMain/kotlin/app/katari/entry/interactions/anime/runtime/AnimeImmersiveBindings.kt
+  s_d9af1158cdf779::t_230424e72a19ff 5,31,38
+features/entry-interactions/anime/src/commonMain/kotlin/app/katari/entry/interactions/anime/runtime/AnimePlayerBindings.kt
+  s_d9af1158cdf779::t_f7e75fd23d649e 23,39,93-96,127,154
+features/entry-interactions/anime/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/video/player/VideoPlaybackUiModels.kt
+  s_d9af1158cdf779::t_9c017be6d1f9d7 37-39,51-53
+features/entry-interactions/anime/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/video/player/VideoPlayerViewModel.kt
+  s_d9af1158cdf779::t_87946a4d82f0d2 25,53-54,56,131,244-261,535,538-540,542,1424-1425
+features/entry-interactions/anime/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/video/player/components/VideoSubtitleEditorPanel.kt
+  s_d9af1158cdf779::t_89e231a6d72902 24,36-40,73-74
+features/entry-interactions/anime/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/video/player/components/VideoSubtitleLookRows.kt
+  s_d9af1158cdf779::t_2b7bceade8c77c 1-108
+features/entry-interactions/anime/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/video/player/screen/VideoPlayerSubtitleEditorLayer.kt
+  s_d9af1158cdf779::t_2eba16d2b93b77 18-19,52,56
+features/entry-interactions/anime/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/video/player/settings/VideoSubtitleDefaultLookPage.kt
+  s_d9af1158cdf779::t_abdc34e61f39c1 1-111
+features/entry-interactions/anime/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/video/player/subtitle/VideoSubtitleAppearance.kt
+  s_d9af1158cdf779::t_954a3887723e42 3-7,13-19,23-28,45-47,58,60-65,69-81,84-108,111-121,134,143
+features/entry-interactions/api/src/commonMain/kotlin/app/katari/entry/interactions/settings/AnimePlayerPreferences.kt
+  s_d9af1158cdf779::t_d488f76dcef5b6 10-11,15-16,46-61,117-159
+features/entry-interactions/api/src/commonMain/kotlin/app/katari/entry/interactions/settings/DefaultSubtitleLookPage.kt
+  s_d9af1158cdf779::t_b0747d3619cb42 1-12
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/setting/scope/PlayerScopes.kt
+  s_d9af1158cdf779::t_ffc2ac1582f585 20-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "39273f8dcffffbe8ba2e5346eedb17c9368ef93d",
+  "prompts": {},
+  "sessions": {
+    "s_d9af1158cdf779": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5a8967b0-aae3-419b-b1f0-7d68d87161db",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
