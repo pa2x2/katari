@@ -1,0 +1,47 @@
+.agents/skills/ui-kit/components.md
+  s_d498fe46907c28::t_c97880799628a2 82
+app-ui/src/commonMain/kotlin/app/katari/sourcemigration/config/components/MigrationConfigSourceRow.kt
+  s_d498fe46907c28::t_cd2939e70f177d 11,57
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/category/components/CategoryListItem.kt
+  s_d498fe46907c28::t_1e2f85ae272313 10,28
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/entry/components/MergeEditorSheet.kt
+  s_d498fe46907c28::t_4b32a7d4b6ec65 32,203
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/grouping/LibraryGroupingEditor.kt
+  s_d498fe46907c28::t_9c16aec34ce287 16,136
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/browse/longpress/LongPressActionRows.kt
+  s_d498fe46907c28::t_5fc009ec5927b1 6,24
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/stats/layout/StatisticsLayoutEditor.kt
+  s_d498fe46907c28::t_5fc6c1926aed03 29,126,128
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/feed/manage/ManageFeedsSheet.kt
+  s_d498fe46907c28::t_a2bdd4ac22d73c 25,160
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/download/DownloadQueueList.kt
+  s_d498fe46907c28::t_fb9546e1b84f2d 17,96-97
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/download/DownloadQueueRow.kt
+  s_d498fe46907c28::t_dd2b691c91c84c 26,60
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/list/ReorderHandle.kt
+  s_d9af1158cdf779::t_d8a4520f418a38 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ddd539eed73c761abd6cb22c2124e2aa7e541105",
+  "prompts": {},
+  "sessions": {
+    "s_d498fe46907c28": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1a671c90-9c14-4bd4-9364-3ffed948cb49",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    },
+    "s_d9af1158cdf779": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5a8967b0-aae3-419b-b1f0-7d68d87161db",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
