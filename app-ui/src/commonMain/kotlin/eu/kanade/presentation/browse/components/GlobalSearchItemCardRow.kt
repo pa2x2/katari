@@ -10,8 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import app.katari.presentation.kit.content.BrowseMetrics
-import app.katari.presentation.kit.content.entryCoverScale
+import app.katari.presentation.kit.layout.coverShelfWidth
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.entry.components.toGridCoverType
@@ -21,6 +20,7 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItem
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.entry.model.asEntryCover
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -29,6 +29,8 @@ fun GlobalSearchItemCardRow(
     titles: List<GlobalSearchItem>,
     getItem: @Composable (GlobalSearchItem) -> State<GlobalSearchItem>,
     sourceItemOrientation: EntryItemOrientation,
+    coverSize: CoverSize,
+    showsTypeBadge: Boolean,
     onClick: (GlobalSearchItem) -> Unit,
     onLongClick: (GlobalSearchItem) -> Unit,
 ) {
@@ -46,6 +48,8 @@ fun GlobalSearchItemCardRow(
             GlobalSearchItemCard(
                 item = item,
                 sourceItemOrientation = sourceItemOrientation,
+                coverSize = coverSize,
+                showsTypeBadge = showsTypeBadge,
                 onClick = { onClick(item) },
                 onLongClick = { onLongClick(item) },
             )
@@ -57,17 +61,19 @@ fun GlobalSearchItemCardRow(
 private fun GlobalSearchItemCard(
     item: GlobalSearchItem,
     sourceItemOrientation: EntryItemOrientation,
+    coverSize: CoverSize,
+    showsTypeBadge: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    Box(modifier = Modifier.width(BrowseMetrics.searchResultCoverWidth * entryCoverScale())) {
+    Box(modifier = Modifier.width(coverShelfWidth(coverSize))) {
         EntryComfortableGridItem(
             title = item.displayTitle,
             titleMaxLines = 3,
             coverData = item.toEntryCover(),
             coverType = sourceItemOrientation.toGridCoverType(),
             coverBadgeEnd = {
-                CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+                CatalogBadges(isFavorite = item.favorite, entryType = item.entryType.takeIf { showsTypeBadge })
             },
             coverAlpha = if (item.favorite) {
                 CommonEntryItemDefaults.BrowseFavoriteCoverAlpha

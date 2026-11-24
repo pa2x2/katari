@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import app.katari.presentation.kit.layout.CoverSizing
 import eu.kanade.presentation.entry.components.toLibraryGridCoverType
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import tachiyomi.domain.entry.model.asEntryCover
@@ -21,6 +22,7 @@ internal fun LibraryCompactGrid(
     items: List<LibraryItem>,
     showTitle: Boolean,
     columns: GridCells,
+    sizing: CoverSizing?,
     contentPadding: PaddingValues,
     selection: Set<LibraryItemKey>,
     clicks: LibraryItemClicks,
@@ -42,6 +44,7 @@ internal fun LibraryCompactGrid(
             ),
         state = gridState,
         columns = columns,
+        sizing = sizing,
         contentPadding = contentPadding,
     ) {
         libraryPinnedGridItems(

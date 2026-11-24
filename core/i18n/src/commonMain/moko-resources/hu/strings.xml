@@ -668,7 +668,6 @@
     <string name="telemetry_summary">Az összeomlási naplók és elemzések elküldése lehetővé teszi számunkra, hogy azonosítsuk és javítsuk a problémákat, javítsuk a teljesítményt, és a jövőbeli frissítéseket még inkább az Ön igényeihez igazítsuk</string>
     <string name="invalid_backup_file_unknown">A biztonsági másolat fájl sérült</string>
     <string name="pref_flash_duration_summary">%1$s ms</string>
-    <string name="label_auto">Automatikus</string>
     <string name="pref_mark_duplicate_read_chapter_read_new">Új fejezet lekérése után</string>
     <string name="pref_flash_style_white">Fehér</string>
     <string name="library_list">Könyvtár lista</string>

@@ -24,8 +24,14 @@ enum class ScreenFrame {
      */
     ListDetail,
 
-    /** Content that fills its width with more columns, such as cover grids and card flows, up to [WideFrameMaxWidth]. */
+    /** Cards that fill their width with more columns, such as global search's sources, up to [WideFrameMaxWidth]. */
     Wide,
+
+    /**
+     * A grid of entry covers, such as the library or a catalog: all the room beside the dock, as the grid only adds
+     * columns, which the person sizes, however wide the window is.
+     */
+    Covers,
 
     /** The whole window, for content that lays itself out, such as web pages and pictures, or a shell around screens. */
     Window,
@@ -40,6 +46,7 @@ internal fun ScreenFrame.width(window: WindowLayout, available: Dp): Dp = when (
         min(available, RowListMaxWidth)
     }
     ScreenFrame.Wide -> min(available, WideFrameMaxWidth)
+    ScreenFrame.Covers -> available
     ScreenFrame.Window -> available
 }
 
@@ -63,7 +70,7 @@ internal data class FrameMargins(val start: Dp = 0.dp, val end: Dp = 0.dp)
 
 internal val LocalScreenFrameMargin = staticCompositionLocalOf { FrameMargins() }
 
-// Material's Extra-large window class starts here: past it a wider frame would only spread the content apart
+// Material's Extra-large window class starts here: past it a wider frame would only spread the cards apart
 private val WideFrameMaxWidth = 1600.dp
 
 private val ExpandedStartPaneWidth = 450.dp

@@ -21,12 +21,14 @@ import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchToolbar
 import eu.kanade.presentation.browse.components.KeepSearchResultsAtTop
+import eu.kanade.presentation.browse.components.catalogShowsTypeBadge
 import eu.kanade.presentation.browse.components.sourceOrigin
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItem
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchViewModel
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.plus
 
@@ -42,6 +44,8 @@ fun GlobalSearchScreen(
     onClickSource: (EntryCatalogueSourceInfo) -> Unit,
     onClickItem: (GlobalSearchItem) -> Unit,
     onLongClickItem: (GlobalSearchItem) -> Unit,
+    coverSize: CoverSize,
+    typeBadges: Boolean,
 ) {
     Scaffold(
         frame = ScreenFrame.Wide,
@@ -76,6 +80,8 @@ fun GlobalSearchScreen(
             )
         } else {
             GlobalSearchContent(
+                coverSize = coverSize,
+                typeBadges = typeBadges,
                 items = state.filteredItems,
                 contentPadding = paddingValues,
                 getItem = getItem,
@@ -96,6 +102,8 @@ internal fun GlobalSearchContent(
     onClickItem: (GlobalSearchItem) -> Unit,
     onLongClickItem: (GlobalSearchItem) -> Unit,
     fromSourceId: Long? = null,
+    coverSize: CoverSize,
+    typeBadges: Boolean,
 ) {
     val gridState = rememberLazyStaggeredGridState()
     KeepSearchResultsAtTop(firstSourceId = items.keys.firstOrNull()?.id, state = gridState)
@@ -121,6 +129,8 @@ internal fun GlobalSearchContent(
                         }
                         is GlobalSearchItemResult.Success -> {
                             GlobalSearchItemCardRow(
+                                coverSize = coverSize,
+                                showsTypeBadge = catalogShowsTypeBadge(source.supportedEntryTypes, typeBadges),
                                 titles = result.result,
                                 getItem = getItem,
                                 sourceItemOrientation = source.itemOrientation,

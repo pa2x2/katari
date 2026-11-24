@@ -12,8 +12,8 @@ import tachiyomi.domain.updates.service.UpdatesPreferences
 
 /**
  * The preferences that hold the keys this device stores sources under, each in the format its owner stores it in,
- * for whatever carries preferences to another device, whose keys differ: backups and sync. The per-source display mode
- * holds the key in its name. App-state preferences, such as the last used source, never leave the device.
+ * for whatever carries preferences to another device, whose keys differ: backups and sync. A source's own layout
+ * holds the key in its names. App-state preferences, such as the last used source, never leave the device.
  */
 object SourceKeyedPreferences {
     /**
@@ -25,9 +25,9 @@ object SourceKeyedPreferences {
 
     /** [key] with the source key it names replaced by what [transform] makes of it; unchanged when it names none. */
     fun mapKey(key: String, transform: (Long) -> Long): String {
-        val family = SourcePreferences.SOURCE_DISPLAY_MODE_KEY_FAMILY
-        val sourceKey = key.removePrefix(family.value).takeIf { key.startsWith(family.value) }?.toLongOrNull()
-        return if (sourceKey != null) family.key(transform(sourceKey)) else key
+        val family = KEY_FAMILIES.firstOrNull { key.startsWith(it.value) } ?: return key
+        val sourceKey = key.removePrefix(family.value).toLongOrNull() ?: return key
+        return family.key(transform(sourceKey))
     }
 
     /** [value] of the preference [key] with every source key in it replaced by what [transform] makes of it. */
@@ -49,6 +49,13 @@ object SourceKeyedPreferences {
             else -> value
         }
     }
+
+    // Preferences of one source each, named after its key
+    private val KEY_FAMILIES = listOf(
+        SourcePreferences.SOURCE_DISPLAY_MODE_KEY_FAMILY,
+        SourcePreferences.SOURCE_COVER_SIZE_KEY_FAMILY,
+        SourcePreferences.LEGACY_SOURCE_DISPLAY_MODE_KEY_FAMILY,
+    )
 
     private val KEY_SET_PREFERENCES = setOf(
         SourcePreferences.HIDDEN_SOURCES_KEY,

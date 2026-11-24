@@ -2,6 +2,7 @@ package eu.kanade.presentation.library.settings
 
 import androidx.compose.runtime.Composable
 import app.katari.entry.interactions.library.EntryLibraryFilterAvailability
+import app.katari.presentation.kit.layout.CoverSizing
 import app.katari.presentation.kit.sheet.SheetBackdrop
 import app.katari.presentation.kit.sheet.TabbedSheet
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
@@ -15,6 +16,7 @@ fun LibrarySettingsDialog(
     viewModel: LibrarySettingsViewModel,
     category: Category?,
     filterAvailability: EntryLibraryFilterAvailability,
+    sizing: CoverSizing,
 ) {
     TabbedSheet(
         onDismissRequest = onDismissRequest,
@@ -38,6 +40,7 @@ fun LibrarySettingsDialog(
             )
             2 -> LibraryDisplayPage(
                 viewModel = viewModel,
+                sizing = sizing,
             )
             3 -> LibraryGroupPage(
                 viewModel = viewModel,

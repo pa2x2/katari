@@ -664,7 +664,6 @@
     <string name="ext_remove">Видалити</string>
     <string name="remove_private_extension_message">Дійсно видалити \"%s\"?</string>
     <string name="pref_download_new_unread_chapters_only">Пропустити завантаження копій прочитаних розділів</string>
-    <string name="label_auto">Автоматичний</string>
     <string name="theme_monochrome">Монохромний режим</string>
     <string name="pref_behavior">Поведінка</string>
     <string name="action_notes">Примітки</string>

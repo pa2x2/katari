@@ -16,12 +16,14 @@ import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchToolbar
 import eu.kanade.presentation.browse.components.KeepSearchResultsAtTop
+import eu.kanade.presentation.browse.components.catalogShowsTypeBadge
 import eu.kanade.presentation.browse.components.sourceOrigin
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchViewModel
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -37,6 +39,8 @@ fun MigrateSearchScreen(
     onClickSource: (EntryCatalogueSourceInfo) -> Unit,
     onClickItem: (Entry) -> Unit,
     onLongClickItem: (Entry) -> Unit,
+    coverSize: CoverSize,
+    typeBadges: Boolean,
 ) {
     Scaffold(
         frame = ScreenFrame.Wide,
@@ -58,6 +62,8 @@ fun MigrateSearchScreen(
         },
     ) { paddingValues ->
         MigrateSearchContent(
+            coverSize = coverSize,
+            typeBadges = typeBadges,
             fromSourceId = fromSourceId,
             items = state.filteredItems,
             contentPadding = paddingValues,
@@ -78,6 +84,8 @@ internal fun MigrateSearchContent(
     onClickItem: (Entry) -> Unit,
     onLongClickItem: (Entry) -> Unit,
     fromSourceId: Long? = null,
+    coverSize: CoverSize,
+    typeBadges: Boolean,
 ) {
     val gridState = rememberLazyStaggeredGridState()
     KeepSearchResultsAtTop(firstSourceId = items.keys.firstOrNull()?.id, state = gridState)
@@ -103,6 +111,8 @@ internal fun MigrateSearchContent(
                         }
                         is SearchItemResult.Success -> {
                             GlobalSearchCardRow(
+                                coverSize = coverSize,
+                                showsTypeBadge = catalogShowsTypeBadge(source.supportedEntryTypes, typeBadges),
                                 titles = result.result,
                                 getEntryState = getEntryState,
                                 sourceItemOrientation = source.itemOrientation,

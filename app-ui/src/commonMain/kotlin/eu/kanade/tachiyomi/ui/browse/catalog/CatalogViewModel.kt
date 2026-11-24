@@ -67,6 +67,7 @@ import eu.kanade.domain.source.model.restoreSnapshot
 import eu.kanade.domain.source.model.snapshot
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.presentation.browse.components.catalogShowsTypeBadge
 import eu.kanade.presentation.entry.components.MergeEditorEntry
 import eu.kanade.presentation.entry.components.MergeEditorLock
 import eu.kanade.presentation.entry.components.MergeTarget
@@ -84,6 +85,7 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
+import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
 import eu.kanade.tachiyomi.source.filter.detachedCopy
 import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedFilterBrowseSession
@@ -140,10 +142,10 @@ class CatalogViewModel(
     @Assisted openFilterSheetOnStart: Boolean,
     @Assisted feedProfileId: Long?,
     private val sourceManager: SourceManager,
-    sourcePreferences: SourcePreferences,
+    val sourcePreferences: SourcePreferences,
     customPreferences: CustomPreferences,
     activeBrowseFeedService: BrowseFeedService,
-    private val libraryPreferences: LibraryPreferences,
+    libraryPreferences: LibraryPreferences,
     private val getEntry: GetEntry,
     private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature,
     private val entryMergeFeature: EntryMergeFeature,
@@ -179,8 +181,9 @@ class CatalogViewModel(
     val state: StateFlow<CatalogViewModel.State>
         field = MutableStateFlow<CatalogViewModel.State>(initialCatalogState(listingQuery))
 
-    var displayMode by sourcePreferences.sourceDisplayMode(sourceId).asState(viewModelScope)
-    val coverSize by libraryPreferences.coverSize.asState(viewModelScope)
+    private val typeBadges by libraryPreferences.entryTypeBadge.asState(viewModelScope)
+    val showsTypeBadge: Boolean
+        get() = catalogShowsTypeBadge(sourceManager.get(sourceId)?.supportedEntryTypes(), typeBadges)
     var feedsEnabled by customPreferences.enableFeeds.asState(viewModelScope)
     private val defaultBrowseLongPressActionPriority by
         customPreferences.browseLongPressActionPriority.asState(viewModelScope)

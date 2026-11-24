@@ -686,7 +686,6 @@
     <string name="pref_mark_duplicate_read_chapter_read">Marquer un chapitre dupliqué comme lu</string>
     <string name="possible_duplicates_summary">Vous avez une série similaire dans votre bibliothèque.\n\nSélectionnez une série à migrer ou l\'ajouter quand même.</string>
     <string name="action_display_unread_badge">Chapitres non lus</string>
-    <string name="label_auto">Auto</string>
     <string name="action_notes">Notes</string>
     <string name="action_edit_notes">Modifier les notes</string>
     <string name="clear_database_text">Vous êtes sur le point de supprimer des séries de la base de données</string>

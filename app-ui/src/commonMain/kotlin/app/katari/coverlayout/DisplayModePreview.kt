@@ -1,4 +1,4 @@
-package eu.kanade.presentation.library.settings
+package app.katari.coverlayout
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,9 +19,9 @@ import app.katari.presentation.kit.content.schematic
 import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryDisplayMode
 
-/** A miniature of the library laid out in [mode]: covers as tinted blocks, titles as lines. */
+/** A miniature of a grid of covers laid out in [mode]: covers as tinted blocks, titles as lines. */
 @Composable
-internal fun LibraryDisplayModePreview(mode: LibraryDisplayMode) {
+internal fun DisplayModePreview(mode: LibraryDisplayMode) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -115,7 +115,7 @@ private fun PreviewLine(modifier: Modifier) {
     )
 }
 
-private const val PREVIEW_ASPECT_RATIO = 0.8f
+private const val PREVIEW_ASPECT_RATIO = 1.25f
 private const val SHORT_LINE_FRACTION = 0.6f
 
 // The portrait thumbnail of a list row.

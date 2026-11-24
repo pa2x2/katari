@@ -30,6 +30,7 @@ import app.katari.presentation.kit.feedback.SnackbarDuration
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.feedback.SnackbarResult
 import app.katari.presentation.kit.layout.CoverGrid
+import app.katari.presentation.kit.layout.CoverSizing
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.layout.coverGridCells
 import app.katari.presentation.kit.layout.coverListCells
@@ -48,7 +49,6 @@ import eu.kanade.presentation.library.components.EntryListItem
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
@@ -59,9 +59,10 @@ import tachiyomi.i18n.platform.stringResource as coreStringResource
 @Composable
 fun CatalogContent(
     catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
-    coverSize: CoverSize,
+    sizing: CoverSizing,
     displayMode: LibraryDisplayMode,
     sourceItemOrientation: EntryItemOrientation,
+    showsTypeBadge: Boolean,
     snackbarHostState: SnackbarHostState,
     contentPadding: PaddingValues,
     onItemClick: (CatalogListItem) -> Unit,
@@ -138,13 +139,18 @@ fun CatalogContent(
         return
     }
 
-    val columns = coverGridCells(coverSize, wideCovers = sourceItemOrientation == EntryItemOrientation.HORIZONTAL)
+    val columns = coverGridCells(sizing.size, wideCovers = sourceItemOrientation == EntryItemOrientation.HORIZONTAL)
+    val badges: @Composable (CatalogListItem) -> Unit = { item ->
+        CatalogBadges(isFavorite = item.favorite, entryType = item.entryType.takeIf { showsTypeBadge })
+    }
     when (displayMode) {
         LibraryDisplayMode.ComfortableGrid -> CatalogComfortableGrid(
             catalogList = catalogList,
             columns = columns,
+            sizing = sizing,
             contentPadding = contentPadding,
             sourceItemOrientation = sourceItemOrientation,
+            badges = badges,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
             itemMenu = itemMenu,
@@ -153,8 +159,10 @@ fun CatalogContent(
         LibraryDisplayMode.ComfortableList -> CatalogComfortableGrid(
             catalogList = catalogList,
             columns = coverListCells(),
+            sizing = null,
             contentPadding = contentPadding,
             sourceItemOrientation = sourceItemOrientation,
+            badges = badges,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
             itemMenu = itemMenu,
@@ -163,6 +171,7 @@ fun CatalogContent(
         LibraryDisplayMode.List -> CatalogList(
             catalogList = catalogList,
             contentPadding = contentPadding,
+            badges = badges,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
             itemMenu = itemMenu,
@@ -171,8 +180,11 @@ fun CatalogContent(
         LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> CatalogCompactGrid(
             catalogList = catalogList,
             columns = columns,
+            sizing = sizing,
+            showTitles = displayMode == LibraryDisplayMode.CompactGrid,
             contentPadding = contentPadding,
             sourceItemOrientation = sourceItemOrientation,
+            badges = badges,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
             itemMenu = itemMenu,
@@ -185,6 +197,7 @@ fun CatalogContent(
 private fun CatalogList(
     catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
     contentPadding: PaddingValues,
+    badges: @Composable (CatalogListItem) -> Unit,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
     itemMenu: @Composable (CatalogListItem) -> Unit,
@@ -227,9 +240,7 @@ private fun CatalogList(
                         title = item.title,
                         coverData = item.cover,
                         coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
-                        badge = {
-                            CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-                        },
+                        badge = { badges(item) },
                         onLongClick = { onItemLongClick(item) },
                         onClick = { onItemClick(item) },
                     )
@@ -252,8 +263,10 @@ private fun CatalogList(
 private fun CatalogComfortableGrid(
     catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
     columns: GridCells,
+    sizing: CoverSizing?,
     contentPadding: PaddingValues,
     sourceItemOrientation: EntryItemOrientation,
+    badges: @Composable (CatalogListItem) -> Unit,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
     itemMenu: @Composable (CatalogListItem) -> Unit,
@@ -280,6 +293,7 @@ private fun CatalogComfortableGrid(
         contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
         verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+        sizing = sizing,
     ) {
         if (catalogList.loadState.prepend is LoadState.Loading) {
             item(span = { GridItemSpan(maxLineSpan) }) {
@@ -292,16 +306,13 @@ private fun CatalogComfortableGrid(
             key = { index -> catalogList.peek(index)?.value?.id ?: "catalog-comfortable-$index" },
         ) { index ->
             val item = catalogList[index]?.collectAsState()?.value ?: return@items
-            val entryItem = item as? CatalogListItem.EntryItem
             Box {
                 EntryComfortableGridItem(
                     title = item.title,
                     coverData = item.cover,
                     coverType = sourceItemOrientation.toGridCoverType(),
                     coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
-                    coverBadgeEnd = {
-                        CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-                    },
+                    coverBadgeEnd = { badges(item) },
                     onLongClick = { onItemLongClick(item) },
                     onClick = { onItemClick(item) },
                 )
@@ -323,8 +334,11 @@ private fun CatalogComfortableGrid(
 private fun CatalogCompactGrid(
     catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
     columns: GridCells,
+    sizing: CoverSizing,
+    showTitles: Boolean,
     contentPadding: PaddingValues,
     sourceItemOrientation: EntryItemOrientation,
+    badges: @Composable (CatalogListItem) -> Unit,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
     itemMenu: @Composable (CatalogListItem) -> Unit,
@@ -351,6 +365,7 @@ private fun CatalogCompactGrid(
         contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
         verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+        sizing = sizing,
     ) {
         if (catalogList.loadState.prepend is LoadState.Loading) {
             item(span = { GridItemSpan(maxLineSpan) }) {
@@ -363,18 +378,15 @@ private fun CatalogCompactGrid(
             key = { index -> catalogList.peek(index)?.value?.id ?: "catalog-compact-$index" },
         ) { index ->
             val item = catalogList[index]?.collectAsState()?.value ?: return@items
-            val entryItem = item as? CatalogListItem.EntryItem
             Box {
                 EntryCompactGridItem(
                     coverData = item.cover,
-                    title = item.title,
+                    title = item.title.takeIf { showTitles },
                     onClick = { onItemClick(item) },
                     onLongClick = { onItemLongClick(item) },
                     coverType = sourceItemOrientation.toGridCoverType(),
                     coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
-                    coverBadgeEnd = {
-                        CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-                    },
+                    coverBadgeEnd = { badges(item) },
                 )
                 itemMenu(item)
             }

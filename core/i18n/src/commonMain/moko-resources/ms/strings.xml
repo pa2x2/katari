@@ -648,7 +648,6 @@
     <string name="upcoming_guide">Panduan yang akan datang</string>
     <string name="upcoming_calendar_next">Bulan seterusnya</string>
     <string name="upcoming_calendar_prev">Bulan sebelumnya</string>
-    <string name="label_auto">Automatik</string>
     <string name="action_sort_random">Rawak</string>
     <string name="action_copy_link">Pautan salin</string>
     <string name="action_display_unread_badge">Bab yang belum dibaca</string>

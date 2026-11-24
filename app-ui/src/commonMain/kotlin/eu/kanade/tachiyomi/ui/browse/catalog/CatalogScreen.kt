@@ -19,6 +19,10 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.paging.LoadState
+import app.katari.coverlayout.SourceCoverLayoutSettings
+import app.katari.coverlayout.collectSourceLayout
+import app.katari.coverlayout.rememberCoverLayoutAction
+import app.katari.coverlayout.rememberSourceCoverSizing
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.presentation.core.util.collectAsLazyPagingItems
 import app.katari.presentation.kit.feedback.LoadingScreen
@@ -66,7 +70,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.util.lang.withIOContext
-import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -203,16 +206,26 @@ data class CatalogScreen(
                 )
             }
         } else {
+            val layout by collectSourceLayout(viewModel.sourcePreferences, sourceId)
+            val sizing = rememberSourceCoverSizing(viewModel.sourcePreferences, sourceId, layout)
+            val displayAction = rememberCoverLayoutAction(layout.displayMode) {
+                SourceCoverLayoutSettings(
+                    preferences = viewModel.sourcePreferences,
+                    sourceId = sourceId,
+                    sourceName = viewModel.sourceName,
+                    layout = layout,
+                    sizing = sizing,
+                )
+            }
             Scaffold(
-                frame = ScreenFrame.Wide,
+                frame = ScreenFrame.Covers,
                 topBar = { scrollBehavior ->
                     Column {
                         CatalogToolbar(
                             title = viewModel.sourceName,
                             searchQuery = state.toolbarQuery,
                             onSearchQueryChange = viewModel::setToolbarQuery,
-                            displayMode = viewModel.displayMode,
-                            onDisplayModeChange = { viewModel.displayMode = it },
+                            displayAction = displayAction,
                             navigateUp = navigateUp,
                             onWebViewClick = onWebViewClick,
                             onSettingsClick = onSettingsClick,
@@ -267,9 +280,10 @@ data class CatalogScreen(
                 ) {
                     CatalogContent(
                         catalogList = catalogList,
-                        coverSize = viewModel.coverSize,
-                        displayMode = viewModel.displayMode,
+                        sizing = sizing,
+                        displayMode = layout.displayMode,
                         sourceItemOrientation = viewModel.sourceItemOrientation,
+                        showsTypeBadge = viewModel.showsTypeBadge,
                         snackbarHostState = snackbarHostState,
                         contentPadding = paddingValues,
                         onItemClick = { item ->

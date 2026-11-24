@@ -35,6 +35,8 @@ class MigrateSearchScreen(private val subject: EntryMigrationSubject) : Screen()
             fromSourceId = state.from?.source,
             navigateUp = navigator::pop,
             onChangeSearchQuery = viewModel::updateSearchQuery,
+            coverSize = viewModel.coverSize,
+            typeBadges = viewModel.typeBadges,
             onSearch = { viewModel.search() },
             getEntryState = { viewModel.getEntryState(it) },
             onChangeSearchFilter = viewModel::setSourceFilter,

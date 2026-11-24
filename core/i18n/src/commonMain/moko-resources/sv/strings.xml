@@ -747,7 +747,6 @@
     <string name="migrationListScreen.migrateDialog.copyLabel">Kopiera</string>
     <string name="migrationListScreen.migrateDialog.migrateLabel">Migrera</string>
     <string name="migrationListScreen.matchWithoutChapterToast">Inga kapitel fanns, den här artikeln kan inte användas för migrering</string>
-    <string name="label_auto">Automatisk</string>
     <string name="extensionStores">Tilläggsdepåer</string>
     <string name="action.addExtensionStore">Lägg till tilläggsdepå</string>
     <string name="extensionStoresScreen.emptyLabel">Du har ännu inte lagt till en tilläggsdepå</string>

@@ -675,7 +675,6 @@
     <string name="ext_remove">Eliminați</string>
     <string name="ext_confirm_remove">Eliminați extensia?</string>
     <string name="remove_private_extension_message">Chiar doriți să eliminați extensia „%s”?</string>
-    <string name="label_auto">Automatic</string>
     <string name="pref_incognito_mode_extension_summary">Întrerupeți istoricul de lectură pentru extensie</string>
     <string name="action_display_unread_badge">Capitole necitite</string>
     <string name="action_notes">Notițe</string>

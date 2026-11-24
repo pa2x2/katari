@@ -9,7 +9,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMap
+import app.katari.coverlayout.DisplayModes
+import app.katari.coverlayout.labelRes
 import app.katari.platform.presentation.platformPresentation
+import app.katari.presentation.kit.layout.labelRes
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -178,17 +181,7 @@ class SettingsLibraryScreen : SearchableSettings() {
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.displayMode,
-                    entries = persistentMapOf(
-                        LibraryDisplayMode.CompactGrid to stringResource(MR.strings.action_display_grid),
-                        LibraryDisplayMode.ComfortableGrid to stringResource(
-                            MR.strings.action_display_comfortable_grid,
-                        ),
-                        LibraryDisplayMode.ComfortableList to stringResource(
-                            MR.strings.action_display_comfortable_list,
-                        ),
-                        LibraryDisplayMode.CoverOnlyGrid to stringResource(MR.strings.action_display_cover_only_grid),
-                        LibraryDisplayMode.List to stringResource(MR.strings.action_display_list),
-                    ),
+                    entries = DisplayModes.associateWith { stringResource(it.labelRes) },
                     title = stringResource(MR.strings.action_display_mode),
                 ),
                 Preference.PreferenceItem.ListPreference(
@@ -200,8 +193,7 @@ class SettingsLibraryScreen : SearchableSettings() {
                     preference = libraryPreferences.coverSize,
                     entries = CoverSize.entries.associateWith { stringResource(it.labelRes) },
                     title = stringResource(MR.strings.pref_library_cover_size),
-                    visible = displayMode != LibraryDisplayMode.List &&
-                        displayMode != LibraryDisplayMode.ComfortableList,
+                    visible = displayMode.isCoverGrid,
                 ),
             ),
         )

@@ -64,6 +64,8 @@ class GlobalSearchScreen(
                 state = state,
                 navigateUp = navigator::pop,
                 onChangeSearchQuery = viewModel::updateSearchQuery,
+                coverSize = viewModel.coverSize,
+                typeBadges = viewModel.typeBadges,
                 onSearch = { viewModel.search() },
                 getItem = { viewModel.getItem(it) },
                 onChangeSearchFilter = viewModel::setSourceFilter,

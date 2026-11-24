@@ -29,6 +29,7 @@ import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.feedback.SnackbarDuration
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.feedback.SnackbarResult
+import app.katari.presentation.kit.layout.CoverSizing
 import app.katari.presentation.kit.layout.coverGridCells
 import app.katari.presentation.kit.layout.coverListCells
 import app.katari.presentation.kit.navigation.rememberAppBarExpander
@@ -42,7 +43,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.domain.source.model.CatalogListItem
@@ -55,8 +55,9 @@ import tachiyomi.i18n.platform.stringResource as coreStringResource
 fun CatalogFeedBrowseContent(
     source: EntryCatalogueSourceInfo?,
     viewModel: FeedViewModel<CatalogListItem>,
-    coverSize: CoverSize,
+    sizing: CoverSizing,
     displayMode: LibraryDisplayMode,
+    showsTypeBadge: Boolean,
     snackbarHostState: SnackbarHostState,
     contentPadding: PaddingValues,
     onWebViewClick: (() -> Unit)?,
@@ -214,7 +215,7 @@ fun CatalogFeedBrowseContent(
     }
 
     val sourceItemOrientation = source?.itemOrientation ?: EntryItemOrientation.VERTICAL
-    val columns = coverGridCells(coverSize, wideCovers = sourceItemOrientation == EntryItemOrientation.HORIZONTAL)
+    val columns = coverGridCells(sizing.size, wideCovers = sourceItemOrientation == EntryItemOrientation.HORIZONTAL)
     val showFooter = state.isAppending || state.appendError != null
     val footer: @Composable () -> Unit = {
         val appendError = state.appendError
@@ -249,6 +250,7 @@ fun CatalogFeedBrowseContent(
                 ref = it.ref,
                 viewModel = viewModel,
                 sourceItemOrientation = sourceItemOrientation,
+                showsTypeBadge = showsTypeBadge,
                 onItemClick = onItemClick,
                 onItemLongClick = onItemLongClick,
                 itemMenu = itemMenu,
@@ -277,6 +279,7 @@ fun CatalogFeedBrowseContent(
                         CatalogFeedListItem(
                             ref = it.ref,
                             viewModel = viewModel,
+                            showsTypeBadge = showsTypeBadge,
                             onItemClick = onItemClick,
                             onItemLongClick = onItemLongClick,
                             itemMenu = itemMenu,
@@ -288,6 +291,7 @@ fun CatalogFeedBrowseContent(
             LibraryDisplayMode.ComfortableGrid -> FeedLazyGrid(
                 rows = rows,
                 columns = columns,
+                sizing = sizing,
                 gridState = gridState,
                 contentPadding = contentPadding,
                 showFooter = showFooter,
@@ -297,6 +301,7 @@ fun CatalogFeedBrowseContent(
             LibraryDisplayMode.ComfortableList -> FeedLazyGrid(
                 rows = rows,
                 columns = coverListCells(),
+                sizing = null,
                 gridState = gridState,
                 contentPadding = contentPadding,
                 showFooter = showFooter,
@@ -306,6 +311,7 @@ fun CatalogFeedBrowseContent(
             LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> FeedLazyGrid(
                 rows = rows,
                 columns = columns,
+                sizing = sizing,
                 gridState = gridState,
                 contentPadding = contentPadding,
                 showFooter = showFooter,
@@ -315,6 +321,8 @@ fun CatalogFeedBrowseContent(
                             ref = it.ref,
                             viewModel = viewModel,
                             sourceItemOrientation = sourceItemOrientation,
+                            showTitle = displayMode == LibraryDisplayMode.CompactGrid,
+                            showsTypeBadge = showsTypeBadge,
                             onItemClick = onItemClick,
                             onItemLongClick = onItemLongClick,
                             itemMenu = itemMenu,

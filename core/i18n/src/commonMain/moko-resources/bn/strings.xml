@@ -536,7 +536,6 @@
     <string name="action_ok">ওকে</string>
     <string name="action_sort_next_updated">পরবর্তী আপডেটের সম্ভাব্য সময়</string>
     <string name="action_copy_link">লিংক কপি করুন</string>
-    <string name="label_auto">স্বয়ংক্রিয়</string>
     <string name="onboarding_permission_ignore_battery_opts">পটভূমিতে ব্যাটারি ব্যবহার</string>
     <string name="action_sort_random">এলোমেলো</string>
     <string name="onboarding_permission_notifications_description">লাইব্রেরি আপডেট এবং আরও বিষয়ে নোটিফিকেশন পান।</string>

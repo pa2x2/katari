@@ -666,7 +666,6 @@
     <string name="invalid_backup_file_unknown">Back-up bestand is corrupt</string>
     <string name="manga_interval_expected_update">Nieuwe hoofdstukken zijn geschat om uit te komen in ongeveer %1$s. Word ongeveer elke %2$s gecontroleerd.</string>
     <string name="pref_incognito_mode_extension_summary">Pauseer leesgeschiedenis voor extensie</string>
-    <string name="label_auto">Automatisch</string>
     <string name="pref_mark_duplicate_read_chapter_read_existing">Na het lezen van een hoofdstuk</string>
     <string name="pref_behavior">Gedrag</string>
     <string name="pref_mark_duplicate_read_chapter_read_new">Na het ophalen van een nieuw hoofdstuk</string>

@@ -6,6 +6,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import app.katari.coverlayout.SourceCoverLayoutSettings
+import app.katari.coverlayout.collectSourceLayout
+import app.katari.coverlayout.rememberCoverLayoutAction
+import app.katari.coverlayout.rememberSourceCoverSizing
 import app.katari.entry.interactions.migration.EntryMigrationPreparationResult
 import app.katari.entry.interactions.migration.EntryMigrationPrepareIntent
 import app.katari.icons.materialsymbols.MaterialSymbols
@@ -15,6 +19,7 @@ import app.katari.presentation.kit.button.FloatingActionButton
 import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.navigation.AppBarActions
 import app.katari.presentation.kit.navigation.Scaffold
 import app.katari.presentation.kit.navigation.SearchToolbar
 import app.katari.sourcemigration.dialog.MigrateEntryDialog
@@ -76,15 +81,26 @@ data class MigrateSourceSearchScreen(
         val catalogList = viewModel.catalogPagerFlowFlow.collectAsLazyPagingItems()
         CatalogScreenEventsEffect(viewModel, snackbarHostState)
 
+        val layout by collectSourceLayout(viewModel.sourcePreferences, sourceId)
+        val sizing = rememberSourceCoverSizing(viewModel.sourcePreferences, sourceId, layout)
+        val displayAction = rememberCoverLayoutAction(layout.displayMode) {
+            SourceCoverLayoutSettings(
+                preferences = viewModel.sourcePreferences,
+                sourceId = sourceId,
+                sourceName = viewModel.sourceName,
+                layout = layout,
+                sizing = sizing,
+            )
+        }
         Scaffold(
-
-            frame = ScreenFrame.Wide,
+            frame = ScreenFrame.Covers,
             topBar = { scrollBehavior ->
                 SearchToolbar(
                     searchQuery = state.toolbarQuery ?: "",
                     onChangeSearchQuery = viewModel::setToolbarQuery,
                     onClickCloseSearch = navigator::pop,
                     onSearch = viewModel::search,
+                    actions = { AppBarActions(listOf(displayAction)) },
                     scrollBehavior = scrollBehavior,
                 )
             },
@@ -120,9 +136,10 @@ data class MigrateSourceSearchScreen(
             }
             CatalogContent(
                 catalogList = catalogList,
-                coverSize = viewModel.coverSize,
-                displayMode = viewModel.displayMode,
+                sizing = sizing,
+                displayMode = layout.displayMode,
                 sourceItemOrientation = viewModel.sourceItemOrientation,
+                showsTypeBadge = viewModel.showsTypeBadge,
                 snackbarHostState = snackbarHostState,
                 contentPadding = paddingValues,
                 onItemClick = { item ->

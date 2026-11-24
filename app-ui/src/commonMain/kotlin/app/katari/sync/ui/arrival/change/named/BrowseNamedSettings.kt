@@ -1,6 +1,7 @@
 package app.katari.sync.ui.arrival.change.named
 
 import app.katari.core.common.CustomPreferences
+import app.katari.coverlayout.labelRes
 import app.katari.entry.interactions.settings.EntryInteractionPreferences
 import app.katari.platform.presentation.platformPresentation
 import app.katari.sync.ui.arrival.change.setChanges
@@ -8,7 +9,6 @@ import app.katari.sync.ui.arrival.change.valueChange
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.domain.source.interactor.SetMigrateSorting
 import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.presentation.library.settings.labelRes
 import eu.kanade.presentation.more.settings.screen.browse.longpress.browseLongPressPrioritySummary
 import eu.kanade.presentation.more.settings.screen.previewSizeTitleRes
 import kotlinx.serialization.json.Json

@@ -675,7 +675,6 @@
     <string name="pref_display_profile">โปรไฟล์การแสดงผลแบบกำหนดเอง</string>
     <string name="pref_webtoon_disable_zoom_out">ปิดการใช้งานการซูมออก</string>
     <string name="action_view_upcoming">ดูการอัปเดตที่กำลังจะมีขึ้น</string>
-    <string name="label_auto">อัตโนมัติ</string>
     <string name="action_display_unread_badge">ตอนที่ยังไม่ได้อ่าน</string>
     <string name="action_notes">โน้ต</string>
     <string name="action_edit_notes">แก้ไขโน้ต</string>

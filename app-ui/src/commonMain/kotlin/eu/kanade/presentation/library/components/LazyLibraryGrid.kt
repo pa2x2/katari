@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.katari.presentation.kit.layout.CoverGrid
+import app.katari.presentation.kit.layout.CoverSizing
 import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.util.plus
 
@@ -17,6 +18,7 @@ internal fun LazyLibraryGrid(
     modifier: Modifier = Modifier,
     state: LazyGridState = rememberLazyGridState(),
     columns: GridCells,
+    sizing: CoverSizing?,
     contentPadding: PaddingValues,
     content: LazyGridScope.() -> Unit,
 ) {
@@ -28,5 +30,6 @@ internal fun LazyLibraryGrid(
         fastScroll = true,
         verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+        sizing = sizing,
     ) { content() }
 }

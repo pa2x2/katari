@@ -3,6 +3,7 @@ package app.katari.sync.ui.arrival.change.named
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import app.katari.coverlayout.labelRes
 import app.katari.library.update.planning.LibraryUpdateSkipRule
 import app.katari.sync.ui.arrival.change.listChange
 import app.katari.sync.ui.arrival.change.setChanges
@@ -11,7 +12,6 @@ import app.katari.ui.di.LocalAppUiGraph
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.entry.entryTypePresentation
-import eu.kanade.presentation.library.settings.labelRes
 import eu.kanade.presentation.more.settings.screen.libraryupdates.titleRes
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore

@@ -703,7 +703,6 @@
     <string name="remove_private_extension_message">Möchtest du die Erweiterung „%s“ wirklich entfernen?</string>
     <string name="non_library_settings">Alle gelesenen Einträge</string>
     <string name="pref_incognito_mode_extension_summary">Leseverlauf für eine Erweiterung pausieren</string>
-    <string name="label_auto">Automatisch</string>
     <string name="theme_monochrome">Monochrom</string>
     <string name="library_list">Bibliotheksliste</string>
     <string name="library_exported">Bibliothek exportiert</string>

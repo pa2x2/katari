@@ -33,6 +33,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.coverlayout.SourceCoverLayoutSettings
+import app.katari.coverlayout.collectSourceLayout
+import app.katari.coverlayout.rememberSourceCoverSizing
 import app.katari.entry.interactions.media.EntryImmersiveSourceAvailability
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Add
@@ -258,10 +261,9 @@ private fun Screen.FeedsTabContent(
         )
     } else if (activeFeed != null && activeSource != null && activePreset != null) {
         val enabledFeeds = state.enabledFeeds
-        val activeDisplayMode = viewModel.displayModeFor(
-            activeFeed,
-            viewModel.sourceDisplayMode(activeFeed.sourceId),
-        )
+        val layoutPreferences = remember(activeProfileId) { graph.profileSourcePreferences.forProfile(activeProfileId) }
+        val layout by collectSourceLayout(layoutPreferences, activeFeed.sourceId)
+        val sizing = rememberSourceCoverSizing(layoutPreferences, activeFeed.sourceId, layout)
         var showFeedPicker by remember(activeFeed.id) { mutableStateOf(false) }
         val feedPickerAnchor = rememberPopoverAnchor()
         var jumpToNewestRequest by remember(activeFeed.id) { mutableIntStateOf(0) }
@@ -348,12 +350,20 @@ private fun Screen.FeedsTabContent(
                                 FeedNavigationBar(
                                     feeds = enabledFeeds,
                                     selectedFeed = activeFeed,
-                                    selectedDisplayMode = activeDisplayMode,
+                                    displayMode = layout.displayMode,
+                                    displaySettings = {
+                                        SourceCoverLayoutSettings(
+                                            preferences = layoutPreferences,
+                                            sourceId = activeFeed.sourceId,
+                                            sourceName = activeSource.name,
+                                            layout = layout,
+                                            sizing = sizing,
+                                        )
+                                    },
                                     sourceFor = viewModel::sourceFor,
                                     presetFor = viewModel::presetFor,
                                     immersiveAvailable = immersiveAvailable,
                                     onFeedViewModeChange = onFeedViewModeChange,
-                                    onDisplayModeChange = { viewModel.updateFeedDisplayMode(activeFeed.id, it) },
                                     onFeedSelect = viewModel::selectFeed,
                                     onRenameFeed = { renamingFeedId = activeFeed.id },
                                     onAddFeed = viewModel::showCreateDialog,
@@ -371,8 +381,9 @@ private fun Screen.FeedsTabContent(
                                 CatalogFeedBrowseContent(
                                     source = catalogSource,
                                     viewModel = timelineModel,
-                                    coverSize = actionModel.coverSize,
-                                    displayMode = activeDisplayMode,
+                                    sizing = sizing,
+                                    displayMode = layout.displayMode,
+                                    showsTypeBadge = actionModel.showsTypeBadge,
                                     snackbarHostState = snackbarHostState,
                                     contentPadding = toolbarPadding,
                                     onWebViewClick = {

@@ -515,7 +515,6 @@
     <string name="onboarding_storage_selected_folder">Суйланӑ папкӑ: %s</string>
     <string name="onboarding_permission_analytics">Тӗпчевлеме ирӗк</string>
     <string name="action_add_anyway">Пур пӗрех хуш</string>
-    <string name="label_auto">Хӑй халлӗн</string>
     <string name="action_display_unread_badge">Вуламан сыпӑк</string>
     <string name="action_notes">Ҫырчӑк</string>
     <string name="action_edit_notes">Ҫырчӑк улӑштар</string>

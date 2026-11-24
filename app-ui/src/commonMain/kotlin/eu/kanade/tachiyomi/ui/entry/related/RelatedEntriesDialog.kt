@@ -11,6 +11,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.katari.core.platform.currentPlatformContext
+import app.katari.coverlayout.CoverLayoutButton
+import app.katari.coverlayout.SourceCoverLayoutSettings
+import app.katari.coverlayout.collectSourceLayout
+import app.katari.coverlayout.rememberSourceCoverSizing
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Refresh
 import app.katari.presentation.kit.feedback.EmptyScreen
@@ -21,6 +25,9 @@ import app.katari.presentation.kit.refresh.RefreshButton
 import app.katari.presentation.kit.sheet.Sheet
 import app.katari.presentation.kit.sheet.SheetHeader
 import app.katari.ui.di.LocalAppUiGraph
+import eu.kanade.presentation.browse.components.catalogShowsTypeBadge
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -28,6 +35,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun RelatedEntriesDialog(
     viewModel: RelatedEntriesViewModel,
+    source: UnifiedSource?,
+    sourceId: Long,
+    sourceName: String,
     onDismissRequest: () -> Unit,
     onEntryClick: (Entry) -> Unit,
 ) {
@@ -38,6 +48,9 @@ fun RelatedEntriesDialog(
     LaunchedEffect(viewModel) {
         viewModel.load()
     }
+    val layout by collectSourceLayout(viewModel.sourcePreferences, sourceId)
+    val sizing = rememberSourceCoverSizing(viewModel.sourcePreferences, sourceId, layout)
+    val showsTypeBadge = catalogShowsTypeBadge(source?.supportedEntryTypes(), viewModel.typeBadges)
 
     // A sheet capped below the window's height; the grid fills it, so loading and empty states keep its size.
     Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
@@ -47,7 +60,18 @@ fun RelatedEntriesDialog(
             SheetHeader(
                 title = stringResource(MR.strings.related_entries),
                 actions = results?.let { success ->
-                    { RefreshButton(onClick = viewModel::refresh, enabled = !success.isRefreshing) }
+                    {
+                        CoverLayoutButton(displayMode = layout.displayMode) {
+                            SourceCoverLayoutSettings(
+                                preferences = viewModel.sourcePreferences,
+                                sourceId = sourceId,
+                                sourceName = sourceName,
+                                layout = layout,
+                                sizing = sizing,
+                            )
+                        }
+                        RefreshButton(onClick = viewModel::refresh, enabled = !success.isRefreshing)
+                    }
                 },
             )
             Box(
@@ -107,14 +131,19 @@ fun RelatedEntriesDialog(
                                 if (currentState.isGrouped) {
                                     RelatedEntryShelves(
                                         groups = currentState.groups,
+                                        sizing = sizing,
                                         sourceItemOrientation = currentState.sourceItemOrientation,
+                                        showsTypeBadge = showsTypeBadge,
                                         entryState = viewModel::getEntryState,
                                         onEntryClick = onEntryClick,
                                     )
                                 } else {
                                     RelatedEntryGrid(
                                         entries = currentState.groups.single().entries,
+                                        displayMode = layout.displayMode,
+                                        sizing = sizing,
                                         sourceItemOrientation = currentState.sourceItemOrientation,
+                                        showsTypeBadge = showsTypeBadge,
                                         entryState = viewModel::getEntryState,
                                         onEntryClick = onEntryClick,
                                     )

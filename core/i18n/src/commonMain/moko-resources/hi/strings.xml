@@ -555,7 +555,6 @@
     <string name="action_ok">ठीक है</string>
     <string name="pref_invalidate_download_cache">डाउनलोड फिर से अनुक्रमित करें</string>
     <string name="copied_to_clipboard_plain">क्लिपबोर्ड पर कॉपी हो गया है</string>
-    <string name="label_auto">स्वत:</string>
     <string name="action_sort_random">अनियमित</string>
     <string name="selected">चयनित</string>
     <string name="delete_downloaded">डाउनलोड मिटाएँ</string>

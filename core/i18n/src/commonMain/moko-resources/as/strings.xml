@@ -676,7 +676,6 @@
     <string name="ext_confirm_remove">এক্সটেনশ্বন আঁতৰাওক?</string>
     <string name="remove_private_extension_message">আপুনি সঁচাকৈয়ে \"%s\" এক্সটেনশ্বন আঁতৰাব বিচাৰে নেকি?</string>
     <string name="pref_incognito_mode_extension_summary">এক্সটেনশ্বনৰ বাবে পঢ়াৰ ইতিহাস বিৰাম দিয়ে</string>
-    <string name="label_auto">স্বয়ংক্ৰিয়</string>
     <string name="theme_monochrome">মোন\'ক্ৰম</string>
     <string name="clear_db_exclude_read">পঢ়া অধ্যায় থকা প্ৰৱিষ্টি ৰাখক</string>
     <string name="author">লেখক</string>

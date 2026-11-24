@@ -661,7 +661,6 @@
     <string name="available_disk_space_info">사용가능: %1$s / 전체: %2$s</string>
     <string name="theme_nord">Nord</string>
     <string name="label_upcoming">곧 공개</string>
-    <string name="label_auto">자동</string>
     <string name="action_sort_random">무작위</string>
     <string name="action_copy_link">링크 복사</string>
     <string name="action_display_unread_badge">읽지 않은 챕터</string>

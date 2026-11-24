@@ -43,7 +43,6 @@
     <string name="label_default">Default</string>
     <string name="label_anime">Anime</string>
     <string name="label_warning">Warning</string>
-    <string name="label_auto">Auto</string>
 
     <!-- Shared labels -->
     <string name="label_started">Started</string>
@@ -1065,10 +1064,14 @@
       <!-- Library section -->
     <string name="pref_category_display">Display</string>
     <string name="pref_library_cover_size">Cover size</string>
+    <string name="pref_library_cover_size_extra_small">Extra small</string>
     <string name="pref_library_cover_size_small">Small</string>
     <string name="pref_library_cover_size_medium">Medium</string>
     <string name="pref_library_cover_size_large">Large</string>
     <string name="pref_library_cover_size_extra_large">Extra large</string>
+    <string name="cover_layout_own_title">Only for %1$s</string>
+    <string name="cover_layout_own_on">This source keeps its own layout</string>
+    <string name="cover_layout_own_off">Same as every catalog and feed</string>
 
     <string name="pref_category_library_updates">Library updates</string>
     <string name="pref_library_updates_summary">Schedule, categories, sources, skip rules</string>

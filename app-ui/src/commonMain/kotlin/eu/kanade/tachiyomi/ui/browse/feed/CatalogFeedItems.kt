@@ -29,6 +29,7 @@ import eu.kanade.presentation.entry.components.EntryCover as CoverType
 internal fun CatalogFeedListItem(
     ref: FeedItemRef,
     viewModel: FeedViewModel<CatalogListItem>,
+    showsTypeBadge: Boolean,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
     itemMenu: @Composable (CatalogListItem) -> Unit,
@@ -45,7 +46,7 @@ internal fun CatalogFeedListItem(
             coverData = item.cover,
             coverAlpha = browseCoverAlpha(item.favorite),
             badge = {
-                CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+                CatalogBadges(isFavorite = item.favorite, entryType = item.entryType.takeIf { showsTypeBadge })
             },
             onLongClick = { onItemLongClick(item) },
             onClick = { onItemClick(item) },
@@ -59,6 +60,8 @@ internal fun CatalogFeedCompactGridItem(
     ref: FeedItemRef,
     viewModel: FeedViewModel<CatalogListItem>,
     sourceItemOrientation: EntryItemOrientation,
+    showTitle: Boolean,
+    showsTypeBadge: Boolean,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
     itemMenu: @Composable (CatalogListItem) -> Unit,
@@ -71,12 +74,12 @@ internal fun CatalogFeedCompactGridItem(
 
     Box {
         EntryCompactGridItem(
-            title = item.title,
+            title = item.title.takeIf { showTitle },
             coverData = item.cover,
             coverType = sourceItemOrientation.toGridCoverType(),
             coverAlpha = browseCoverAlpha(item.favorite),
             coverBadgeStart = {
-                CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+                CatalogBadges(isFavorite = item.favorite, entryType = item.entryType.takeIf { showsTypeBadge })
             },
             onLongClick = { onItemLongClick(item) },
             onClick = { onItemClick(item) },
@@ -90,6 +93,7 @@ internal fun CatalogFeedComfortableGridItem(
     ref: FeedItemRef,
     viewModel: FeedViewModel<CatalogListItem>,
     sourceItemOrientation: EntryItemOrientation,
+    showsTypeBadge: Boolean,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
     itemMenu: @Composable (CatalogListItem) -> Unit,
@@ -107,7 +111,7 @@ internal fun CatalogFeedComfortableGridItem(
             coverType = sourceItemOrientation.toGridCoverType(),
             coverAlpha = browseCoverAlpha(item.favorite),
             coverBadgeStart = {
-                CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+                CatalogBadges(isFavorite = item.favorite, entryType = item.entryType.takeIf { showsTypeBadge })
             },
             onLongClick = { onItemLongClick(item) },
             onClick = { onItemClick(item) },

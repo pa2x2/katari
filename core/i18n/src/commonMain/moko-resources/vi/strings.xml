@@ -679,7 +679,6 @@
     <string name="pref_mark_duplicate_read_chapter_read_existing">Sau khi đọc một chương</string>
     <string name="pref_mark_duplicate_read_chapter_read_new">Sau khi tìm nạp chương mới</string>
     <string name="possible_duplicates_title">Tiêu đề có thể trùng lặp</string>
-    <string name="label_auto">Tự động</string>
     <string name="pref_mark_duplicate_read_chapter_read">Đánh dấu chương trùng lặp đã đọc là đã đọc</string>
     <string name="action_edit_notes">Sửa ghi chú</string>
     <string name="theme_monochrome">Đơn sắc</string>

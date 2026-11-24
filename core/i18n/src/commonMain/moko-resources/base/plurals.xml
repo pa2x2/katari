@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <plurals name="cover_size_per_row">
+        <item quantity="one">%1$s · %2$d per row</item>
+        <item quantity="other">%1$s · %2$d per row</item>
+    </plurals>
     <plurals name="reader_text_translate_downloads_offer">
         <item quantity="one">%d chapter of this series is downloaded but not translated.</item>
         <item quantity="other">%d chapters of this series are downloaded but not translated.</item>

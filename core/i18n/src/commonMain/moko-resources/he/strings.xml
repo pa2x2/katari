@@ -596,7 +596,6 @@
     <string name="action_copy_link">העתקת הקישור</string>
     <string name="action_revert_to_default">אפס לברירת מחדל</string>
     <string name="action_move_to_bottom_all_for_series">העבר סדרה לתחתית</string>
-    <string name="label_auto">אוטומטי</string>
     <string name="action_add_anyway">הוסף בכל זאת</string>
     <string name="onboarding_storage_help_action">מדריך אחסון</string>
     <string name="onboarding_permission_install_apps">הרשאה להתקנת אפליקציות</string>
