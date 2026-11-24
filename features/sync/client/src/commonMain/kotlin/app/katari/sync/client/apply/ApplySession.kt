@@ -126,9 +126,16 @@ internal class ApplySession(
         val envelope = record.record
         var stage = FailedStage.STORING
         try {
-            if (parts.isOff(kind, envelope.deleted, envelope.payload)) return hold(record, HoldReason.TURNED_OFF)
             val incoming = RecordState.of(envelope.deleted, envelope.payload)
-            val edited = kind.newestEdit(incoming)
+            // Decoded once for every check and write below, which a first sync does for each of a library's records
+            val received = (incoming as? RecordState.Live)?.let { kind.decode(it.bytes) }
+            val off = if (received != null) {
+                parts.isOff(kind, received)
+            } else {
+                parts.isOff(kind, envelope.deleted, envelope.payload)
+            }
+            if (off) return hold(record, HoldReason.TURNED_OFF)
+            val edited = if (received != null) newestEdit(kind.serializer, received) else kind.newestEdit(incoming)
             if (edited != null && edited.physicalMillis - now() > HybridLogicalClock.MAX_AHEAD.inWholeMilliseconds) {
                 return hold(record, HoldReason.AHEAD)
             }
@@ -144,8 +151,21 @@ internal class ApplySession(
             val stored = database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull()
             val local = stored?.let { RecordState.of(it.deleted, it.payload) }
             val merged = movedEdits.settled(kind, local, incoming, local?.let { kind.merge(it, incoming) } ?: incoming)
-            val holdsLocalEdits = !kind.sameRecord(merged, incoming)
+            // A record new here is the incoming copy itself
+            val holdsLocalEdits = merged !== incoming && !kind.sameRecord(merged, incoming)
             val payload = if (holdsLocalEdits) merged.bytes else envelope.payload
+            val mergedPayload = if (merged ===
+                incoming
+            ) {
+                received
+            } else {
+                (merged as? RecordState.Live)?.let { kind.decode(it.bytes) }
+            }
+            val group = if (mergedPayload != null) {
+                RecordGroups.of(kind, envelope.key, mergedPayload)
+            } else {
+                RecordGroups.of(kind.name, envelope.key, merged.deleted, payload)
+            }
             database.sync_recordsQueries.storeMerged(
                 recordKey = envelope.key,
                 kind = kind.name,
@@ -156,16 +176,18 @@ internal class ApplySession(
                 basedOn = record.sequence,
                 changeId = if (holdsLocalEdits) newChangeId() else null,
                 basePayload = envelope.payload,
-                recordGroup = RecordGroups.of(kind.name, envelope.key, merged.deleted, payload),
+                recordGroup = group,
             )
             stage = FailedStage.WRITING
-            val outcome = if (envelope.key in failing) {
-                ApplyOutcome.Held(HoldReason.FAILED)
-            } else {
-                write(kind, envelope.key, merged, stored?.local_ref)
+            val outcome = when {
+                envelope.key in failing -> ApplyOutcome.Held(HoldReason.FAILED)
+                mergedPayload != null -> writeLive(kind, envelope.key, mergedPayload)
+                else -> write(kind, envelope.key, merged, stored?.local_ref)
             }
             settle(kind, envelope.key, outcome, stored?.local_ref, record)
-            if (outcome is ApplyOutcome.Applied && merged is RecordState.Live) carry(kind, envelope.key, merged)
+            if (outcome is ApplyOutcome.Applied && mergedPayload != null) {
+                ReplacedEntryEdits(this).carry(kind, envelope.key, mergedPayload)
+            }
             movedEdits.carry(kind, local, incoming, merged)
         } catch (e: Exception) {
             throw failure(envelope.key, stage, e)
@@ -336,15 +358,11 @@ internal class ApplySession(
         state: RecordState,
         storedRef: String?,
     ): ApplyOutcome {
-        val moved = ReplacedEntryEdits(this)
         return when (state) {
-            is RecordState.Live -> {
-                val payload = kind.decode(state.bytes)
-                if (moved.movedAway(kind, payload)) ApplyOutcome.Applied(null) else kind.apply(this, key, payload)
-            }
+            is RecordState.Live -> writeLive(kind, key, kind.decode(state.bytes))
             is RecordState.Deleted -> {
                 val last = state.tombstone.last.takeIf { it.isNotEmpty() }?.let(kind::decode)
-                if (last != null && moved.movedAway(kind, last)) {
+                if (last != null && ReplacedEntryEdits(this).movedAway(kind, last)) {
                     ApplyOutcome.Applied(null)
                 } else {
                     kind.applyDeletion(this, key, storedRef?.let(::LocalRef))
@@ -352,6 +370,16 @@ internal class ApplySession(
             }
         }
     }
+
+    private suspend fun <P : Any> writeLive(kind: SyncedKind<P>, key: String, payload: P): ApplyOutcome =
+        if (ReplacedEntryEdits(
+                this,
+            ).movedAway(kind, payload)
+        ) {
+            ApplyOutcome.Applied(null)
+        } else {
+            kind.apply(this, key, payload)
+        }
 
     private suspend fun hold(
         record: SequencedRecord,

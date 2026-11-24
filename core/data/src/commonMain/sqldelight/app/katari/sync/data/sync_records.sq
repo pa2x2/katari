@@ -253,6 +253,10 @@ UPDATE sync_records
 SET based_on = 0
 WHERE record_key = :recordKey;
 
+-- Whether a record of :kind is deleted, such as a profile, whose records' later edits ask about the deletion.
+hasDeleted:
+SELECT EXISTS(SELECT 1 FROM sync_records WHERE kind = :kind AND deleted = 1);
+
 -- Whether a record of :kind is stored under a version older than :version, to be read again.
 hasOutdated:
 SELECT EXISTS(SELECT 1 FROM sync_records WHERE kind = :kind AND kind_version < :version);
