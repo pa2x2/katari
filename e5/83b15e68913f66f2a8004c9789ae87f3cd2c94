@@ -1,0 +1,35 @@
+core/data/src/commonMain/sqldelight/tachiyomi/migrations/100.sqm
+  s_70e1fb91b5ace8::t_ccfd313ec94876 1-14
+core/domain/src/commonMain/kotlin/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt
+  s_70e1fb91b5ace8::t_3fe128c3477e0e 202
+core/domain/src/commonTest/kotlin/tachiyomi/domain/entry/interactor/SyncEntryWithSourceTest.kt
+  s_70e1fb91b5ace8::t_a3b5ccf31281a6 190
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/capture/CaptureTrigger.kt
+  s_70e1fb91b5ace8::t_796f18265bce0b 7-9,27-31,34-35,40,56-58,79,81,101-102,115-116
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/kind/chapter/ChapterKind.kt
+  s_70e1fb91b5ace8::t_ad9105701b68d6 14,30-40,51,54-64
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/kind/chapter/ChapterPayload.kt
+  s_70e1fb91b5ace8::t_c60b602fa725fc 10
+features/sync/client/src/desktopTest/kotlin/app/katari/sync/client/capture/ChangeCaptureTest.kt
+  s_70e1fb91b5ace8::t_866bb2a981bcd6 45,51,206-209,250-251
+features/sync/client/src/desktopTest/kotlin/app/katari/sync/client/kind/chapter/NewReleaseTest.kt
+  s_70e1fb91b5ace8::t_e241c935371431 18-38,40-45,47-53
+features/sync/client/src/desktopTest/kotlin/app/katari/sync/client/kind/chapter/RenamedChapterTest.kt
+  s_70e1fb91b5ace8::t_134063edf54346 44,48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e583b15e68913f66f2a8004c9789ae87f3cd2c94",
+  "prompts": {},
+  "sessions": {
+    "s_70e1fb91b5ace8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ba65e70a-b99c-45d3-849d-1a0c09b50db5",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
