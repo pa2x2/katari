@@ -41,7 +41,7 @@ WHERE record_key = :recordKey;
 waitingFor:
 SELECT record_key, record, reason, waits_for, received_at, kind, held_on, pulled_since_resync
 FROM sync_pending
-WHERE waits_for = :recordKey
+WHERE waits_for IS :recordKey AND waits_for IS NOT NULL
 ORDER BY received_at, record_key;
 
 -- Everything held for a reason that may have gone away since: a newer app, a clock caught up, a reference arrived.

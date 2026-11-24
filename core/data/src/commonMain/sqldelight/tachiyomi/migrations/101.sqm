@@ -1,0 +1,3 @@
+-- A push sends the changes waiting a kind at a time, parents first (app/katari/sync/data/sync_records.sq).
+DROP INDEX idx_sync_records_pending;
+CREATE INDEX idx_sync_records_pending ON sync_records(kind, record_key) WHERE change_id IS NOT NULL;

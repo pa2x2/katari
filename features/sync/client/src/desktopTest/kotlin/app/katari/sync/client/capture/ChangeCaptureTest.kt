@@ -242,9 +242,7 @@ class ChangeCaptureTest {
             // Rows that go with their entry, such as clearing the database of entries outside the library
             expect("entry removed as cache") { db.entriesQueries.deleteById(profileId = 1, entryId = 1) }
 
-            val stored = device.handler.await {
-                sync_recordsQueries.pendingAfter("", Long.MAX_VALUE).awaitAsList().map { it.kind }
-            }
+            val stored = device.pending.next(Long.MAX_VALUE).map { it.kind }
             // Preferences aren't in the database; their kinds have no triggers
             stored.toSet() shouldBe SyncKinds.all.filter { it.capture.isNotEmpty() }.map { it.name }.toSet()
             withClue("every episode and recap, the new release and the added entry's episode, not the local chapter") {

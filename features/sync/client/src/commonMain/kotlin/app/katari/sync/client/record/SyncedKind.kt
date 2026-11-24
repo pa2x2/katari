@@ -122,10 +122,11 @@ abstract class SyncedKind<P : Any>(
     internal open fun settingsArea(payload: P): SettingsArea? = settingKey(payload)?.let(PreferenceScopes::markOf)?.area
 
     /**
-     * The files [payload] names, which the envelope lists so the server keeps them while the record is live
-     * ([app.katari.sync.protocol.record.RecordEnvelope.files]).
+     * The files a payload names, which the envelope lists so the server keeps them while the record is live
+     * ([app.katari.sync.protocol.record.RecordEnvelope.files]); null for a kind whose records name none, whose payloads
+     * a push then doesn't decode.
      */
-    internal open fun files(payload: P): List<FileReference> = emptyList()
+    internal open val files: ((P) -> List<FileReference>)? = null
 
     /** For [Absence.REMOVED_FLAG]: [previous] marked removed. */
     internal open fun removed(previous: P, stamps: FieldStamps): P =
