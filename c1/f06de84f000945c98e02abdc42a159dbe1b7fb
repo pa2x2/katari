@@ -1,0 +1,19 @@
+features/entry-interactions/manga/src/desktopMain/kotlin/eu/kanade/tachiyomi/ui/reader/window/DesktopMangaReader.kt
+  s_533d2da74ae6a3::t_ca32a521d5b7a4 94-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c1f06de84f000945c98e02abdc42a159dbe1b7fb",
+  "prompts": {},
+  "sessions": {
+    "s_533d2da74ae6a3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abc58bad-1337-4a77-a795-fb1da1233f44",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
