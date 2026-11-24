@@ -51,7 +51,10 @@ data class ServerConfig(
                 maxRequestBytes = number(MAX_REQUEST_BYTES, default = 32 * MEBIBYTE, range = MEBIBYTE..Int.MAX_VALUE),
                 // Covers are well under this; CJK fonts reach tens of megabytes.
                 maxFileBytes = number(MAX_FILE_BYTES, default = 64 * MEBIBYTE, range = 1L..Long.MAX_VALUE),
-                pullPageSize = number(PULL_PAGE_SIZE, default = 500, range = 1L..10_000).toInt(),
+                // A device applies each page in one transaction, which rewrites every index page its records touch, and
+                // a first sync's records are spread over the whole of those indexes: larger pages write each page once
+                // for more records, which halved what a device downloading a library wrote.
+                pullPageSize = number(PULL_PAGE_SIZE, default = 2000, range = 1L..10_000).toInt(),
                 trustedProxies = number(TRUSTED_PROXIES, default = 0, range = 0L..10).toInt(),
             )
         }
