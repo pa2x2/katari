@@ -57,17 +57,6 @@ class FoldedSeasonCarryTest {
                         """,
                     )
                     exchange.settle(listOf(a, b))
-                    // B fetched both entries' episodes itself, as no one marked them yet
-                    b.sql(
-                        """
-                        INSERT INTO chapters(entry_id, url, name, chapter_number)
-                        SELECT E._id, E.url || '/' || N.number, 'Episode ' || N.number, N.number
-                        FROM entries E
-                        JOIN (SELECT 1 AS number UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6) N
-                        WHERE E.url = '/all' OR N.number <= 3
-                        """,
-                    )
-
                     // A folds the second season into the entry listing every season, after the first season's three
                     // episodes, as local migration does: it leaves the library, and the new entry keeps its viewer setting
                     a.sql(

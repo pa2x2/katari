@@ -1,0 +1,14 @@
+-- Every chapter of an entry in the Library syncs now, where only those marked or found as new releases did: a device
+-- that syncs records those without a record, as no edit, the way its first sync records its rows
+-- (app/katari/sync/client/firstsync/ExistingRows.kt), so the records hold the whole list.
+INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
+SELECT 'chapter', json_array(CH._id), 0, NULL, CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER),
+    C.seen_physical, C.seen_counter
+FROM chapters CH, sync_clock C, sync_state S
+WHERE C.id = 0 AND S.id = 0 AND S.enabled = 1
+AND CH.entry_id IN (SELECT _id FROM entries WHERE favorite = 1)
+AND NOT EXISTS (
+    SELECT 1
+    FROM sync_records R
+    WHERE R.kind = 'chapter' AND R.local_ref = json_array(CH._id)
+);

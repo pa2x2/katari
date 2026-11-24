@@ -199,7 +199,7 @@ class SyncEntryWithSource(
         val existingChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
         // The first time this device lists an entry in the Library (one it refreshed has a fetch interval), what it
         // lists is the back catalogue, no news: dated no later than the entry joined the Library, it stays out of
-        // Updates. Chapters stored here before, such as those another device read or found, are known already, so only
+        // Updates. Chapters stored here before, such as the list another device synced, are known already, so only
         // chapters listed before all of them are new releases. The chapters of a season its source added to a merge in
         // the Library are new as well
         val listsBackCatalogue = firstFetchIsBackCatalogue &&

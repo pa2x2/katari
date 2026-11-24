@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
 /**
- * A chapter or episode the person marked, or one a refresh found as new. [metadata], [details] and [sourceOrder] let
+ * A chapter or episode of an entry in the Library, or one the person marked. [metadata], [details] and [sourceOrder] let
  * another device create the row in its place, as its own refresh would list it, and show it as read, or in Updates,
  * before it refreshes the entry; its next refresh overrides them, but not [dateFetch].
  *
