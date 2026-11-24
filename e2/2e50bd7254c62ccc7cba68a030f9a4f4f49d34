@@ -1,0 +1,151 @@
+.agents/skills/adaptive-layout/SKILL.md
+  s_1e5caecceb49b4::t_06d1bf47bcf916 21,23-24,64
+.agents/skills/ui-kit/components.md
+  s_1e5caecceb49b4::t_d54fc3e1398c72 140,283-284,286
+app-ui/src/commonMain/kotlin/app/katari/coverlayout/CoverLayoutButton.kt
+  s_1e5caecceb49b4::t_0cf66d50463b05 1,3-6,10,12-13,19-25,30-46,48,50-60,62-73,78-88
+app-ui/src/commonMain/kotlin/app/katari/coverlayout/DisplayModeChooser.kt
+  s_1e5caecceb49b4::t_3e5edb63c0ee8d 1,12,24,31-32,37-38,42,47,49,55
+app-ui/src/commonMain/kotlin/app/katari/coverlayout/DisplayModePreview.kt
+  s_1e5caecceb49b4::t_3488c0f80bca69 1,22,24,118
+app-ui/src/commonMain/kotlin/app/katari/coverlayout/SourceCoverLayout.kt
+  s_1e5caecceb49b4::t_e6af361206152a 1-46
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/BrowseNamedSettings.kt
+  s_1e5caecceb49b4::t_1f8f425e16126a 4
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/named/LibraryNamedSettings.kt
+  s_1e5caecceb49b4::t_2faa4afaa4b64e 6
+app-ui/src/commonMain/kotlin/app/katari/upgrade/migrations/CoverLayoutMigration.kt
+  s_1e5caecceb49b4::t_08bf83a98aab8d 1-42
+app-ui/src/commonMain/kotlin/app/katari/upgrade/migrations/Migrations.kt
+  s_1e5caecceb49b4::t_b4678026d996ef 22
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/browse/CatalogContent.kt
+  s_1e5caecceb49b4::t_9bfed4a722985e 33,62,65,142-145,150,153,162,165,174,183-184,187,200,243,266,269,296,315,337-338,341,368,384,389
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/browse/GlobalSearchScreen.kt
+  s_1e5caecceb49b4::t_96a7e2b6fb24f0 24,31,47-48,83-84,105-106,132-133
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/browse/MigrateSearchScreen.kt
+  s_1e5caecceb49b4::t_530e5faa12937f 19,26,42-43,65-66,87-88,114-115
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/browse/components/BrowseBadges.kt
+  s_1e5caecceb49b4::t_5036e79ebace95 18,20,22,24-30
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/browse/components/GlobalSearchCardRow.kt
+  s_1e5caecceb49b4::t_57f53080573033 13,23,32-33,58,60,73,75,79
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/browse/components/GlobalSearchItemCardRow.kt
+  s_1e5caecceb49b4::t_dad5263aad15e3 13,23,32-33,51-52,64-65,69,76
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/components/LazyLibraryGrid.kt
+  s_1e5caecceb49b4::t_b764704dee9b99 12,21,33
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/components/LibraryComfortableGrid.kt
+  s_1e5caecceb49b4::t_7337f3c405c625 12,24,46
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/components/LibraryCompactGrid.kt
+  s_1e5caecceb49b4::t_2764154b49e89d 12,25,47
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/components/LibraryContent.kt
+  s_1e5caecceb49b4::t_66aeff117caa25 17,226,262,297
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/components/LibraryPager.kt
+  s_1e5caecceb49b4::t_6250ed85c727e6 14,37,87-88,101-102,115
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/components/LibraryToolbar.kt
+  s_1e5caecceb49b4::t_585530e968c855 37,59,76,115
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/search/LibrarySearchResults.kt
+  s_1e5caecceb49b4::t_8dbcd2d03fe38b 31,72,103,121,129,158
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/settings/LibraryDisplayPage.kt
+  s_1e5caecceb49b4::t_46b9de55cea9f5 5-6,18-30,34,36
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/settings/LibraryPinnedStyleChooser.kt
+  s_1e5caecceb49b4::t_37f1c14e8fe14d 15,32,34-36,49
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/library/settings/LibrarySettingsDialog.kt
+  s_1e5caecceb49b4::t_2c433b1207aacc 5,19,43
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/SettingsLibraryScreen.kt
+  s_1e5caecceb49b4::t_3071e9cfe35f42 12-13,15,184,196
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/BrowseTab.kt
+  s_1e5caecceb49b4::t_3cb714c38e93d0 103
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/catalog/CatalogScreen.kt
+  s_1e5caecceb49b4::t_d49dd73d3d20f8 22-25,209-219,221,228,283-284,286
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/catalog/CatalogToolbar.kt
+  s_1e5caecceb49b4::t_f3ee912393f1d2 23,54
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/catalog/CatalogViewModel.kt
+  s_1e5caecceb49b4::t_b073c2e0962b27 70,88,145,148,184-186
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/feed/CatalogFeedBrowseContent.kt
+  s_1e5caecceb49b4::t_5d76cf47e887cd 32,58,60,218,253,282,294,304,314,324-325
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/feed/CatalogFeedItems.kt
+  s_1e5caecceb49b4::t_f3e95a7dba876a 32,49,63-64,77,82,96,114
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/feed/FeedLazyLayouts.kt
+  s_1e5caecceb49b4::t_b2ff4cc5fd9775 14,67,80
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/feed/FeedsTab.kt
+  s_1e5caecceb49b4::t_c208cdc1432fa6 36-38,264-266,353-362,384-386
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/feed/switcher/FeedNavigationBar.kt
+  s_1e5caecceb49b4::t_8034839998f7ea 9,22,27-28,70
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/migration/search/MigrateSearchScreen.kt
+  s_1e5caecceb49b4::t_807617bfad0554 38-39
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/migration/search/MigrateSearchViewModel.kt
+  s_1e5caecceb49b4::t_e1ceaec33b25fe 27,39,46
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/migration/search/MigrateSourceSearchScreen.kt
+  s_1e5caecceb49b4::t_3dd1f8726bfd3e 9-12,22,84-94,96,103,139-140,142
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/source/globalsearch/GlobalSearchScreen.kt
+  s_1e5caecceb49b4::t_e2664813d67bec 67-68
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/source/globalsearch/GlobalSearchViewModel.kt
+  s_1e5caecceb49b4::t_a9059056de926f 5,20,42,56,66-70
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/browse/source/globalsearch/SearchViewModel.kt
+  s_1e5caecceb49b4::t_3c4c2ff6ba0803 5,12,34,44,48-52
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/entry/EntryScreen.kt
+  s_1e5caecceb49b4::t_8689465aaa85fe 448-450
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/entry/related/RelatedEntriesContent.kt
+  s_1e5caecceb49b4::t_3573a6d08995ae 18,21-22,32-33,37,41,45-46,48,52-69,73-77,81,88-101,107-108,113,115,119,134-140,150-155,158,160-161,166-180
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/entry/related/RelatedEntriesDialog.kt
+  s_1e5caecceb49b4::t_0ed0a43b193945 14-17,28-30,38-40,51-53,63-74,134,136,143-144,146
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/entry/related/RelatedEntriesViewModel.kt
+  s_1e5caecceb49b4::t_841205d054da63 5,20-21,36,42-43,53-55
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/library/LibraryTab.kt
+  s_1e5caecceb49b4::t_5df1d39a89306c 22,29,57,186-190,192,209,316,349
+core/domain/src/commonMain/kotlin/app/katari/library/display/legacy/LegacyItemsPerRowConversion.kt
+  s_1e5caecceb49b4::t_56af06ed726ad5 27
+core/domain/src/commonMain/kotlin/eu/kanade/domain/source/model/SourceLayout.kt
+  s_1e5caecceb49b4::t_61e1d1801eba68 1-14
+core/domain/src/commonMain/kotlin/eu/kanade/domain/source/service/LegacySourceDisplayModesConversion.kt
+  s_1e5caecceb49b4::t_2c61330dd30e9e 1-35
+core/domain/src/commonMain/kotlin/eu/kanade/domain/source/service/SourcePreferences.kt
+  s_1e5caecceb49b4::t_e2cdd2c3eff9d0 9-11,21,46-56,66-67,87,104-177
+core/domain/src/commonMain/kotlin/tachiyomi/domain/library/model/LibraryDisplayMode.kt
+  s_1e5caecceb49b4::t_61dffa4ef782dc 37-40
+core/domain/src/commonMain/kotlin/tachiyomi/domain/library/service/LibraryPreferences.kt
+  s_1e5caecceb49b4::t_8f7c83a7839938 49
+core/domain/src/commonMain/kotlin/tachiyomi/domain/source/identity/SourceKeyedPreferences.kt
+  s_1e5caecceb49b4::t_306677545c4f73 15-16,28-30,53-59
+core/i18n/src/commonMain/moko-resources/base/plurals.xml
+  s_1e5caecceb49b4::t_62a56f9f1a306d 3-6
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_1e5caecceb49b4::t_0f64f1f35714fb 1067,1072-1074
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/layout/CoverGrid.kt
+  s_1e5caecceb49b4::t_c527f3a2d0365b 4,9-10,17-18,22,30-31,42,47-48,51,56-63
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/layout/CoverGridColumns.kt
+  s_1e5caecceb49b4::t_7d4bef54d4d4ce 10,56-66,68
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/layout/CoverSizeLabel.kt
+  s_1e5caecceb49b4::t_ea7e032b9de480 1,9
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/layout/CoverSizing.kt
+  s_1e5caecceb49b4::t_dc68226bdc6c6f 1-182
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/layout/ScreenFrame.kt
+  s_1e5caecceb49b4::t_b9bcfe56c622d3 27,30-35,49,73
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/list/ChoiceTileGrid.kt
+  s_1e5caecceb49b4::t_5dc394f7a0e918 1-53
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/restore/restorers/PreferenceRestorer.kt
+  s_1e5caecceb49b4::t_0d076ecc06aac6 10,84
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/setting/scope/BrowseScopes.kt
+  s_1e5caecceb49b4::t_ccd4a73ed129fc 22-25,35,47
+features/sync/client/src/desktopTest/kotlin/app/katari/sync/client/setting/value/SettingEncodingTest.kt
+  s_1e5caecceb49b4::t_3e78d2fb31aa26 34,57
+app-ui/src/commonMain/kotlin/app/katari/coverlayout/CoverLayoutSettings.kt
+  s_1e5caecceb49b4::t_96a215f7b96dd7 1-89
+core/domain/src/commonMain/kotlin/tachiyomi/domain/library/model/CoverSize.kt
+  s_1e5caecceb49b4::t_5bf8114a0098d6 4-6,9,14-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e22e50bd7254c62ccc7cba68a030f9a4f4f49d34",
+  "prompts": {},
+  "sessions": {
+    "s_1e5caecceb49b4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8653aa08-b71e-4125-be0e-0dacccc1a50a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
