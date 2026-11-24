@@ -1,0 +1,27 @@
+core/data/src/commonMain/sqldelight/app/katari/sync/data/sync_apply.sq
+  s_c286dee1f8f137::t_93b139e82c25fc 198,227
+core/data/src/commonMain/sqldelight/app/katari/sync/data/sync_pending.sq
+  s_c286dee1f8f137::t_4019eb65a4ff3e 44
+core/data/src/commonMain/sqldelight/app/katari/sync/data/sync_records.sq
+  s_c286dee1f8f137::t_b43840c25f4b74 47-50,55,73,78,125-126,155,172,228,308
+core/data/src/commonMain/sqldelight/app/katari/sync/data/sync_state.sq
+  s_c286dee1f8f137::t_ba4f88305bb7e4 170
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/apply/ApplySession.kt
+  s_c286dee1f8f137::t_d64494a1bb3242 309
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "150581a48e03ea32b55b8f6e9479a12160f8f18b",
+  "prompts": {},
+  "sessions": {
+    "s_c286dee1f8f137": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dc70b940-c4bb-479c-931b-be6632e4b76d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
