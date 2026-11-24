@@ -44,11 +44,15 @@ SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, sy
 FROM sync_records
 WHERE record_key = :recordKey;
 
+-- Arguments are compared with IS where the column is nullable: against `=`, SQLDelight writes `=` or `IS` by whether
+-- the argument is null, and a statement whose text varies is prepared anew for every call, which for a library's
+-- records costs more than running it. `local_ref IS NOT NULL` lets SQLite search idx_sync_records_local, which `IS`
+-- alone doesn't.
 getByLocalRef:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
     record_group, held_back
 FROM sync_records
-WHERE kind = :kind AND local_ref = :localRef;
+WHERE kind = :kind AND local_ref IS :localRef AND local_ref IS NOT NULL;
 
 -- Where the live records of :kind are held here, such as which entries sync.
 liveLocalRefs:
@@ -66,12 +70,12 @@ WHERE record_key IN :recordKeys AND deleted = 0;
 detachLocalRef:
 UPDATE sync_records
 SET local_ref = NULL
-WHERE kind = :kind AND local_ref = :localRef AND record_key != :recordKey;
+WHERE kind = :kind AND local_ref IS :localRef AND local_ref IS NOT NULL AND record_key != :recordKey;
 
 -- A record holding the row under a key the row no longer has, removed without being marked deleted (D066).
 deleteReplaced:
 DELETE FROM sync_records
-WHERE kind = :kind AND local_ref = :localRef AND record_key != :recordKey;
+WHERE kind = :kind AND local_ref IS :localRef AND local_ref IS NOT NULL AND record_key != :recordKey;
 
 storeLocalChange:
 INSERT INTO sync_records(record_key, kind, local_ref, kind_version, payload, deleted, change_id, record_group)
@@ -118,8 +122,8 @@ markPushed:
 UPDATE sync_records
 SET based_on = :sequence,
     synced = 1,
-    base_payload = CASE WHEN change_id = :changeId THEN payload ELSE base_payload END,
-    change_id = CASE WHEN change_id = :changeId THEN NULL ELSE change_id END
+    base_payload = CASE WHEN change_id IS :changeId THEN payload ELSE base_payload END,
+    change_id = CASE WHEN change_id IS :changeId THEN NULL ELSE change_id END
 WHERE record_key = :recordKey;
 
 -- A server copy merged in: the record as merged, based on that copy, with a change id when the merge holds edits the
@@ -148,7 +152,7 @@ ON CONFLICT(record_key) DO UPDATE SET
 outsideTitlesAfter:
 SELECT record_key, kind, deleted, payload
 FROM sync_records
-WHERE (record_group IS NULL OR record_group = '' OR record_group = :profilesGroup)
+WHERE (record_group IS NULL OR record_group = '' OR record_group IS :profilesGroup)
     AND kind != :titleKind AND record_key > :afterKey
 ORDER BY record_key
 LIMIT :limit;
@@ -165,7 +169,7 @@ LIMIT :limit;
 inGroup:
 SELECT record_key, kind, deleted, payload
 FROM sync_records
-WHERE record_group = :recordGroup
+WHERE record_group IS :recordGroup
 ORDER BY record_key;
 
 holdBack:
@@ -221,7 +225,7 @@ ORDER BY record_key;
 liveOfKindInGroup:
 SELECT record_key, payload
 FROM sync_records
-WHERE record_group = :recordGroup AND kind = :kind AND deleted = 0
+WHERE record_group IS :recordGroup AND kind = :kind AND deleted = 0
 ORDER BY record_key;
 
 -- Records stored before groups were kept here, a batch at a time for their groups to be filled in.
@@ -301,4 +305,4 @@ SELECT EXISTS(SELECT 1 FROM sync_records WHERE synced = 1);
 
 deleteByLocalRef:
 DELETE FROM sync_records
-WHERE kind = :kind AND local_ref = :localRef;
+WHERE kind = :kind AND local_ref IS :localRef AND local_ref IS NOT NULL;

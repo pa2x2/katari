@@ -306,7 +306,7 @@ internal class ApplySession(
     }
 
     private suspend fun retryWaitingFor(key: String) {
-        database.sync_pendingQueries.waitingFor(key).awaitAsList().forEach { held -> retry(held) }
+        database.sync_pendingQueries.waitingFor(key, ::Sync_pending).awaitAsList().forEach { held -> retry(held) }
     }
 
     /**

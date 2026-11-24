@@ -167,7 +167,7 @@ WHERE id = 0;
 passOwnPush:
 UPDATE sync_state
 SET cursor = :cursor, chain = :chain
-WHERE id = 0 AND server_instance_id = :serverInstanceId AND cursor < :cursor;
+WHERE id = 0 AND server_instance_id IS :serverInstanceId AND cursor < :cursor;
 
 setMessagesHandled:
 UPDATE sync_state
