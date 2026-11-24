@@ -1,5 +1,24 @@
 # Desktop Changelog
 
+## [1.2.0] - 2026-11-24
+
+### ✨ Added
+
+- A Display panel on every cover screen: library, catalogs, feeds, library search, related entries and migration search.
+- Ctrl + wheel or a touchpad pinch resizes covers in a grid.
+- Cover-only grid and cover size in catalogs, feeds and related entries.
+- Extra small cover size.
+
+### 🔄 Changed
+
+- Catalogs and feeds share one layout, and a source can keep its own.
+- The Auto cover size is replaced by Medium.
+- Cover grids use the full window width.
+
+### 🐛 Fixed
+
+- Covers from single-type sources no longer show a type badge, and type badges follow the Entry type badge setting.
+
 ## [1.1.5] - 2026-11-23
 
 ### 🧩 Improved
@@ -467,7 +486,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.1.5...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.2.0...HEAD
+[1.2.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.2.0
 [1.1.5]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.5
 [1.1.4]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.4
 [1.1.3]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.3
