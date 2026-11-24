@@ -167,8 +167,9 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
         returned = latest(local.returned, incoming.returned),
     )
 
-    override fun files(payload: EntryPayload): List<FileReference> =
+    override val files: (EntryPayload) -> List<FileReference> = { payload ->
         listOfNotNull(payload.customCover.value?.reference(FileCategory.COVER))
+    }
 
     /**
      * Writes the person's fields, and the source's metadata and details only into a row it creates: a device that has

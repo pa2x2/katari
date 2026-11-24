@@ -39,7 +39,9 @@ class PendingChanges(private val handler: DatabaseHandler) {
                 deleted = record.deleted,
                 payload = record.payload,
                 files = RecordFiles.of(record.kind, record.deleted, record.payload),
-                group = RecordGroups.of(record.kind, record.record_key, record.deleted, record.payload),
+                // Stored with the payload; computed only for a record stored before groups were kept
+                group = record.record_group
+                    ?: RecordGroups.of(record.kind, record.record_key, record.deleted, record.payload),
             )
         }
     }
