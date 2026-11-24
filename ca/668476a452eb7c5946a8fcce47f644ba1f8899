@@ -1,0 +1,29 @@
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/server/NoDelaySocketFactory.kt
+  s_70e1fb91b5ace8::t_b20870c341064d 1-27
+features/sync/client/src/commonMain/kotlin/app/katari/sync/client/server/SyncServerClients.kt
+  s_c286dee1f8f137::t_37e0e754bb9820 32-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ca668476a452eb7c5946a8fcce47f644ba1f8899",
+  "prompts": {},
+  "sessions": {
+    "s_70e1fb91b5ace8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ba65e70a-b99c-45d3-849d-1a0c09b50db5",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    },
+    "s_c286dee1f8f137": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dc70b940-c4bb-479c-931b-be6632e4b76d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
