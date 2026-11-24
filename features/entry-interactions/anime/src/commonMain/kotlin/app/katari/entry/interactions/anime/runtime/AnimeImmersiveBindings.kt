@@ -2,6 +2,7 @@ package app.katari.entry.interactions.anime.runtime
 
 import app.katari.entry.interactions.anime.media.immersive.AnimeClipPlatform
 import app.katari.entry.interactions.anime.media.immersive.AnimeImmersiveClips
+import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.video.engine.spi.VideoEngine
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
@@ -27,12 +28,14 @@ object AnimeImmersiveBindings {
         resolveVideoStream: () -> VideoStreamResolver,
         videoEngine: () -> VideoEngine,
         basePreferences: () -> AnimePlayerBasePreferences,
+        playerPreferences: AnimePlayerPreferences,
         clipPlatform: AnimeClipPlatform,
     ): AnimeImmersiveClips = AnimeImmersiveClips(
         entryProgressRepository = entryProgressRepository,
         resolveVideoStream = resolveVideoStream,
         videoEngine = videoEngine,
         basePreferences = basePreferences,
+        playerPreferences = playerPreferences,
         clipPlatform = clipPlatform,
     )
 }

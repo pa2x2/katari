@@ -74,6 +74,7 @@ internal fun AnimeImmersivePlayerSurface(
     playerErrorMessage: String?,
     muted: Boolean,
     subtitles: AnimeClipSubtitles,
+    subtitleAppearance: VideoSubtitleAppearance,
     metadata: VideoMetadata,
     onToggleControls: () -> Unit,
     onPlaybackSnapshotChange: (VideoPlayerPlaybackSnapshot) -> Unit,
@@ -225,14 +226,14 @@ internal fun AnimeImmersivePlayerSurface(
         )
         VideoSubtitles(
             cues = cues,
-            appearance = DEFAULT_APPEARANCE,
+            appearance = subtitleAppearance,
             layout = { width, height ->
                 videoSubtitleLayout(
                     playerWidth = width,
                     playerHeight = height,
                     aspectRatio = aspectRatio,
                     framing = PictureFraming.Fit,
-                    appearance = DEFAULT_APPEARANCE,
+                    appearance = subtitleAppearance,
                     keepInPicture = true,
                     gapPx = subtitleGapPx,
                 )
@@ -344,9 +345,6 @@ internal fun AnimeImmersivePlayerSurface(
         )
     }
 }
-
-// A clip has no subtitle settings, so a subtitle its stream shows by default looks as the player's do by default
-private val DEFAULT_APPEARANCE = VideoSubtitleAppearance()
 
 private const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
 private const val SPEED_BOOST_MULTIPLIER = 2f

@@ -7,9 +7,13 @@ import app.katari.entry.viewer.settings.ViewerSettingId
 import app.katari.entry.viewer.settings.ViewerSettingScope
 import app.katari.entry.viewer.settings.ViewerSettingsCategory
 import app.katari.entry.viewer.settings.ViewerSettingsProvider
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
+import tachiyomi.domain.entry.model.SubtitlePosition
+import tachiyomi.domain.entry.model.SubtitleTextEdge
 
 class AnimePlayerPreferences(
     preferenceStore: PreferenceStore,
@@ -39,6 +43,22 @@ class AnimePlayerPreferences(
         const val SUBTITLES_IN_PICTURE_KEY = "anime_subtitles_in_picture"
         const val PREFERRED_QUALITY_HEIGHT_KEY = "anime_preferred_quality_height"
         const val DEFAULT_PLAYBACK_SPEED_PERCENT_KEY = "anime_default_playback_speed_percent"
+        const val DEFAULT_SUBTITLE_POSITION_KEY = "anime_default_subtitle_position"
+        const val DEFAULT_SUBTITLE_TEXT_SIZE_KEY = "anime_default_subtitle_text_size"
+        const val DEFAULT_SUBTITLE_TEXT_COLOR_KEY = "anime_default_subtitle_text_color"
+        const val DEFAULT_SUBTITLE_BACKGROUND_COLOR_KEY = "anime_default_subtitle_background_color"
+        const val DEFAULT_SUBTITLE_BACKGROUND_OPACITY_KEY = "anime_default_subtitle_background_opacity"
+        const val DEFAULT_SUBTITLE_TEXT_EDGE_KEY = "anime_default_subtitle_text_edge"
+
+        /** The subtitles' text size before the viewer sets one, a share of the picture's height. */
+        const val BUILT_IN_SUBTITLE_TEXT_SIZE = 0.0533f
+
+        /** ARGB. */
+        const val BUILT_IN_SUBTITLE_TEXT_COLOR = 0xFFFFFFFF.toInt()
+
+        /** ARGB, its alpha replaced by the background opacity. */
+        const val BUILT_IN_SUBTITLE_BACKGROUND_COLOR = 0xFF000000.toInt()
+        const val BUILT_IN_SUBTITLE_BACKGROUND_OPACITY = 0.72f
 
         /** Video heights a series starts at until one is picked in the player; 0 asks for the highest offered. */
         val PREFERRED_QUALITY_HEIGHT_OPTIONS = listOf(0, 1080, 720, 480, 360)
@@ -93,6 +113,49 @@ class AnimePlayerPreferences(
 
     /** Off lets subtitles leave the picture for the band under it when there is room. */
     val subtitlesInPicture: Preference<Boolean> = preferenceStore.getBoolean(SUBTITLES_IN_PICTURE_KEY, false)
+
+    // The look of subtitles in every series that has none of its own, set on its own Settings page. Where subtitles are
+    // dragged off the position grid stays with each series.
+    val defaultSubtitlePosition: Preference<SubtitlePosition> = preferenceStore.getEnum(
+        DEFAULT_SUBTITLE_POSITION_KEY,
+        SubtitlePosition.BOTTOM_CENTER,
+    )
+
+    /** A share of the picture's height. */
+    val defaultSubtitleTextSize: Preference<Float> =
+        preferenceStore.getFloat(DEFAULT_SUBTITLE_TEXT_SIZE_KEY, BUILT_IN_SUBTITLE_TEXT_SIZE)
+
+    /** ARGB. */
+    val defaultSubtitleTextColor: Preference<Int> =
+        preferenceStore.getInt(DEFAULT_SUBTITLE_TEXT_COLOR_KEY, BUILT_IN_SUBTITLE_TEXT_COLOR)
+
+    /** ARGB, its alpha replaced by [defaultSubtitleBackgroundOpacity]. */
+    val defaultSubtitleBackgroundColor: Preference<Int> =
+        preferenceStore.getInt(DEFAULT_SUBTITLE_BACKGROUND_COLOR_KEY, BUILT_IN_SUBTITLE_BACKGROUND_COLOR)
+
+    val defaultSubtitleBackgroundOpacity: Preference<Float> =
+        preferenceStore.getFloat(DEFAULT_SUBTITLE_BACKGROUND_OPACITY_KEY, BUILT_IN_SUBTITLE_BACKGROUND_OPACITY)
+
+    val defaultSubtitleTextEdge: Preference<SubtitleTextEdge> = preferenceStore.getEnum(
+        DEFAULT_SUBTITLE_TEXT_EDGE_KEY,
+        SubtitleTextEdge.OUTLINE,
+    )
+
+    private val defaultSubtitleLook: List<Preference<*>> = listOf(
+        defaultSubtitlePosition,
+        defaultSubtitleTextSize,
+        defaultSubtitleTextColor,
+        defaultSubtitleBackgroundColor,
+        defaultSubtitleBackgroundOpacity,
+        defaultSubtitleTextEdge,
+    )
+
+    /** Emits now and whenever the default subtitle look changes, such as from another device. */
+    fun defaultSubtitleLookChanges(): Flow<Unit> = combine(defaultSubtitleLook.map { it.changes() }) { }
+
+    fun resetDefaultSubtitleLook() {
+        defaultSubtitleLook.forEach(Preference<*>::delete)
+    }
 
     val orientation: Preference<AnimePlayerOrientation> = preferenceStore.getEnum(
         ORIENTATION_KEY,

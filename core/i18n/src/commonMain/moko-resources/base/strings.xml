@@ -1893,6 +1893,7 @@
     <string name="anime_playback_subtitle_own_style">This subtitle keeps its own styling, so these settings don\'t change it.</string>
     <string name="anime_playback_subtitle_keep_in_picture">Keep in the picture</string>
     <string name="anime_playback_subtitle_keep_in_picture_summary">Otherwise they move below the picture when there\'s room</string>
+    <string name="anime_playback_subtitle_all_series">All series</string>
     <string name="anime_playback_subtitle_drag_hint">Drag to move</string>
     <string name="anime_playback_subtitle_drag_keys_hint">Drag or use the arrow keys to move, Shift for bigger steps</string>
     <string name="anime_playback_subtitle_guide_center">Center</string>
@@ -2164,6 +2165,12 @@
     <string name="pref_anime_preferred_quality_summary">%s · used until you pick one for a series</string>
     <string name="anime_quality_highest">Highest</string>
     <string name="pref_anime_default_speed">Default speed</string>
+    <string name="pref_anime_subtitles">Subtitles</string>
+    <string name="pref_anime_reset_subtitle_look">Reset the default subtitle look</string>
+    <string name="pref_anime_default_subtitle_look">Default subtitle look</string>
+    <string name="pref_anime_default_subtitle_look_summary">How subtitles look in series without a look of their own</string>
+    <string name="pref_anime_default_subtitle_look_note">Series without a look of their own show subtitles like this. A look set in the player\'s subtitle settings stays with its series.</string>
+    <string name="pref_anime_reset_subtitle_look_summary">Series without a look of their own show subtitles as they first did</string>
     <string name="anime_orientation_follow_video">Follow the video\'s shape</string>
     <string name="anime_orientation_system">Follow the device</string>
     <string name="anime_no_global_search_results">No anime sources returned results</string>

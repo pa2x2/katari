@@ -34,7 +34,9 @@ internal data class VideoPlaybackUiState(
     /** The audio track picked this session; null leaves the choice to the stream. */
     val currentAudioTrackKey: String? = null,
     val currentSubtitle: VideoPlayerSubtitleSelection = VideoPlayerSubtitleSelection.None,
-    val subtitleAppearance: VideoSubtitleAppearance = VideoSubtitleAppearance(),
+    /** The series' own subtitle look; null follows [subtitleDefault]. */
+    val ownSubtitleLook: VideoSubtitleAppearance? = null,
+    val subtitleDefault: VideoSubtitleAppearance = VideoSubtitleAppearance(),
     /** The title's engine; null leaves it to Auto. */
     val engineOverride: PlayerEngineOverride? = null,
     /** The title has had its one hint that the mpv add-on would play it better. */
@@ -45,6 +47,9 @@ internal data class VideoPlaybackUiState(
 ) {
     val subtitles: List<VideoSubtitle>
         get() = currentStream.subtitles
+
+    val subtitleAppearance: VideoSubtitleAppearance
+        get() = ownSubtitleLook ?: subtitleDefault
 
     val showsAdaptiveQualitySelector: Boolean
         get() = playbackData.sourceQualities.isEmpty() && adaptiveQualities.size > 1
