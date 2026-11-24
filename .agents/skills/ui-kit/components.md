@@ -264,6 +264,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A long strip of page images | `PageStrip` | With `maxWidth` it keeps the pages to a centred column, such as a strip previewed in the immersive feed |
 | Title and actions beside media that leaves room for them, such as a tall page in a wide window | `PanelBesideMedia` | Over the media otherwise; the caller says how wide the media is drawn |
 | A preview of reading colours | `ReadingPageSample`, `ReadingPaletteSwatch` | |
+| A video stand-in while something shown over video is set, such as how subtitles look | `VideoFrameSample` | A drawn scene in a 16:9 frame; lay the preview over it in its content |
 
 ## Dashboards, charts and calendars
 

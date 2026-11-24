@@ -9,15 +9,14 @@ import app.katari.video.engine.spi.player.SubtitleCue
 import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.subtitleKeepsOwnStyle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The subtitle editor over the paused video. It previews the text cues on screen, or a sample line when there are none,
- * and resumes playback on close if the video was playing when it opened. Whether subtitles stay in the picture is the
- * viewer's, kept for every title, while their appearance is the title's.
+ * and resumes playback on close if the video was playing when it opened. Their look is the series' own, and Reset puts
+ * back the default look; whether subtitles stay in the picture is kept for every series.
  */
 @Composable
 internal fun VideoPlayerSubtitleEditorLayer(
@@ -50,15 +49,11 @@ internal fun VideoPlayerSubtitleEditorLayer(
                     currentPlayer.play()
                 }
             },
-            onReset = {
-                ui.subtitleEditorDraft = VideoSubtitleAppearance()
-                ui.subtitleEditorKeepsInPicture = false
-            },
+            onReset = { ui.subtitleEditorDraft = current.playback.subtitleDefault },
             onDone = {
                 actions.endSpeedBoost()
-                val normalizedAppearance = ui.subtitleEditorDraft.normalized()
                 ui.subtitleEditorVisible = false
-                viewModel.updateSubtitleAppearance(normalizedAppearance)
+                viewModel.updateSubtitleAppearance(ui.subtitleEditorDraft)
                 host.visit.subtitlesInPicture = ui.subtitleEditorKeepsInPicture
                 host.preferences.subtitlesInPicture.set(ui.subtitleEditorKeepsInPicture)
                 if (ui.resumePlaybackAfterSubtitleEditor) {

@@ -31,6 +31,7 @@ import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.playbackSnapshot
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -44,6 +45,7 @@ internal class AnimeImmersiveRenderer(
     private val handle: EntryImmersiveHandle.Playback,
     private val savedPositionMs: Flow<Long>,
     private val savedSubtitleKey: String?,
+    private val subtitleAppearance: VideoSubtitleAppearance,
     private val metadata: VideoMetadata,
     private val videoEngineProvider: () -> VideoEngine,
     private val basePreferencesProvider: () -> AnimePlayerBasePreferences,
@@ -198,6 +200,7 @@ internal class AnimeImmersiveRenderer(
             playerErrorMessage = playerErrorMessage,
             muted = muted,
             subtitles = subtitles,
+            subtitleAppearance = subtitleAppearance,
             metadata = metadata,
             onToggleControls = onToggleControls,
             onPlaybackSnapshotChange = { playbackSnapshot = it },

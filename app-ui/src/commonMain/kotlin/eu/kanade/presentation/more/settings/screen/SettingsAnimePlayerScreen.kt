@@ -12,7 +12,10 @@ import app.katari.entry.viewer.settings.asProfilePreference
 import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.window.currentWindowLayout
 import app.katari.ui.di.LocalAppUiGraph
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.screen.animeplayer.DefaultSubtitleLookScreen
 import eu.kanade.presentation.more.settings.widget.ListTypedEntry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -74,6 +77,7 @@ class SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         val seekStep = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.seekStepSetting).asProfilePreference()
         }
+        val navigator = LocalNavigator.currentOrThrow
 
         val playback = listOf(
             Preference.PreferenceItem.ListPreference(
@@ -185,6 +189,21 @@ class SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.pref_anime_playback),
                 preferenceItems = playback,
+            ),
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.pref_anime_subtitles),
+                preferenceItems = listOf(
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.pref_anime_default_subtitle_look),
+                        subtitle = stringResource(MR.strings.pref_anime_default_subtitle_look_summary),
+                        onClick = { navigator.push(DefaultSubtitleLookScreen()) },
+                    ),
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.pref_anime_reset_subtitle_look),
+                        subtitle = stringResource(MR.strings.pref_anime_reset_subtitle_look_summary),
+                        onClick = animePlayerPreferences::resetDefaultSubtitleLook,
+                    ),
+                ),
             ),
             // Brightness belongs to the screen and the room, so every profile shares it and the group has no chip.
             Preference.PreferenceGroup(

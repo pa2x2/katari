@@ -1,28 +1,33 @@
 package eu.kanade.tachiyomi.ui.video.player.subtitle
 
+import app.katari.entry.interactions.settings.AnimePlayerPreferences
+import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.BUILT_IN_SUBTITLE_BACKGROUND_COLOR
+import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.BUILT_IN_SUBTITLE_BACKGROUND_OPACITY
+import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.BUILT_IN_SUBTITLE_TEXT_COLOR
+import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.BUILT_IN_SUBTITLE_TEXT_SIZE
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.SubtitlePosition
 import tachiyomi.domain.entry.model.SubtitleTextEdge
 
 /**
- * How the viewer wants a title's text subtitles to look. [position] is where they rest, [textSize] a share of the
- * picture's height, the offsets shares of its width and height the subtitles are dragged by from there, and the colours
- * ARGB. A title saves it only once it
- * differs from the default; [normalized] holds every value to what the editor offers.
+ * How the viewer wants text subtitles to look. [position] is where they rest, [textSize] a share of the picture's
+ * height, the offsets shares of its width and height the subtitles are dragged by from there, and the colours ARGB.
+ * The constructor's values are the built-in look; [normalized] holds every value to what the editor offers.
+ *
+ * A series either keeps a look of its own ([ownSubtitleLook]) or follows the default look ([subtitleDefault]), which
+ * every series without one shares. The default has no offsets: where subtitles are dragged suits one series' pictures,
+ * not every series'.
  */
 internal data class VideoSubtitleAppearance(
     val position: SubtitlePosition = SubtitlePosition.BOTTOM_CENTER,
-    val offsetX: Float = DEFAULT_SUBTITLE_OFFSET_X,
-    val offsetY: Float = DEFAULT_SUBTITLE_OFFSET_Y,
-    val textSize: Float = DEFAULT_SUBTITLE_TEXT_SIZE,
-    val textColor: Int = DEFAULT_SUBTITLE_TEXT_COLOR,
-    val backgroundColor: Int = DEFAULT_SUBTITLE_BACKGROUND_COLOR,
-    val backgroundOpacity: Float = DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
+    val offsetX: Float = 0f,
+    val offsetY: Float = 0f,
+    val textSize: Float = BUILT_IN_SUBTITLE_TEXT_SIZE,
+    val textColor: Int = BUILT_IN_SUBTITLE_TEXT_COLOR,
+    val backgroundColor: Int = BUILT_IN_SUBTITLE_BACKGROUND_COLOR,
+    val backgroundOpacity: Float = BUILT_IN_SUBTITLE_BACKGROUND_OPACITY,
     val textEdge: SubtitleTextEdge = SubtitleTextEdge.OUTLINE,
 ) {
-    val isCustomized: Boolean
-        get() = normalized() != VideoSubtitleAppearance()
-
     /** The subtitles sit where [position] rests them, not dragged off it. */
     val restsInPlace: Boolean
         get() = offsetX == 0f && offsetY == 0f
@@ -37,6 +42,9 @@ internal data class VideoSubtitleAppearance(
             return (alpha shl 24) or (backgroundColor and 0x00FFFFFF)
         }
 
+    /** The part of the look a default keeps: everything but where the subtitles are dragged off their grid cell. */
+    fun asDefault(): VideoSubtitleAppearance = restingIn(position).normalized()
+
     fun normalized(): VideoSubtitleAppearance {
         return copy(
             offsetX = offsetX.coerceIn(-SUBTITLE_OFFSET_LIMIT, SUBTITLE_OFFSET_LIMIT),
@@ -47,67 +55,73 @@ internal data class VideoSubtitleAppearance(
     }
 }
 
-internal fun PlaybackPreferences.toSubtitleAppearance(): VideoSubtitleAppearance {
+internal fun AnimePlayerPreferences.subtitleDefault(): VideoSubtitleAppearance {
     return VideoSubtitleAppearance(
-        position = subtitlePosition ?: SubtitlePosition.BOTTOM_CENTER,
-        offsetX = subtitleOffsetX?.toFloat() ?: DEFAULT_SUBTITLE_OFFSET_X,
-        offsetY = subtitleOffsetY?.toFloat() ?: DEFAULT_SUBTITLE_OFFSET_Y,
-        textSize = subtitleTextSize?.toFloat() ?: DEFAULT_SUBTITLE_TEXT_SIZE,
-        textColor = subtitleTextColor ?: DEFAULT_SUBTITLE_TEXT_COLOR,
-        backgroundColor = subtitleBackgroundColor ?: DEFAULT_SUBTITLE_BACKGROUND_COLOR,
-        backgroundOpacity = subtitleBackgroundOpacity?.toFloat() ?: DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
-        textEdge = subtitleTextEdge ?: SubtitleTextEdge.OUTLINE,
+        position = defaultSubtitlePosition.get(),
+        textSize = defaultSubtitleTextSize.get(),
+        textColor = defaultSubtitleTextColor.get(),
+        backgroundColor = defaultSubtitleBackgroundColor.get(),
+        backgroundOpacity = defaultSubtitleBackgroundOpacity.get(),
+        textEdge = defaultSubtitleTextEdge.get(),
     ).normalized()
 }
 
-internal fun VideoSubtitleAppearance.toPersistedPosition(): SubtitlePosition? {
-    val normalized = normalized()
-    return normalized.position.takeIf { normalized.isCustomized }
+/** Makes [appearance] the default look; the built-in look clears it. */
+internal fun AnimePlayerPreferences.setSubtitleDefault(appearance: VideoSubtitleAppearance) {
+    val look = appearance.asDefault()
+    if (look == VideoSubtitleAppearance()) {
+        resetDefaultSubtitleLook()
+        return
+    }
+    defaultSubtitlePosition.set(look.position)
+    defaultSubtitleTextSize.set(look.textSize)
+    defaultSubtitleTextColor.set(look.textColor)
+    defaultSubtitleBackgroundColor.set(look.backgroundColor)
+    defaultSubtitleBackgroundOpacity.set(look.backgroundOpacity)
+    defaultSubtitleTextEdge.set(look.textEdge)
 }
 
-internal fun VideoSubtitleAppearance.toPersistedOffsetX(): Double? {
-    val normalized = normalized()
-    return normalized.offsetX.toDouble().takeIf { normalized.isCustomized }
+/** The series' own look, or null while it follows the default. */
+internal fun PlaybackPreferences.ownSubtitleLook(): VideoSubtitleAppearance? {
+    val columns = listOf(
+        subtitlePosition,
+        subtitleOffsetX,
+        subtitleOffsetY,
+        subtitleTextSize,
+        subtitleTextColor,
+        subtitleBackgroundColor,
+        subtitleBackgroundOpacity,
+        subtitleTextEdge,
+    )
+    if (columns.all { it == null }) return null
+    // A look saved before positions existed has none, and rested at the bottom centre
+    val builtIn = VideoSubtitleAppearance()
+    return VideoSubtitleAppearance(
+        position = subtitlePosition ?: builtIn.position,
+        offsetX = subtitleOffsetX?.toFloat() ?: builtIn.offsetX,
+        offsetY = subtitleOffsetY?.toFloat() ?: builtIn.offsetY,
+        textSize = subtitleTextSize?.toFloat() ?: builtIn.textSize,
+        textColor = subtitleTextColor ?: builtIn.textColor,
+        backgroundColor = subtitleBackgroundColor ?: builtIn.backgroundColor,
+        backgroundOpacity = subtitleBackgroundOpacity?.toFloat() ?: builtIn.backgroundOpacity,
+        textEdge = subtitleTextEdge ?: builtIn.textEdge,
+    ).normalized()
 }
 
-internal fun VideoSubtitleAppearance.toPersistedOffsetY(): Double? {
-    val normalized = normalized()
-    return normalized.offsetY.toDouble().takeIf { normalized.isCustomized }
-}
+/** The series keeps [own] as its look, or follows the default while it is null. */
+internal fun PlaybackPreferences.withOwnSubtitleLook(own: VideoSubtitleAppearance?): PlaybackPreferences = copy(
+    subtitlePosition = own?.position,
+    subtitleOffsetX = own?.offsetX?.toDouble(),
+    subtitleOffsetY = own?.offsetY?.toDouble(),
+    subtitleTextSize = own?.textSize?.toDouble(),
+    subtitleTextColor = own?.textColor,
+    subtitleBackgroundColor = own?.backgroundColor,
+    subtitleBackgroundOpacity = own?.backgroundOpacity?.toDouble(),
+    subtitleTextEdge = own?.textEdge,
+)
 
-internal fun VideoSubtitleAppearance.toPersistedTextSize(): Double? {
-    val normalized = normalized()
-    return normalized.textSize.toDouble().takeIf { normalized.isCustomized }
-}
-
-internal fun VideoSubtitleAppearance.toPersistedTextColor(): Int? {
-    val normalized = normalized()
-    return normalized.textColor.takeIf { normalized.isCustomized }
-}
-
-internal fun VideoSubtitleAppearance.toPersistedTextEdge(): SubtitleTextEdge? {
-    val normalized = normalized()
-    return normalized.textEdge.takeIf { normalized.isCustomized }
-}
-
-internal fun VideoSubtitleAppearance.toPersistedBackgroundColor(): Int? {
-    val normalized = normalized()
-    return normalized.backgroundColor.takeIf { normalized.isCustomized }
-}
-
-internal fun VideoSubtitleAppearance.toPersistedBackgroundOpacity(): Double? {
-    val normalized = normalized()
-    return normalized.backgroundOpacity.toDouble().takeIf { normalized.isCustomized }
-}
-
-internal const val DEFAULT_SUBTITLE_TEXT_SIZE = 0.0533f
-internal const val DEFAULT_SUBTITLE_BACKGROUND_OPACITY = 0.72f
-internal const val DEFAULT_SUBTITLE_OFFSET_X = 0f
-internal const val DEFAULT_SUBTITLE_OFFSET_Y = 0f
 internal const val MIN_SUBTITLE_TEXT_SIZE = 0.03f
 internal const val MAX_SUBTITLE_TEXT_SIZE = 0.12f
-internal const val DEFAULT_SUBTITLE_TEXT_COLOR = 0xFFFFFFFF.toInt()
-internal const val DEFAULT_SUBTITLE_BACKGROUND_COLOR = 0xFF000000.toInt()
 
 // How far subtitles rest from the picture's edges, a share of its height
 internal const val SUBTITLE_EDGE_FRACTION = 0.08f
@@ -117,7 +131,7 @@ internal const val SUBTITLE_OFFSET_LIMIT = 1f
 
 /** The colours the subtitle editor offers for subtitle text, as ARGB integers. */
 internal val SUBTITLE_TEXT_COLOR_PRESETS = listOf(
-    DEFAULT_SUBTITLE_TEXT_COLOR,
+    BUILT_IN_SUBTITLE_TEXT_COLOR,
     0xFFFFFF99.toInt(),
     0xFFFFC857.toInt(),
     0xFF8BE9FD.toInt(),
@@ -126,7 +140,7 @@ internal val SUBTITLE_TEXT_COLOR_PRESETS = listOf(
 
 /** The colours the subtitle editor offers for the box behind subtitle text, as ARGB integers. */
 internal val SUBTITLE_BACKGROUND_COLOR_PRESETS = listOf(
-    DEFAULT_SUBTITLE_BACKGROUND_COLOR,
+    BUILT_IN_SUBTITLE_BACKGROUND_COLOR,
     0xFF1F2937.toInt(),
     0xFF374151.toInt(),
     0xFF7F1D1D.toInt(),

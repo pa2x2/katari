@@ -17,6 +17,12 @@ internal val PlayerScopes = PreferenceScopeTable(SettingsArea.PLAYERS) {
         "anime_default_playback_speed_percent",
         "anime_shows_remaining_time",
         "anime_subtitles_in_picture",
+        "anime_default_subtitle_position",
+        "anime_default_subtitle_text_size",
+        "anime_default_subtitle_text_color",
+        "anime_default_subtitle_background_color",
+        "anime_default_subtitle_background_opacity",
+        "anime_default_subtitle_text_edge",
     )
     deviceByDefault(
         "enable_anime_picture_in_picture",

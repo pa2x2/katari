@@ -5,6 +5,7 @@ import app.katari.entry.interactions.anime.state.resumePositionMs
 import app.katari.entry.interactions.media.EntryImmersiveHandle
 import app.katari.entry.interactions.media.EntryImmersiveRenderer
 import app.katari.entry.interactions.runtime.EntryImmersiveLoadMode
+import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.video.engine.spi.VideoEngine
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -12,6 +13,9 @@ import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.ResolveVideoStream
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
+import eu.kanade.tachiyomi.ui.video.player.subtitle.ownSubtitleLook
+import eu.kanade.tachiyomi.ui.video.player.subtitle.subtitleDefault
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -32,6 +36,7 @@ internal class AnimeImmersiveClips(
     private val resolveVideoStream: () -> VideoStreamResolver,
     private val videoEngine: () -> VideoEngine,
     private val basePreferences: () -> AnimePlayerBasePreferences,
+    private val playerPreferences: AnimePlayerPreferences,
     private val clipPlatform: AnimeClipPlatform,
 ) {
     val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
@@ -64,6 +69,7 @@ internal class AnimeImmersiveClips(
                 delegate = AnimeImmersiveEpisode(
                     child = chapter,
                     subtitleKey = result.preferences.subtitleKey,
+                    subtitleAppearance = result.preferences.ownSubtitleLook() ?: playerPreferences.subtitleDefault(),
                     metadata = VideoMetadata(
                         title = chapter.name,
                         series = entry.title,
@@ -85,6 +91,7 @@ internal class AnimeImmersiveClips(
             handle = playback,
             savedPositionMs = savedPositionMs(episode.child),
             savedSubtitleKey = episode.subtitleKey,
+            subtitleAppearance = episode.subtitleAppearance,
             metadata = episode.metadata,
             videoEngineProvider = videoEngine,
             basePreferencesProvider = basePreferences,
@@ -107,6 +114,7 @@ internal class AnimeImmersiveClips(
 private data class AnimeImmersiveEpisode(
     val child: EntryChapter,
     val subtitleKey: String?,
+    val subtitleAppearance: VideoSubtitleAppearance,
     val metadata: VideoMetadata,
 )
 
