@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.browse.source.globalsearch
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
@@ -16,6 +17,7 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import eu.kanade.core.preference.asState
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.SourceExtensionPackages
 import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
@@ -37,6 +39,7 @@ import tachiyomi.core.common.preference.toggle
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
+import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
@@ -50,6 +53,7 @@ class GlobalSearchViewModel(
     private val getEntry: GetEntry,
     private val preferences: SourcePreferences,
     private val catalogueFeature: EntryCatalogueFeature,
+    libraryPreferences: LibraryPreferences,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -58,6 +62,11 @@ class GlobalSearchViewModel(
     interface Factory : ManualViewModelAssistedFactory {
         fun create(initialQuery: String, initialExtensionFilter: String?): GlobalSearchViewModel
     }
+
+    /** The cover size of the results' shelves: Browse's. */
+    val coverSize by preferences.browseCoverSize.asState(viewModelScope)
+
+    val typeBadges by libraryPreferences.entryTypeBadge.asState(viewModelScope)
 
     val state: StateFlow<GlobalSearchViewModel.State>
         field = MutableStateFlow<GlobalSearchViewModel.State>(State(searchQuery = initialQuery))

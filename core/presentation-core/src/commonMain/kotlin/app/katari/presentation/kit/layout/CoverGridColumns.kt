@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import app.katari.presentation.kit.content.BrowseMetrics
 import app.katari.presentation.kit.content.entryCoverScale
 import tachiyomi.domain.library.model.CoverSize
 import kotlin.math.ceil
@@ -52,10 +53,19 @@ fun GridCells.columnCount(availableWidth: Dp, spacing: Dp): Int {
     }
 }
 
-// Narrowest a cell gets. The sizes keep the column count people had chosen before there were sizes, 4 to 1 per row,
-// on a typical phone about 411 dp wide.
+/**
+ * How wide a cover on a shelf that scrolls sideways is at [size], such as a global search result's: the shelf width of
+ * [BrowseMetrics] at the default size, in step with the grids' sizes, and scaled with the window as they are.
+ */
+@Composable
+@ReadOnlyComposable
+fun coverShelfWidth(size: CoverSize): Dp =
+    BrowseMetrics.searchResultCoverWidth * (size.minCellWidth() / CoverSize.default.minCellWidth()) * entryCoverScale()
+
+// Narrowest a cell gets. Small to Extra large keep the column count people had chosen before there were sizes, 4 to 1
+// per row, on a typical phone about 411 dp wide; Extra small fits 5.
 private fun CoverSize.minCellWidth(): Dp = when (this) {
-    CoverSize.Auto -> 128.dp
+    CoverSize.ExtraSmall -> 72.dp
     CoverSize.Small -> 88.dp
     CoverSize.Medium -> 120.dp
     CoverSize.Large -> 150.dp

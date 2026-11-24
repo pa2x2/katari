@@ -676,7 +676,6 @@
     <string name="file_picker_uri_permission_unsupported">Non se puido obter un acceso continuo ao cartafol. É posible que a aplicación se comporte de xeito imprevisto.</string>
     <string name="ext_remove">Eliminar</string>
     <string name="pref_flash_duration">Duración do flash</string>
-    <string name="label_auto">Automático</string>
     <string name="theme_monochrome">Monocromo</string>
     <string name="pref_mark_duplicate_read_chapter_read_existing">Ao rematar de ler un capítulo</string>
     <string name="possible_duplicates_title">Posibles duplicados</string>

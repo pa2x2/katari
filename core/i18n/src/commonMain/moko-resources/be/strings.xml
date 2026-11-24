@@ -313,7 +313,6 @@
     <string name="label_upcoming">Каляндар</string>
     <string name="scanlator">Сканлейтар</string>
     <string name="label_downloaded">Спампована</string>
-    <string name="label_auto">Аўта</string>
     <string name="action_sort_next_updated">Наступнае чаканае абнаўленне</string>
     <string name="action_sort_random">Выпадкова</string>
     <string name="action_search_hint">Шукаць…</string>

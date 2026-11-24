@@ -445,6 +445,9 @@ class EntryScreen(
         if (showRelatedEntriesDialog) {
             RelatedEntriesDialog(
                 viewModel = relatedEntriesViewModel,
+                source = successState.source,
+                sourceId = successState.entry.source,
+                sourceName = successState.sourceName,
                 onDismissRequest = { showRelatedEntriesDialog = false },
                 onEntryClick = { relatedEntry ->
                     showRelatedEntriesDialog = false

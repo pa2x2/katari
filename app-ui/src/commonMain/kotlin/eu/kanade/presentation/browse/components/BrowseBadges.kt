@@ -15,8 +15,16 @@ internal fun InLibraryBadge(enabled: Boolean) {
     }
 }
 
+/** A source's cover badges: whether it's in the library, and [entryType] unless null, as [catalogShowsTypeBadge] says. */
 @Composable
-fun CatalogBadges(isFavorite: Boolean, entryType: EntryType) {
+fun CatalogBadges(isFavorite: Boolean, entryType: EntryType?) {
     InLibraryBadge(enabled = isFavorite)
-    CatalogTypeBadge(entryType = entryType)
+    entryType?.let { CatalogTypeBadge(entryType = it) }
 }
+
+/**
+ * Whether the covers of a source offering [entryTypes] (null when it doesn't say) show their entry type: not when the
+ * source has one type, which every cover would repeat, nor while the person hides type badges ([typeBadges]).
+ */
+fun catalogShowsTypeBadge(entryTypes: Set<EntryType>?, typeBadges: Boolean): Boolean =
+    typeBadges && (entryTypes == null || entryTypes.size > 1)

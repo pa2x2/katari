@@ -684,7 +684,6 @@
     <string name="storage_failed_to_create_download_directory">Nie udało się utworzyć folderu pobierania</string>
     <string name="storage_failed_to_create_directory">Nie udało się utworzyć folderu: %s</string>
     <string name="export">Eksportuj</string>
-    <string name="label_auto">Auto</string>
     <string name="action_display_unread_badge">Nieprzeczytane rozdziały</string>
     <string name="theme_catppuccin">Catppucin</string>
     <string name="pref_behavior">Zachowanie</string>

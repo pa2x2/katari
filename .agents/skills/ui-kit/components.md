@@ -137,6 +137,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A scrolling row of connected toggle buttons, such as content types | `ConnectedToggleRow` | |
 | A few connected options inline with other controls | `ConnectedToggleGroup` | |
 | One choice of a setting shown as a picture of it | `ChoiceTile` | |
+| The choices of one setting shown as pictures of them, such as display modes | `ChoiceTileGrid` | Each a `ChoiceTile`; as many to a line as fit, lines balanced, all the same width |
 | Bare toggles, outside rows | `Switch`, `Checkbox`, `TriStateCheckbox`, `RadioButton` | Settings use the toggle and choice rows instead |
 | A slider | `Slider`, `VerticalSlider` | `SliderRow` for a setting |
 | A value stepped one meaningful step at a time | `Stepper` | `StepperRow` for a setting; `StepperKind` and `StepperInput` as for `StepperRow` |
@@ -279,8 +280,10 @@ See the `adaptive-layout` skill for which to use at which window size.
 |---|---|---|
 | A vertical list of rows, and what stays above it | `RowList`, `RowListHeader` | Never a raw `LazyColumn`; `stickyRowGroupHeader` in its scope keeps a header at the top while its rows scroll |
 | Entries shown as rows by a grid | `RowGridColumn` | |
-| A scrolling grid of entries, such as a library page, catalog or feed | `CoverGrid` | Never a raw `LazyVerticalGrid`; `fastScroll = true` for long grids; its content is given the column count |
+| A scrolling grid of entries, such as a library page, catalog or feed | `CoverGrid` | Never a raw `LazyVerticalGrid`; `fastScroll = true` for long grids; its content is given the column count; `sizing` lets the person resize its covers on the grid |
+| The cover size a grid shows, which the grid's own gestures and a control beside it both change, such as a display panel's slider | `rememberCoverSizing` | Ctrl + wheel, touchpad and touch pinches step the size with a pill saying how many fit per row; `columns` is the grid's count |
 | Columns for a cover grid, and how many a grid lays out | `coverGridCells`, `GridCells.columnCount` | |
+| How wide a cover on a sideways shelf is, such as a global search result | `coverShelfWidth` | Follows the cover size as grids do |
 | Cards of varying height in columns | `CardFlow` | |
 | A screen's content that isn't one of these lists, grids or panes, such as a page laid out as one column, tabs above a pager or a button over a list | `FramedContent`, `FramedScrollColumn` | Keeps it in the screen's frame, clear of the side dock and system bars; `FramedScrollColumn` scrolls from edge to edge and lets artwork bleed with `columnInset` |
 | A lazy list or grid with a mouse scrollbar | `ScrollbarFrame` | |

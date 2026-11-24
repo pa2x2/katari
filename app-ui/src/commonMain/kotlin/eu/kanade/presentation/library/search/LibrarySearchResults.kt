@@ -28,6 +28,7 @@ import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.feedback.EmptyScreen
 import app.katari.presentation.kit.layout.CoverGrid
+import app.katari.presentation.kit.layout.CoverSizing
 import app.katari.presentation.kit.layout.RowGridColumn
 import app.katari.presentation.kit.layout.coverGridCells
 import app.katari.presentation.kit.layout.coverListCells
@@ -49,7 +50,6 @@ import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.displayTitle
-import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
@@ -69,7 +69,7 @@ internal fun LibrarySearchResults(
     selection: Set<LibraryItemKey>,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
-    coverSize: CoverSize,
+    sizing: CoverSizing,
     displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
     pageClicks: LibraryPageClicks,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
@@ -100,6 +100,7 @@ internal fun LibrarySearchResults(
         { cells, gridContentPadding ->
             LibrarySearchResultsGrid(
                 cells = cells,
+                sizing = sizing.takeIf { displayMode.isCoverGrid },
                 contentPadding = gridContentPadding + PaddingValues(gridPadding),
                 gridState = gridState,
                 sections = sections,
@@ -117,13 +118,7 @@ internal fun LibrarySearchResults(
     if (displayMode == LibraryDisplayMode.List) {
         RowGridColumn(contentPadding, modifier.fillMaxSize()) { cells, rowPadding -> results(cells, rowPadding) }
     } else {
-        val cells = if (displayMode ==
-            LibraryDisplayMode.ComfortableList
-        ) {
-            coverListCells()
-        } else {
-            coverGridCells(coverSize)
-        }
+        val cells = if (displayMode.isCoverGrid) coverGridCells(sizing.size) else coverListCells()
         Box(modifier = modifier.fillMaxSize()) { results(cells, contentPadding) }
     }
 }
@@ -131,6 +126,7 @@ internal fun LibrarySearchResults(
 @Composable
 private fun LibrarySearchResultsGrid(
     cells: GridCells,
+    sizing: CoverSizing?,
     contentPadding: PaddingValues,
     gridState: LazyGridState,
     sections: List<Pair<LibraryPage, List<LibraryItem>>>,
@@ -159,6 +155,7 @@ private fun LibrarySearchResultsGrid(
             },
         ),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+        sizing = sizing,
     ) { columns ->
         if (onGlobalSearchClicked != null) {
             item(span = { GridItemSpan(maxLineSpan) }, contentType = "library_global_search_item") {

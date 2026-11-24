@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.entry.related
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.katari.entry.interactions.child.EntryRelatedEntriesFeature
@@ -16,6 +17,8 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import eu.kanade.core.preference.asState
+import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
 import eu.kanade.tachiyomi.ui.base.observation.collectAsState
@@ -30,11 +33,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.library.service.LibraryPreferences
 
 @AssistedInject
 class RelatedEntriesViewModel(
     @Assisted private val entryId: Long,
     private val relatedEntriesFeature: EntryRelatedEntriesFeature,
+    val sourcePreferences: SourcePreferences,
+    libraryPreferences: LibraryPreferences,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -43,6 +49,9 @@ class RelatedEntriesViewModel(
     interface Factory : ManualViewModelAssistedFactory {
         fun create(entryId: Long): RelatedEntriesViewModel
     }
+
+    /** Whether the person shows entry-type badges on covers. */
+    val typeBadges by libraryPreferences.entryTypeBadge.asState(viewModelScope)
 
     val state: StateFlow<RelatedEntriesViewModel.State>
         field = MutableStateFlow<RelatedEntriesViewModel.State>(State.Idle)

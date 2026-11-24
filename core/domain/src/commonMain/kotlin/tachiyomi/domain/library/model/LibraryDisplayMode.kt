@@ -34,6 +34,10 @@ sealed interface LibraryDisplayMode {
         }
     }
 
+    /** Whether this lays covers out in columns the cover size decides, as every mode but the two lists does. */
+    val isCoverGrid: Boolean
+        get() = this != List && this != ComfortableList
+
     fun serialize(): String {
         return when (this) {
             ComfortableGrid -> "COMFORTABLE_GRID"

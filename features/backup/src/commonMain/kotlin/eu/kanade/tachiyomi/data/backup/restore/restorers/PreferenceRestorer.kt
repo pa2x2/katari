@@ -7,6 +7,7 @@ import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.source.service.LegacyMigrationFlagsConversion
 import eu.kanade.domain.source.service.LegacyNsfwSourceConversion
+import eu.kanade.domain.source.service.LegacySourceDisplayModesConversion
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
@@ -80,6 +81,7 @@ class PreferenceRestorer(
         LegacyExcludedSourcesConversion.convert(store)
         LegacyNsfwSourceConversion.convert(store)
         LegacyMigrationFlagsConversion.convert(store)
+        LegacySourceDisplayModesConversion.convert(store)
         LegacyItemsPerRowConversion.convert(store)
 
         if (includeGlobalRestore) {

@@ -6,6 +6,9 @@ import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedAnchor
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.domain.source.model.SourceFeedTimeline
+import eu.kanade.domain.source.model.SourceLayout
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -15,6 +18,7 @@ import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.getEnum
 import tachiyomi.core.common.preference.getEnumSet
 import tachiyomi.core.common.preference.getLongArray
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import java.util.Locale
 
@@ -39,7 +43,17 @@ class SourcePreferences(
         const val SAVED_FEED_PRESETS_KEY = "saved_feed_presets"
         const val SAVED_FEEDS_KEY = "saved_source_feeds"
 
-        val SOURCE_DISPLAY_MODE_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix("pref_display_mode_catalogue_")
+        /** A source's own display mode. A source keeps its own layout exactly while this is set. */
+        val SOURCE_DISPLAY_MODE_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix("pref_source_display_mode_")
+
+        /** A source's own cover size, set beside its own display mode. */
+        val SOURCE_COVER_SIZE_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix("pref_source_cover_size_")
+
+        /**
+         * The display mode every source remembered before Browse had a layout of its own, read only to convert it
+         * ([LegacySourceDisplayModesConversion]).
+         */
+        val LEGACY_SOURCE_DISPLAY_MODE_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix("pref_display_mode_catalogue_")
         val FEED_TIMELINE_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix(
             Preference.appStateKey("source_feed_timeline_"),
         )
@@ -49,6 +63,8 @@ class SourcePreferences(
 
         val profileKeyPatterns = setOf(
             SOURCE_DISPLAY_MODE_KEY_FAMILY,
+            SOURCE_COVER_SIZE_KEY_FAMILY,
+            LEGACY_SOURCE_DISPLAY_MODE_KEY_FAMILY,
             FEED_TIMELINE_KEY_FAMILY,
             FEED_ANCHOR_KEY_FAMILY,
         )
@@ -68,6 +84,7 @@ class SourcePreferences(
         }
     }
 
+    /** The display mode of every catalog, feed and search of sources that don't keep their own layout. */
     val sourceDisplayMode: Preference<LibraryDisplayMode> = preferenceStore.getObjectFromString(
         "pref_display_mode_catalogue",
         LibraryDisplayMode.default,
@@ -82,6 +99,80 @@ class SourcePreferences(
             LibraryDisplayMode.Serializer::serialize,
             LibraryDisplayMode.Serializer::deserialize,
         )
+    }
+
+    /** The cover size of every catalog, feed and search of sources that don't keep their own layout. */
+    val browseCoverSize: Preference<CoverSize> = preferenceStore.getEnum("pref_browse_cover_size", CoverSize.default)
+
+    fun sourceCoverSize(sourceId: Long): Preference<CoverSize> {
+        return preferenceStore.getEnum(SOURCE_COVER_SIZE_KEY_FAMILY.key(sourceId), browseCoverSize.get())
+    }
+
+    fun sourceLayout(sourceId: Long): Flow<SourceLayout> {
+        val ownMode = sourceDisplayMode(sourceId)
+        val ownSize = sourceCoverSize(sourceId)
+        return combine(sourceDisplayMode.changes(), browseCoverSize.changes(), ownMode.changes(), ownSize.changes()) {
+                browseMode,
+                browseSize,
+                mode,
+                size,
+            ->
+            sourceLayout(ownMode, ownSize, browseMode, browseSize, mode, size)
+        }
+    }
+
+    fun getSourceLayout(sourceId: Long): SourceLayout {
+        val ownMode = sourceDisplayMode(sourceId)
+        val ownSize = sourceCoverSize(sourceId)
+        return sourceLayout(
+            ownMode,
+            ownSize,
+            sourceDisplayMode.get(),
+            browseCoverSize.get(),
+            ownMode.get(),
+            ownSize.get(),
+        )
+    }
+
+    // A source's own preferences default to Browse's values as they were when made, so they count only while set
+    private fun sourceLayout(
+        ownMode: Preference<LibraryDisplayMode>,
+        ownSize: Preference<CoverSize>,
+        browseMode: LibraryDisplayMode,
+        browseSize: CoverSize,
+        mode: LibraryDisplayMode,
+        size: CoverSize,
+    ): SourceLayout = if (ownMode.isSet()) {
+        SourceLayout(mode, if (ownSize.isSet()) size else browseSize, ownLayout = true)
+    } else {
+        SourceLayout(browseMode, browseSize, ownLayout = false)
+    }
+
+    /** Sets the display mode [sourceId] shows: its own while it keeps its own layout, Browse's otherwise. */
+    fun setSourceDisplayMode(sourceId: Long, mode: LibraryDisplayMode) {
+        val own = sourceDisplayMode(sourceId)
+        if (own.isSet()) own.set(mode) else sourceDisplayMode.set(mode)
+    }
+
+    /** Sets the cover size [sourceId] shows: its own while it keeps its own layout, Browse's otherwise. */
+    fun setSourceCoverSize(sourceId: Long, size: CoverSize) {
+        if (sourceDisplayMode(sourceId).isSet()) sourceCoverSize(sourceId).set(size) else browseCoverSize.set(size)
+    }
+
+    /**
+     * Gives [sourceId] its own layout, starting from what Browse shows, or drops it so the source shows Browse's
+     * layout again.
+     */
+    fun setSourceOwnLayout(sourceId: Long, own: Boolean) {
+        val mode = sourceDisplayMode(sourceId)
+        val size = sourceCoverSize(sourceId)
+        if (own) {
+            mode.set(sourceDisplayMode.get())
+            size.set(browseCoverSize.get())
+        } else {
+            mode.delete()
+            size.delete()
+        }
     }
 
     val enabledLanguages: Preference<Set<String>> = preferenceStore.getStringSet(

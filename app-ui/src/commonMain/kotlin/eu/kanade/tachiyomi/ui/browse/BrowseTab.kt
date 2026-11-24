@@ -100,7 +100,7 @@ data object BrowseTab : Tab {
             searchQuery = extensionsSearchQuery,
             onChangeSearchQuery = extensionsViewModel::search,
             // Feeds are cover grids
-            frame = ScreenFrame.Wide,
+            frame = ScreenFrame.Covers,
             screenActions = listOfNotNull(rememberBarSyncAction(HomeScreenTabs.Browse, navigator)),
         )
         LaunchedEffect(state, sourcesTabIndex) {

@@ -64,8 +64,8 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 109
-        versionName = "3.4.5"
+        versionCode = 110
+        versionName = "3.5.0"
 
         buildConfigField("String", "MPV_ADDON_RELEASES_URL", "\"\"")
     }

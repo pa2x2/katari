@@ -730,7 +730,6 @@
     <string name="pref_vertical_navigator_height">ارتفاع ناوبری عمودی</string>
     <string name="pref_display_images_description">نمایش تصاویر در توضیحات مانگا</string>
     <string name="pref_filter_update_categories_details">به‌روزرسانی‌های مربوط به دسته‌های مستثنی‌شده نمایش داده نخواهند شد، حتی اگر آن موارد در دسته‌های گنجانده‌شده نیز قرار داشته باشند.</string>
-    <string name="label_auto">خودکار</string>
     <string name="migrationConfigScreen.deepSearchModeTitle">حالت جستجوی پیشرفته</string>
     <string name="ext_remove">حذف</string>
     <string name="migrationConfigScreen.selectAllLabel">انتخاب همه</string>

@@ -1,7 +1,7 @@
 [versions]
 aboutLibraries = "15.3.0"
 android-desugar = "2.1.5"
-android-gradle = "9.5.1"
+android-gradle = "9.5.2"
 androidsvg = "1.4"
 # The version dex2jar is built against.
 asm = "9.11.1"

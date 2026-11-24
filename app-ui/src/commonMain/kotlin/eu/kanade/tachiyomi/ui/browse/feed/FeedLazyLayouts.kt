@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import app.katari.presentation.kit.layout.CoverGrid
+import app.katari.presentation.kit.layout.CoverSizing
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
@@ -63,6 +64,7 @@ internal fun FeedLazyList(
 internal fun FeedLazyGrid(
     rows: List<FeedRow>,
     columns: GridCells,
+    sizing: CoverSizing?,
     gridState: LazyGridState,
     contentPadding: PaddingValues,
     showFooter: Boolean,
@@ -75,6 +77,7 @@ internal fun FeedLazyGrid(
         contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
         verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+        sizing = sizing,
     ) {
         items(
             items = rows,

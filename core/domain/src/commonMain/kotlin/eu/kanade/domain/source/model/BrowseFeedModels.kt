@@ -19,7 +19,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
-import tachiyomi.domain.library.model.LibraryDisplayMode
 
 const val BUILTIN_POPULAR_PRESET_ID = "builtin:popular"
 const val BUILTIN_LATEST_PRESET_ID = "builtin:latest"
@@ -97,19 +96,9 @@ data class SourceFeed(
     val sourceId: Long,
     val presetId: String,
     val enabled: Boolean = true,
-    val displayMode: String? = null,
     /** A name the user gave the feed; the preset name is shown when it is null. */
     val title: String? = null,
 )
-
-/**
- * Feeds offer the same display modes as the source's catalog, which has no cover-only grid. A feed
- * saved with that mode shows as the compact grid it was already drawn as.
- */
-fun SourceFeed.resolvedDisplayMode(defaultDisplayMode: LibraryDisplayMode): LibraryDisplayMode {
-    val mode = displayMode?.let(LibraryDisplayMode::deserialize) ?: defaultDisplayMode
-    return if (mode == LibraryDisplayMode.CoverOnlyGrid) LibraryDisplayMode.CompactGrid else mode
-}
 
 /** Built-in presets are never saved; their names are resolved from their ids where they are shown. */
 fun popularFeedPreset(sourceId: Long): SourceFeedPreset {

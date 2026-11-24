@@ -664,7 +664,6 @@
     <string name="invalid_backup_file_json">لا يتم دعم النسخ الاحتياطي لـ JSON</string>
     <string name="artist">الرسَّام</string>
     <string name="author">المؤلِّف</string>
-    <string name="label_auto">تلقائي</string>
     <string name="onboarding_permission_analytics_description">أرسل بيانات بشكل مخفي للمساهمة في تطوير البرنامج.</string>
     <string name="pref_security">الأمن</string>
     <string name="pref_telemetry">سجلات التحليلات و الأخطاء</string>

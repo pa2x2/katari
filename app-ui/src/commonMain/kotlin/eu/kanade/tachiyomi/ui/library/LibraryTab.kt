@@ -19,12 +19,14 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import app.katari.core.common.HomeScreenTabs
 import app.katari.core.platform.currentPlatformContext
+import app.katari.coverlayout.rememberCoverLayoutAction
 import app.katari.missingextensions.ui.MissingExtensionsLibraryNotice
 import app.katari.missingextensions.ui.MissingExtensionsSheet
 import app.katari.missingextensions.ui.OtherDeviceExtensionsLibraryNotice
 import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.layout.rememberCoverSizing
 import app.katari.presentation.kit.navigation.HideDocks
 import app.katari.presentation.kit.navigation.Scaffold
 import app.katari.presentation.kit.navigation.rememberAppBarScrollBehavior
@@ -52,6 +54,7 @@ import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.library.components.LibraryUpdateModeDialog
 import eu.kanade.presentation.library.components.librarySelectionActions
+import eu.kanade.presentation.library.settings.LibraryCoverLayoutSettings
 import eu.kanade.presentation.library.settings.LibrarySettingsDialog
 import eu.kanade.presentation.library.update.rememberReportingLibraryUpdateStarter
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
@@ -180,9 +183,13 @@ data object LibraryTab : Tab {
             onUpdateModeClicked = viewModel::openUpdateModeDialog,
         )
 
+        val displayMode by viewModel.getDisplayMode()
+        val sizing = rememberCoverSizing(viewModel.coverSize, settingsViewModel.libraryPreferences.coverSize::set)
+        val displayAction = rememberCoverLayoutAction(displayMode) {
+            LibraryCoverLayoutSettings(viewModel = settingsViewModel, sizing = sizing)
+        }
         Scaffold(
-
-            frame = ScreenFrame.Wide,
+            frame = ScreenFrame.Covers,
             topBarScrollBehavior = topBarScrollBehavior,
             topBar = { scrollBehavior ->
                 val title = state.getToolbarTitle(
@@ -199,6 +206,7 @@ data object LibraryTab : Tab {
                     onClickSelectAll = viewModel::selectAll,
                     onClickInvertSelection = viewModel::invertSelection,
                     onClickFilter = viewModel::showSettingsDialog,
+                    displayAction = displayAction,
                     onClickRefresh = {
                         scope.launch { onClickRefresh(state) }
                         Unit
@@ -305,7 +313,7 @@ data object LibraryTab : Tab {
                             navigator.push(GlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))
                         },
                         getDisplayMode = { viewModel.getDisplayMode() },
-                        coverSize = viewModel.coverSize,
+                        sizing = sizing,
                         getItemsForPage = { state.getItemsForPage(it) },
                         displaySettingsForPage = state::displaySettingsForPage,
                         scrollToTopTarget = scrollToTopTarget,
@@ -338,6 +346,7 @@ data object LibraryTab : Tab {
                     viewModel = settingsViewModel,
                     category = state.activeSortCategory,
                     filterAvailability = state.libraryData.filterAvailability,
+                    sizing = sizing,
                 )
             }
             is LibraryViewModel.Dialog.ChangeCategory -> {

@@ -695,7 +695,6 @@
     <string name="clear_database_history_warning">ライブラリ以外の書籍の章の閲覧履歴や進捗状況は失われます</string>
     <string name="clear_db_exclude_read">読んだ章ごとに項目を残しておく</string>
     <string name="possible_duplicates_title">重複の可能性</string>
-    <string name="label_auto">自動</string>
     <string name="theme_catppuccin">キャットプッチン</string>
     <string name="theme_monochrome">モノクロ</string>
     <string name="pref_display_images_description">マンガの描写で画像をレンダリングする</string>

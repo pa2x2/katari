@@ -1,17 +1,15 @@
-package eu.kanade.presentation.library.settings
+package app.katari.coverlayout
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.control.ChoiceTile
+import app.katari.presentation.kit.list.ChoiceTileGrid
 import app.katari.presentation.kit.list.RowGroupHeader
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
@@ -23,55 +21,38 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /** Display modes as small drawings of the layout they produce, so the names don't have to be decoded. */
 @Composable
-internal fun LibraryDisplayModeChooser(
+internal fun DisplayModeChooser(
     selectedMode: LibraryDisplayMode,
     onModeSelected: (LibraryDisplayMode) -> Unit,
     setting: Preference<*>,
 ) {
     Column {
         RowGroupHeader(stringResource(MR.strings.action_display_mode), setting = setting)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .selectableGroup()
-                .padding(horizontal = KatariTheme.spacing.m),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
-        ) {
-            DisplayModes.forEach { mode ->
-                LibraryDisplayModeChoice(
-                    mode = mode,
-                    selected = selectedMode == mode,
-                    onClick = { onModeSelected(mode) },
-                    modifier = Modifier.weight(1f),
-                )
-            }
+        ChoiceTileGrid(DisplayModes) { mode ->
+            DisplayModeChoice(mode = mode, selected = selectedMode == mode, onClick = { onModeSelected(mode) })
         }
     }
 }
 
-private val DisplayModes = listOf(
+/** The grids, then the lists, so a chooser of two lines gives each its own. */
+internal val DisplayModes = listOf(
     LibraryDisplayMode.CompactGrid,
     LibraryDisplayMode.ComfortableGrid,
-    LibraryDisplayMode.ComfortableList,
     LibraryDisplayMode.CoverOnlyGrid,
+    LibraryDisplayMode.ComfortableList,
     LibraryDisplayMode.List,
 )
 
 @Composable
-private fun LibraryDisplayModeChoice(
-    mode: LibraryDisplayMode,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun DisplayModeChoice(mode: LibraryDisplayMode, selected: Boolean, onClick: () -> Unit) {
     val label = stringResource(mode.labelRes)
-    ChoiceTile(selected = selected, onClick = onClick, modifier = modifier) {
+    ChoiceTile(selected = selected, onClick = onClick) {
         Column(
             modifier = Modifier.padding(KatariTheme.spacing.xs),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
         ) {
-            LibraryDisplayModePreview(mode)
+            DisplayModePreview(mode)
             Text(
                 text = label,
                 role = TextRole.Badge,

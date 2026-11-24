@@ -24,6 +24,7 @@ import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.library.service.LibraryPreferences
 
 @AssistedInject
 class MigrateSearchViewModel(
@@ -35,12 +36,14 @@ class MigrateSearchViewModel(
     extensionPackages: SourceExtensionPackages,
     networkToLocalEntry: NetworkToLocalEntry,
     getEntry: GetEntry,
+    libraryPreferences: LibraryPreferences,
 ) : SearchViewModel(
     extensionPackages = extensionPackages,
     networkToLocalEntry = networkToLocalEntry,
     getEntry = getEntry,
     preferences = sourcePreferences,
     catalogueFeature = catalogueFeature,
+    libraryPreferences = libraryPreferences,
 ) {
 
     @AssistedFactory

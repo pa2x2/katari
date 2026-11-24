@@ -19,7 +19,10 @@ internal val BrowseScopes = PreferenceScopeTable(SettingsArea.BROWSE) {
         "migration_hide_unmatched",
         "migration_hide_without_updates",
     )
-    personPrefix("pref_display_mode_catalogue_")
+    personPrefix("pref_source_display_mode_")
+    // Cover sizes fit the screen
+    deviceByDefault("pref_browse_cover_size")
+    deviceByDefaultPrefix("pref_source_cover_size_")
     menu(MenuSettings.SOURCES) {
         person("source_languages", "hidden_sources", "pinned_sources")
     }
@@ -29,7 +32,7 @@ internal val BrowseScopes = PreferenceScopeTable(SettingsArea.BROWSE) {
 
     // Keys of earlier versions, read only to convert them: hidden and pinned sources before one set held them, the
     // 18+ switch before content warnings, the repositories before they had their own table, and the migration options
-    // before only the download choice was remembered.
+    // before only the download choice was remembered, and each source's display mode before Browse had a layout.
     device(
         DeviceBound.APP,
         "hidden_catalogues",
@@ -41,6 +44,7 @@ internal val BrowseScopes = PreferenceScopeTable(SettingsArea.BROWSE) {
         "extension_repos",
         "migration_flags",
     )
+    devicePrefix(DeviceBound.APP, "pref_display_mode_catalogue_")
 
     // GlobalSourcePreferences: how many installed extensions have updates
     device(DeviceBound.APP, "ext_updates_count")

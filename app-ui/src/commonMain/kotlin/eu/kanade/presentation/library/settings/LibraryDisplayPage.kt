@@ -2,31 +2,38 @@ package eu.kanade.presentation.library.settings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import app.katari.coverlayout.CoverLayoutSettings
+import app.katari.presentation.kit.layout.CoverSizing
 import app.katari.presentation.kit.list.RowGroup
-import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.RowGroupHeader
-import app.katari.presentation.kit.list.SliderRow
 import app.katari.presentation.kit.list.ToggleRow
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.toggle
-import tachiyomi.domain.library.model.CoverSize
-import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
+/** The library's part of the Display panel: its display mode and cover size. */
+@Composable
+internal fun LibraryCoverLayoutSettings(viewModel: LibrarySettingsViewModel, sizing: CoverSizing) {
+    val displayMode by viewModel.libraryPreferences.displayMode.collectAsState()
+    CoverLayoutSettings(
+        displayMode = displayMode,
+        onDisplayModeChange = viewModel::setDisplayMode,
+        sizing = sizing,
+        displayModeSetting = viewModel.libraryPreferences.displayMode,
+        coverSizeSetting = viewModel.libraryPreferences.coverSize,
+    )
+}
+
 @Composable
 internal fun LibraryDisplayPage(
     viewModel: LibrarySettingsViewModel,
+    sizing: CoverSizing,
 ) {
-    val displayMode by viewModel.libraryPreferences.displayMode.collectAsState()
-    LibraryDisplayModeChooser(
-        selectedMode = displayMode,
-        onModeSelected = viewModel::setDisplayMode,
-        setting = viewModel.libraryPreferences.displayMode,
-    )
+    LibraryCoverLayoutSettings(viewModel, sizing)
 
     val pinnedDisplayStyle by viewModel.libraryPreferences.pinnedDisplayStyle.collectAsState()
     LibraryPinnedStyleChooser(
@@ -34,24 +41,6 @@ internal fun LibraryDisplayPage(
         onStyleSelected = viewModel::setPinnedDisplayStyle,
         setting = viewModel.libraryPreferences.pinnedDisplayStyle,
     )
-
-    if (displayMode != LibraryDisplayMode.List && displayMode != LibraryDisplayMode.ComfortableList) {
-        RowGroupGap()
-        RowGroup {
-            row {
-                val coverSizePreference = viewModel.libraryPreferences.coverSize
-                val coverSize by coverSizePreference.collectAsState()
-                SliderRow(
-                    title = stringResource(MR.strings.pref_library_cover_size),
-                    value = coverSize.ordinal,
-                    valueRange = CoverSize.entries.indices,
-                    onValueChange = { coverSizePreference.set(CoverSize.entries[it]) },
-                    valueText = stringResource(coverSize.labelRes),
-                    setting = coverSizePreference,
-                )
-            }
-        }
-    }
 
     val preferences = viewModel.libraryPreferences
     RowGroupHeader(stringResource(MR.strings.overlay_header))

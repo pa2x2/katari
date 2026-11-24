@@ -676,7 +676,6 @@
     <string name="invalid_backup_file_unknown">Su documentu de sa còpia de seguresa est corrùmpidu</string>
     <string name="pref_download_new_unread_chapters_only">Brinca s\'iscarrigamentu de capìtulos lèghidos duplicados</string>
     <string name="pref_incognito_mode_extension_summary">Pone in pàusa sa cronologia de letura pro s\'estensione</string>
-    <string name="label_auto">Automàticu</string>
     <string name="library_list">Lista de sa biblioteca</string>
     <string name="export">Esporta</string>
     <string name="theme_monochrome">Monocromo</string>

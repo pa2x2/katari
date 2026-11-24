@@ -24,7 +24,7 @@ object LegacyItemsPerRowConversion {
     }
 
     private fun coverSizeFor(itemsPerRow: Int): CoverSize = when {
-        itemsPerRow <= 0 -> CoverSize.Auto
+        itemsPerRow <= 0 -> CoverSize.default
         itemsPerRow == 1 -> CoverSize.ExtraLarge
         itemsPerRow == 2 -> CoverSize.Large
         itemsPerRow == 3 -> CoverSize.Medium

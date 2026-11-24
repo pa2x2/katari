@@ -14,6 +14,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.layout.CoverSizing
 import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.refresh.PullRefresh
 import app.katari.presentation.kit.theme.KatariTheme
@@ -24,7 +25,6 @@ import eu.kanade.presentation.library.update.rememberAwaitingUpdateState
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import kotlinx.coroutines.launch
-import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
@@ -223,7 +223,7 @@ fun LibraryContent(
     notice: @Composable () -> Unit,
     onGlobalSearchClicked: (() -> Unit)?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
-    coverSize: CoverSize,
+    sizing: CoverSizing,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
     displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
     scrollToTopTarget: LibraryScrollToTopTarget,
@@ -259,7 +259,7 @@ fun LibraryContent(
             selection = selection,
             getItemsForPage = getItemsForPage,
             getDisplayMode = getDisplayMode,
-            coverSize = coverSize,
+            sizing = sizing,
             displaySettingsForPage = displaySettingsForPage,
             pageClicks = pageClicks,
             onClickContinueReading = onContinueReadingClicked,
@@ -294,7 +294,7 @@ fun LibraryContent(
                 selection = selection,
                 getPageForIndex = { page -> pages[page] },
                 getDisplayMode = getDisplayMode,
-                coverSize = coverSize,
+                sizing = sizing,
                 getItemsForPage = getItemsForPage,
                 displaySettingsForPage = displaySettingsForPage,
                 pageClicks = pageClicks,

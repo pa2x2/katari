@@ -19,4 +19,5 @@ val migrations: List<Migration>
         CoverSizeMigration(),
         MigrationOptionsMigration(),
         TrackerDataCleanupMigration(),
+        CoverLayoutMigration(),
     )

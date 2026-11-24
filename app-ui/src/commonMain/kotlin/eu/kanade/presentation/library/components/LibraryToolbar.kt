@@ -34,6 +34,7 @@ fun LibraryToolbar(
     onClickSelectAll: () -> Unit,
     onClickInvertSelection: () -> Unit,
     onClickFilter: () -> Unit,
+    displayAction: AppBar.Action,
     onClickRefresh: (() -> Unit)?,
     onClickGlobalUpdate: (() -> Unit)?,
     onClickOpenRandomEntry: () -> Unit,
@@ -55,6 +56,7 @@ fun LibraryToolbar(
         searchQuery = searchQuery,
         onSearchQueryChange = onSearchQueryChange,
         onClickFilter = onClickFilter,
+        displayAction = displayAction,
         onClickRefresh = onClickRefresh,
         onClickGlobalUpdate = onClickGlobalUpdate,
         onClickOpenRandomEntry = onClickOpenRandomEntry,
@@ -71,6 +73,7 @@ private fun LibraryRegularToolbar(
     searchQuery: String?,
     onSearchQueryChange: (String?) -> Unit,
     onClickFilter: () -> Unit,
+    displayAction: AppBar.Action,
     onClickRefresh: (() -> Unit)?,
     onClickGlobalUpdate: (() -> Unit)?,
     onClickOpenRandomEntry: () -> Unit,
@@ -109,6 +112,7 @@ private fun LibraryRegularToolbar(
                             onClick = onClickFilter,
                         ),
                     )
+                    add(displayAction)
                     onClickRefresh?.let {
                         add(refreshAppBarAction(onClick = it, title = updateCurrentGroupTitle))
                     }

@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import app.katari.coverlayout.CoverLayoutButton
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Fullscreen
 import app.katari.presentation.kit.button.IconButton
@@ -18,17 +19,17 @@ import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** The feed switcher and the view and display mode buttons, floating over the bottom of the feed's grid. */
+/** The feed switcher and the view and display buttons, floating over the bottom of the feed's grid. */
 @Composable
 internal fun FeedNavigationBar(
     feeds: List<SourceFeed>,
     selectedFeed: SourceFeed,
-    selectedDisplayMode: LibraryDisplayMode,
+    displayMode: LibraryDisplayMode,
+    displaySettings: @Composable () -> Unit,
     sourceFor: (Long) -> Source?,
     presetFor: (SourceFeed) -> SourceFeedPreset?,
     immersiveAvailable: Boolean,
     onFeedViewModeChange: (FeedViewMode) -> Unit,
-    onDisplayModeChange: (LibraryDisplayMode) -> Unit,
     onFeedSelect: (String) -> Unit,
     onRenameFeed: () -> Unit,
     onAddFeed: () -> Unit,
@@ -66,9 +67,6 @@ internal fun FeedNavigationBar(
             onClick = { onFeedViewModeChange(FeedViewMode.Immersive) },
             enabled = immersiveAvailable,
         )
-        FeedDisplayModeButton(
-            displayMode = selectedDisplayMode,
-            onDisplayModeChange = onDisplayModeChange,
-        )
+        CoverLayoutButton(displayMode = displayMode, settings = displaySettings)
     }
 }

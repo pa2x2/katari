@@ -548,7 +548,6 @@
     <string name="pref_flash_style_white_black">Бяло и черно</string>
     <string name="available_disk_space_info">Налични: %1$s / Общо: %2$s</string>
     <string name="manga_display_modified_interval_title">Задай обновление на всеки</string>
-    <string name="label_auto">Автоматично</string>
     <string name="label_local">Локален</string>
     <string name="action_sort_random">Случайно</string>
     <string name="onboarding_action_finish">Започни</string>

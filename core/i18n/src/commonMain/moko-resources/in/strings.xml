@@ -676,7 +676,6 @@
     <string name="ext_remove">Hapus</string>
     <string name="ext_confirm_remove">Hapus Ekstensi?</string>
     <string name="pref_incognito_mode_extension_summary">Jeda riwayat membaca untuk ekstensi</string>
-    <string name="label_auto">Otomatis</string>
     <string name="pref_mark_duplicate_read_chapter_read">Tandai bab duplikat yang telah dibaca sebagai telah dibaca</string>
     <string name="theme_monochrome">Monokrom</string>
     <string name="export">Ekspor</string>

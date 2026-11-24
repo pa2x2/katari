@@ -46,7 +46,7 @@ class LibraryPreferences(
 
     val randomSortSeed: Preference<Int> = preferenceStore.getInt("library_random_sort_seed", 0)
 
-    val coverSize: Preference<CoverSize> = preferenceStore.getEnum("pref_library_cover_size", CoverSize.Auto)
+    val coverSize: Preference<CoverSize> = preferenceStore.getEnum("pref_library_cover_size", CoverSize.default)
 
     val autoUpdateInterval: Preference<Int> = preferenceStore.getInt("pref_library_update_interval_key", 0)
 

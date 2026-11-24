@@ -19,10 +19,7 @@ import eu.kanade.domain.source.model.SourceFeedContentMode
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.domain.source.model.latestFeedPreset
 import eu.kanade.domain.source.model.popularFeedPreset
-import eu.kanade.domain.source.model.resolvedDisplayMode
 import eu.kanade.domain.source.service.BrowseFeedService
-import eu.kanade.domain.source.service.ProfileSourcePreferences
-import eu.kanade.domain.source.service.SourcePreferences
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -37,7 +34,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.data.ActiveProfileProvider
-import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.service.SourceManager
 import java.util.UUID
@@ -46,7 +42,6 @@ import java.util.UUID
 class FeedsViewModel(
     @Assisted private val contentMode: SourceFeedContentMode,
     private val browseFeedService: BrowseFeedService,
-    private val profileSourcePreferences: ProfileSourcePreferences,
     private val getEnabledCatalogSources: GetEnabledCatalogSources,
     private val sourceManager: SourceManager,
     private val activeProfileProvider: ActiveProfileProvider,
@@ -135,7 +130,6 @@ class FeedsViewModel(
                 sourceId = sourceId,
                 presetId = presetId,
                 enabled = true,
-                displayMode = sourcePreferences().sourceDisplayMode(sourceId).get().serialize(),
             ),
         )
         closeDialog()
@@ -144,19 +138,6 @@ class FeedsViewModel(
     fun toggleFeed(feedId: String, enabled: Boolean) {
         val feed = state.value.feeds.firstOrNull { it.id == feedId } ?: return
         profileBrowseFeedService().updateFeed(feed.copy(enabled = enabled))
-    }
-
-    fun updateFeedDisplayMode(feedId: String, displayMode: LibraryDisplayMode) {
-        val feed = state.value.feeds.firstOrNull { it.id == feedId } ?: return
-        profileBrowseFeedService().updateFeed(feed.copy(displayMode = displayMode.serialize()))
-    }
-
-    fun displayModeFor(feed: SourceFeed, defaultDisplayMode: LibraryDisplayMode): LibraryDisplayMode {
-        return feed.resolvedDisplayMode(defaultDisplayMode)
-    }
-
-    fun sourceDisplayMode(sourceId: Long): LibraryDisplayMode {
-        return sourcePreferences().sourceDisplayMode(sourceId).get()
     }
 
     fun renameFeed(feedId: String, title: String) {
@@ -245,10 +226,6 @@ class FeedsViewModel(
 
     private fun profileBrowseFeedService(): BrowseFeedService {
         return browseFeedService.forProfile(state.value.profileId ?: activeProfileProvider.activeProfileId)
-    }
-
-    private fun sourcePreferences(): SourcePreferences {
-        return profileSourcePreferences.forProfile(state.value.profileId ?: activeProfileProvider.activeProfileId)
     }
 
     sealed interface Dialog {

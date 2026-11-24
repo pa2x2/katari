@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.5.0] - 2026-11-24
+
+### ✨ Added
+
+- A Display panel on every cover screen: library, catalogs, feeds, library search, related entries and migration search.
+- Pinch a cover grid to resize covers.
+- Cover-only grid and cover size in catalogs, feeds and related entries.
+- Extra small cover size.
+
+### 🔄 Changed
+
+- Catalogs and feeds share one layout, and a source can keep its own.
+- The Auto cover size is replaced by Medium.
+
+### 🐛 Fixed
+
+- Covers from single-type sources no longer show a type badge, and type badges follow the Entry type badge setting.
+
 ## [3.4.5] - 2026-11-23
 
 ### 🧩 Improved
@@ -1365,7 +1383,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.4.5...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.5.0...HEAD
+[3.5.0]: https://github.com/pa2x2/katari/releases/tag/v3.5.0
 [3.4.5]: https://github.com/pa2x2/katari/releases/tag/v3.4.5
 [3.4.4]: https://github.com/pa2x2/katari/releases/tag/v3.4.4
 [3.4.3]: https://github.com/pa2x2/katari/releases/tag/v3.4.3

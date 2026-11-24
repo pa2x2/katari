@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.katari.presentation.kit.feedback.EmptyScreen
 import app.katari.presentation.kit.feedback.NoResults
+import app.katari.presentation.kit.layout.CoverSizing
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.layout.coverGridCells
 import app.katari.presentation.kit.layout.coverListCells
@@ -18,7 +19,6 @@ import app.katari.presentation.kit.pager.HorizontalPager
 import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.tachiyomi.ui.library.LibraryPage
-import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
@@ -34,7 +34,7 @@ fun LibraryPager(
     selection: Set<LibraryItemKey>,
     getPageForIndex: (Int) -> LibraryPage,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
-    coverSize: CoverSize,
+    sizing: CoverSizing,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
     displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
     pageClicks: LibraryPageClicks,
@@ -84,7 +84,8 @@ fun LibraryPager(
                 LibraryCompactGrid(
                     items = items,
                     showTitle = displayMode is LibraryDisplayMode.CompactGrid,
-                    columns = coverGridCells(coverSize),
+                    columns = coverGridCells(sizing.size),
+                    sizing = sizing,
                     contentPadding = contentPadding,
                     selection = selection,
                     clicks = clicks,
@@ -97,7 +98,8 @@ fun LibraryPager(
             LibraryDisplayMode.ComfortableGrid -> {
                 LibraryComfortableGrid(
                     items = items,
-                    columns = coverGridCells(coverSize),
+                    columns = coverGridCells(sizing.size),
+                    sizing = sizing,
                     contentPadding = contentPadding,
                     selection = selection,
                     clicks = clicks,
@@ -110,6 +112,7 @@ fun LibraryPager(
             LibraryDisplayMode.ComfortableList -> LibraryComfortableGrid(
                 items = items,
                 columns = coverListCells(),
+                sizing = null,
                 contentPadding = contentPadding,
                 selection = selection,
                 clicks = clicks,

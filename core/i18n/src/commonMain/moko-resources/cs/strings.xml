@@ -676,7 +676,6 @@
     <string name="upcoming_calendar_prev">Předchozí měsíc</string>
     <string name="upcoming_calendar_next">Následující měsíc</string>
     <string name="upcoming_guide">Návod k nadcházejícím kapitolám</string>
-    <string name="label_auto">Automaticky</string>
     <string name="pref_mark_duplicate_read_chapter_read">Označit duplicitní přečtenou kapitolu jako přečtenou</string>
     <string name="theme_monochrome">Černobílý</string>
     <string name="author">Autor</string>

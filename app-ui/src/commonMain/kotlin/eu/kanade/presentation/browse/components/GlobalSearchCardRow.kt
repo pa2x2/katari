@@ -10,8 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import app.katari.presentation.kit.content.BrowseMetrics
-import app.katari.presentation.kit.content.entryCoverScale
+import app.katari.presentation.kit.layout.coverShelfWidth
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.entry.components.toGridCoverType
@@ -21,6 +20,7 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryCover
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -29,6 +29,8 @@ fun GlobalSearchCardRow(
     titles: List<Entry>,
     getEntryState: @Composable (Entry) -> State<Entry>,
     sourceItemOrientation: EntryItemOrientation,
+    coverSize: CoverSize,
+    showsTypeBadge: Boolean,
     onClick: (Entry) -> Unit,
     onLongClick: (Entry) -> Unit,
 ) {
@@ -53,8 +55,9 @@ fun GlobalSearchCardRow(
                     lastModified = title.coverLastModified,
                 ),
                 sourceItemOrientation = sourceItemOrientation,
+                coverSize = coverSize,
                 isFavorite = title.favorite,
-                entryType = title.type,
+                entryType = title.type.takeIf { showsTypeBadge },
                 onClick = { onClick(title) },
                 onLongClick = { onLongClick(title) },
             )
@@ -67,12 +70,13 @@ private fun EntryItem(
     title: String,
     cover: EntryCover,
     sourceItemOrientation: EntryItemOrientation,
+    coverSize: CoverSize,
     isFavorite: Boolean,
-    entryType: EntryType,
+    entryType: EntryType?,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    Box(modifier = Modifier.width(BrowseMetrics.searchResultCoverWidth * entryCoverScale())) {
+    Box(modifier = Modifier.width(coverShelfWidth(coverSize))) {
         EntryComfortableGridItem(
             title = title,
             titleMaxLines = 3,

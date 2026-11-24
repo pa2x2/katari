@@ -31,7 +31,7 @@ class SettingEncodingTest {
                     device.startSync(deviceId = 1)
                     val store = device.preferences.profiles.profileStore(1)
                     store.getStringSet("hidden_sources").set(setOf("$animeKey", "6000", "-9"))
-                    store.getString("pref_display_mode_catalogue_$animeKey").set("LIST")
+                    store.getString("pref_source_display_mode_$animeKey").set("LIST")
                     device.awaitDrained(records = 2)
                 }
             }
@@ -54,7 +54,7 @@ class SettingEncodingTest {
                 ),
                 ProfileSettingPayload(
                     profileUuid = "default",
-                    key = "pref_display_mode_catalogue_0",
+                    key = "pref_source_display_mode_0",
                     keySources = listOf(SourceReference("aniyomi", 777)),
                     value = stamped(SettingValue(string = "LIST")),
                 ),

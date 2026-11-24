@@ -699,7 +699,6 @@
     <string name="ext_confirm_remove">Alisin ang Extension?</string>
     <string name="remove_private_extension_message">Gusto mo ba talagang tanggalin ang \"%s\" na extension?</string>
     <string name="pref_incognito_mode_extension_summary">Pinapa-pause ang kasaysayan ng pagbabasa para sa extension</string>
-    <string name="label_auto">Awto</string>
     <string name="library_exported">Na-export ang Aklatan</string>
     <string name="author">May-akda</string>
     <string name="artist">Artista</string>

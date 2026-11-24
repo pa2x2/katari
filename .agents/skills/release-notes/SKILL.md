@@ -69,6 +69,9 @@ changelog, and hands each app's and the server's changelog to its own skill.
    natural, polished language. Let each heading
    provide the category context. Keep the tone factual rather than promotional, and make
    each bullet understandable without commit or implementation context.
+   A bullet names what changed in one short line; it doesn't document the feature. Leave out how it works, where its
+   controls are, what its labels read and how old settings carry over; that belongs on the website. A bullet that needs a
+   second sentence is documenting. Drop minor side effects rather than giving them bullets of their own.
 7. Preserve released entries and avoid repeating documented outcomes. Keep `[Unreleased]`
    first and numbered releases in descending version order. When preparing a release,
    move its applicable unreleased notes into the release section. If there are no new
