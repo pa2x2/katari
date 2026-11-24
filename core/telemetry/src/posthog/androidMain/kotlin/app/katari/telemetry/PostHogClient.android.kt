@@ -22,13 +22,15 @@ internal actual object PostHogClient {
         val config = PostHogAndroidConfig(token, PostHogProject.HOST).apply {
             // Screen views name activities, which say nothing in an app of one activity, and a deep link can carry
             // the address of what someone reads. The day's report counts the days the app is used, in place of an
-            // event each time it opens or goes to the background. Push notifications and feature flags aren't used.
+            // event each time it opens or goes to the background. Push notifications, feature flags and surveys
+            // aren't used.
             captureScreenViews = false
             captureApplicationLifecycleEvents = false
             captureDeepLinks = false
             capturePushNotificationSubscriptions = false
             capturePushNotificationOpened = false
             preloadFeatureFlags = false
+            surveys = false
 
             errorTrackingConfig.autoCapture = true
             errorTrackingConfig.captureNativeCrashes = true
