@@ -79,6 +79,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A row led by an entry's cover, such as an update or history item | `CoverRow` | `coverSlot = CoverRowSlot.Wide` when the list mixes landscape and book covers; no `cover` continues the row above |
 | A place a search found, with the match highlighted | `SearchResultRow` | |
 | A row with actions on a swipe from either edge | `SwipeActionsRow` | |
+| The grip a row of a reorderable list is dragged by, such as a category or a queued download | `ReorderHandle` | Takes the list's drag modifier; shows the move cursor with a mouse. Never a `DragHandle` icon of your own |
 | A line across a list marking a point in it, such as missing chapters | `MarkerLine` | |
 | Tree lines from an expanded item to its children | `Modifier.treeStem`, `Modifier.treeBranch` | |
 | Fills a row or item while it is selected | `Modifier.selectionFill` | |

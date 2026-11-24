@@ -20,15 +20,13 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import app.katari.icons.materialsymbols.MaterialSymbols
-import app.katari.icons.materialsymbols.rounded.DragHandle
 import app.katari.platform.presentation.platformPresentation
-import app.katari.presentation.kit.button.IconButton
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.control.SegmentedButtons
 import app.katari.presentation.kit.control.Switch
 import app.katari.presentation.kit.dialog.DialogAction
 import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.ReorderHandle
 import app.katari.presentation.kit.list.RowGroupHeader
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
@@ -125,11 +123,9 @@ internal fun StatisticsLayoutEditor(
                                     },
                                     subtitle = card.availabilityHint()?.let { stringResource(it) },
                                     leading = {
-                                        IconButton(
-                                            icon = MaterialSymbols.Rounded.DragHandle,
-                                            contentDescription = stringResource(MR.strings.statistics_reorder),
-                                            onClick = {},
+                                        ReorderHandle(
                                             modifier = Modifier.draggableHandle(),
+                                            contentDescription = stringResource(MR.strings.statistics_reorder),
                                         )
                                     },
                                     trailing = { Switch(checked = shown, onCheckedChange = null) },

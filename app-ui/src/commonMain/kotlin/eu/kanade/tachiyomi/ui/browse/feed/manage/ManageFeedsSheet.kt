@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -15,7 +14,6 @@ import androidx.compose.ui.Modifier
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Add
 import app.katari.icons.materialsymbols.rounded.Delete
-import app.katari.icons.materialsymbols.rounded.DragHandle
 import app.katari.icons.materialsymbols.rounded.Edit
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.LogoSize
@@ -24,6 +22,7 @@ import app.katari.presentation.kit.feedback.SnackbarDuration
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.feedback.SnackbarResult
 import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.ReorderHandle
 import app.katari.presentation.kit.list.RowGroup
 import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.RowGroupItem
@@ -158,11 +157,7 @@ private fun ReorderableCollectionItemScope.ManageFeedRow(
                 horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.DragHandle,
-                    contentDescription = null,
-                    modifier = Modifier.draggableHandle(),
-                )
+                ReorderHandle(Modifier.draggableHandle())
                 LocalAppUiGraph.current.sourceRows.Icon(source = source, size = LogoSize.Compact, modifier = Modifier)
             }
         },

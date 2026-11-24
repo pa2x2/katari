@@ -12,11 +12,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import app.katari.entry.interactions.download.EntryDownloadQueueGroup
-import app.katari.icons.materialsymbols.MaterialSymbols
-import app.katari.icons.materialsymbols.rounded.DragHandle
-import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.ReorderHandle
 import app.katari.presentation.kit.list.RowGroupHeader
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
@@ -95,11 +93,8 @@ internal fun DownloadQueueList(
                                 tone = ContentTone.Secondary,
                             )
                             if (canMoveSources) {
-                                Icon(
-                                    imageVector = MaterialSymbols.Rounded.DragHandle,
-                                    contentDescription = null,
-                                    tone = ContentTone.Secondary,
-                                    modifier = Modifier.draggableHandle(
+                                ReorderHandle(
+                                    Modifier.draggableHandle(
                                         onDragStarted = { dragScope = SOURCES_DRAG },
                                         onDragStopped = onDragStopped,
                                     ),
