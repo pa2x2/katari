@@ -2,6 +2,7 @@ package app.katari.sync.client.record
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.katari.sync.client.kind.SyncKinds
 import app.katari.sync.protocol.device.DeviceId
 import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
@@ -11,12 +12,23 @@ import tachiyomi.data.DatabaseHandler
 /** Local changes the drain stored and the server hasn't taken yet, as the envelopes a push sends. */
 @Inject
 class PendingChanges(private val handler: DatabaseHandler) {
-    suspend fun next(limit: Long): List<RecordEnvelope> = after(afterKey = "", limit)
+    /** Up to [limit] changes, in the order a push sends them. */
+    suspend fun next(limit: Long): List<RecordEnvelope> = buildList {
+        kinds().forEach { kind -> addAll(after(kind, afterKey = "", limit - size)) }
+    }
 
-    /** The next [limit] changes in key order after [afterKey], so a push can go through all of them in chunks. */
-    suspend fun after(afterKey: String, limit: Long): List<RecordEnvelope> = handler.await {
+    /**
+     * The kinds that have changes waiting, each after the kinds its records refer to ([SyncKinds.rank]): a device that
+     * pulls them applies each record as it comes, instead of holding a chapter until its entry arrives.
+     */
+    suspend fun kinds(): List<String> = handler.awaitList { sync_recordsQueries.pendingKinds() }
+        .sortedWith(compareBy({ SyncKinds.rank(it) }, { it }))
+
+    /** The next [limit] changes of [kind] after [afterKey] in key order, for a push to go through them in chunks. */
+    suspend fun after(kind: String, afterKey: String, limit: Long): List<RecordEnvelope> = handler.await {
+        if (limit <= 0) return@await emptyList()
         val device = sync_stateQueries.get().awaitAsOne().device_id?.let(::DeviceId) ?: return@await emptyList()
-        sync_recordsQueries.pendingAfter(afterKey, limit).awaitAsList().map { record ->
+        sync_recordsQueries.pendingOfKindAfter(kind, afterKey, limit).awaitAsList().map { record ->
             RecordEnvelope(
                 key = record.record_key,
                 kind = record.kind,

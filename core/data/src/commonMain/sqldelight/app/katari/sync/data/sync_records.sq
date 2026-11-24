@@ -30,8 +30,8 @@ CREATE TABLE sync_records(
 );
 
 CREATE UNIQUE INDEX idx_sync_records_local ON sync_records(kind, local_ref) WHERE local_ref IS NOT NULL;
--- The changes waiting to be pushed, in the key order a push pages through them, which every run reads.
-CREATE INDEX idx_sync_records_pending ON sync_records(record_key) WHERE change_id IS NOT NULL;
+-- The changes waiting to be pushed, a kind at a time in the key order a push pages through them, which every run reads.
+CREATE INDEX idx_sync_records_pending ON sync_records(kind, record_key) WHERE change_id IS NOT NULL;
 CREATE INDEX idx_sync_records_group ON sync_records(record_group, kind, record_key);
 -- The records of a kind in key order, such as the open questions the status shows.
 CREATE INDEX idx_sync_records_kind ON sync_records(kind, record_key);
@@ -84,15 +84,22 @@ ON CONFLICT(record_key) DO UPDATE SET
     change_id = excluded.change_id,
     record_group = excluded.record_group;
 
+-- The kinds that have changes waiting to be pushed.
+pendingKinds:
+SELECT DISTINCT kind
+FROM sync_records
+WHERE change_id IS NOT NULL;
+
 -- A record whose newest server copy this app can't read is not pushed: the server would take this app's older
 -- format over the newer one. It waits in sync_pending until an update can read it. So does one that failed to apply,
--- whose copy here may lack what the server's holds. Changes come a page at a time in
--- key order, so a push reaches every one even when the first are refused.
-pendingAfter:
+-- whose copy here may lack what the server's holds. Changes of :kind come a page at a time in key order, so a push
+-- reaches every one even when the first are refused.
+pendingOfKindAfter:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
     record_group, held_back
 FROM sync_records
 WHERE change_id IS NOT NULL
+AND kind = :kind
 AND held_back = 0
 AND record_key > :afterKey
 AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason IN ('unreadable', 'failed'))
