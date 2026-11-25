@@ -1,5 +1,11 @@
 # Sync Server Changelog
 
+## [1.1.2] - 2026-11-25
+
+### 🔄 Changed
+
+- `KATARI_SYNC_PULL_PAGE_SIZE` defaults to 2000 instead of 500, so a device downloading a library writes about half as much.
+
 ## [1.1.1] - 2026-11-12
 
 > This version upgrades the database in `/data`, and 1.1.0 can't open it afterwards, so copy the volume before upgrading if you might go back.
@@ -32,7 +38,8 @@
 - All data lives in one volume at `/data`, and deleted records and unused files are cleaned up on their own.
 - `reset-password` gives a locked-out admin a new password from inside the container.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/sync-server-v1.1.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/sync-server-v1.1.2...HEAD
+[1.1.2]: https://github.com/pa2x2/katari/tree/sync-server-v1.1.2
 [1.1.1]: https://github.com/pa2x2/katari/tree/sync-server-v1.1.1
 [1.1.0]: https://github.com/pa2x2/katari/tree/sync-server-v1.1.0
 [1.0.1]: https://github.com/pa2x2/katari/tree/sync-server-v1.0.1

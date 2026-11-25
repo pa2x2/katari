@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.6.0] - 2026-11-25
+
+### ✨ Added
+
+- Default subtitle look settings.
+
+### ⚡️ Performance
+
+- Syncing a large library is much faster, most of all on a device's first sync.
+
+### 🐛 Fixed
+
+- A device new to sync shows the full chapter list of each library entry, and its first refresh no longer fills Updates with old chapters.
+- The destination dragged in the navigation editor stays under the finger when settings show in two panes.
+
 ## [3.5.0] - 2026-11-24
 
 ### ✨ Added
@@ -1383,7 +1398,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.5.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.6.0...HEAD
+[3.6.0]: https://github.com/pa2x2/katari/releases/tag/v3.6.0
 [3.5.0]: https://github.com/pa2x2/katari/releases/tag/v3.5.0
 [3.4.5]: https://github.com/pa2x2/katari/releases/tag/v3.4.5
 [3.4.4]: https://github.com/pa2x2/katari/releases/tag/v3.4.4

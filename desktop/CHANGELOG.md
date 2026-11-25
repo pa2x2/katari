@@ -1,5 +1,29 @@
 # Desktop Changelog
 
+## [1.3.0] - 2026-11-25
+
+### ✨ Added
+
+- Default subtitle look settings.
+
+### 🔄 Changed
+
+- A manga page that fails to load opens in the app's web view instead of the browser.
+
+### 🧩 Improved
+
+- The mouse drags destinations in the navigation editor without holding first.
+- Drag handles in reorderable lists show the move cursor.
+
+### ⚡️ Performance
+
+- Syncing a large library is much faster, most of all on a device's first sync.
+
+### 🐛 Fixed
+
+- A device new to sync shows the full chapter list of each library entry, and its first refresh no longer fills Updates with old chapters.
+- The destination dragged in the navigation editor stays under the pointer when settings show in two panes.
+
 ## [1.2.0] - 2026-11-24
 
 ### ✨ Added
@@ -486,7 +510,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.2.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.3.0...HEAD
+[1.3.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.3.0
 [1.2.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.2.0
 [1.1.5]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.5
 [1.1.4]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.4
