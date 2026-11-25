@@ -1,0 +1,23 @@
+features/sync/server/CHANGELOG.md
+  s_e0fec955fe1107::t_b52573c175afbf 3-8,41-42
+CHANGELOG.md
+  s_e0fec955fe1107::t_144b8e06182cd2 3-17,1401-1402
+desktop/CHANGELOG.md
+  s_e0fec955fe1107::t_dfb5e6f2f97db9 3-26,513-514
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7ec3a36133908418e917903efde557b8053c3909",
+  "prompts": {},
+  "sessions": {
+    "s_e0fec955fe1107": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "99b44a22-94a8-4d2b-9fdb-41dcc9ba2a5e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
