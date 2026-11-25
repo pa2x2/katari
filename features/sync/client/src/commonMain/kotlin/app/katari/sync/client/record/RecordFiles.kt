@@ -12,6 +12,8 @@ internal object RecordFiles {
         return filesOf(synced, payload)
     }
 
-    private fun <P : Any> filesOf(kind: SyncedKind<P>, payload: ByteArray): List<FileReference> =
-        kind.files(kind.decode(payload))
+    private fun <P : Any> filesOf(kind: SyncedKind<P>, payload: ByteArray): List<FileReference> {
+        val files = kind.files ?: return emptyList()
+        return files(kind.decode(payload))
+    }
 }

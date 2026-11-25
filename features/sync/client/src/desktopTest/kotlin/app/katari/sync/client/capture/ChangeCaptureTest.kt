@@ -42,12 +42,13 @@ class ChangeCaptureTest {
                 """
                 INSERT INTO entries(_id, profile_id, source, url, title, favorite, date_added, type)
                 VALUES (1, 1, -2, '/show', 'Show', 1, 1000, 'anime'), (2, 1, -2, '/other', 'Other', 1, 0, 'anime'),
-                    (3, 1, 0, 'folder', 'Local', 1, 0, 'manga')
+                    (3, 1, 0, 'folder', 'Local', 1, 0, 'manga'), (4, 1, -2, '/browsed', 'Browsed', 0, 0, 'anime')
                 """,
                 "INSERT INTO chapters(_id, entry_id, url, name) VALUES (10, 1, '/show/1', 'Episode 1')",
                 "INSERT INTO chapters(_id, entry_id, url, name) VALUES (12, 1, '/show/0', 'Recap')",
                 "INSERT INTO chapters(_id, entry_id, url, name) VALUES (13, 1, '/show/00', 'Second recap')",
                 "INSERT INTO chapters(_id, entry_id, url, name) VALUES (11, 3, 'folder/1', 'Local chapter')",
+                "INSERT INTO chapters(_id, entry_id, url, name) VALUES (14, 4, '/browsed/1', 'Browsed episode')",
             )
             val entries = EntryRepositoryImpl(device.handler, device.defaultProfile)
             val chapters = EntryChapterRepositoryImpl(device.handler, device.defaultProfile)
@@ -202,7 +203,10 @@ class ChangeCaptureTest {
                 categories.delete(categories.getAll(1).single { it.name == "Before sync" }.id)
                 categories.delete(categories.getAll(1).single { it.name == "Watching" }.id)
             }
-            expect("source refresh") {
+            expect("entry added to the library, with the episode it listed", "entry", "chapter") {
+                device.sql("UPDATE entries SET favorite = 1, date_added = 2000 WHERE _id = 4")
+            }
+            expect("source refresh listing the back catalogue", "chapter") {
                 entries.updateFromSourceSync(
                     entries.getEntryById(1, 1)!!.copy(title = "Show (TV)", description = "Refreshed"),
                     profileId = 1,
@@ -238,13 +242,11 @@ class ChangeCaptureTest {
             // Rows that go with their entry, such as clearing the database of entries outside the library
             expect("entry removed as cache") { db.entriesQueries.deleteById(profileId = 1, entryId = 1) }
 
-            val stored = device.handler.await {
-                sync_recordsQueries.pendingAfter("", Long.MAX_VALUE).awaitAsList().map { it.kind }
-            }
+            val stored = device.pending.next(Long.MAX_VALUE).map { it.kind }
             // Preferences aren't in the database; their kinds have no triggers
             stored.toSet() shouldBe SyncKinds.all.filter { it.capture.isNotEmpty() }.map { it.name }.toSet()
-            withClue("both episodes, the second recap with its time, and the new release, not the local chapter") {
-                stored.count { it == "chapter" } shouldBe 4
+            withClue("every episode and recap, the new release and the added entry's episode, not the local chapter") {
+                stored.count { it == "chapter" } shouldBe 6
             }
         }
     }

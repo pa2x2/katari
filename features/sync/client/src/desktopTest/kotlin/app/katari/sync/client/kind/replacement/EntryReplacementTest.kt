@@ -44,9 +44,6 @@ class EntryReplacementTest {
                         """,
                     )
                     exchange.settle(listOf(a, b))
-                    b.sql(
-                        "INSERT INTO chapters(entry_id, url, name, chapter_number) SELECT _id, '/old/2', 'Episode 2', 2 FROM entries",
-                    )
 
                     // A migrates the entry as local migration does, keeping chapter state, categories and notes: the
                     // new entry takes its place, its marks and its viewer setting, the old one leaves the library,
@@ -124,9 +121,6 @@ class EntryReplacementTest {
                     """,
                 )
                 exchange.settle(listOf(a, b))
-                b.sql(
-                    "INSERT INTO chapters(entry_id, url, name, chapter_number) SELECT _id, '/old/2', 'Episode 2', 2 FROM entries",
-                )
 
                 a.sql(
                     "INSERT INTO entries(_id, source, url, title, favorite, type) VALUES (2, -3, '/new', 'Show', 1, 'anime')",

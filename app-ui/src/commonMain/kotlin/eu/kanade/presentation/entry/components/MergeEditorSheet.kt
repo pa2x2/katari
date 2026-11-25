@@ -17,7 +17,6 @@ import app.katari.icons.materialsymbols.automirroredrounded.OpenInNew
 import app.katari.icons.materialsymbols.rounded.BookmarkAdd
 import app.katari.icons.materialsymbols.rounded.BookmarkRemove
 import app.katari.icons.materialsymbols.rounded.CallSplit
-import app.katari.icons.materialsymbols.rounded.DragHandle
 import app.katari.icons.materialsymbols.rounded.Lock
 import app.katari.icons.materialsymbols.rounded.LockOpen
 import app.katari.icons.materialsymbols.rounded.Star
@@ -30,6 +29,7 @@ import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.dialog.DialogAction
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.CoverRow
+import app.katari.presentation.kit.list.ReorderHandle
 import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
@@ -200,12 +200,7 @@ private fun ReorderableCollectionItemScope.MergeEditorRow(
                     tone = ContentTone.Secondary,
                 )
             } else {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.DragHandle,
-                    contentDescription = null,
-                    modifier = Modifier.draggableHandle(),
-                    tone = ContentTone.Secondary,
-                )
+                ReorderHandle(Modifier.draggableHandle())
             }
         },
         trailing = if (entry.locked) {

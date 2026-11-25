@@ -18,13 +18,12 @@ import app.katari.entry.interactions.download.resolve
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Cancel
 import app.katari.icons.materialsymbols.rounded.Close
-import app.katari.icons.materialsymbols.rounded.DragHandle
 import app.katari.icons.materialsymbols.rounded.MoreVert
 import app.katari.icons.materialsymbols.rounded.VerticalAlignBottom
 import app.katari.icons.materialsymbols.rounded.VerticalAlignTop
 import app.katari.presentation.kit.button.IconButton
-import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.list.ReorderHandle
 import app.katari.presentation.kit.list.SettingsRow
 import app.katari.presentation.kit.menu.DropdownMenu
 import app.katari.presentation.kit.menu.DropdownMenuDivider
@@ -58,12 +57,7 @@ internal fun DownloadQueueRow(
     SettingsRow(
         title = item.title,
         leading = {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.DragHandle,
-                contentDescription = null,
-                tone = ContentTone.Secondary,
-                modifier = handleModifier,
-            )
+            ReorderHandle(handleModifier)
         },
         trailing = {
             RowMenu(

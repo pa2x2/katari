@@ -20,6 +20,7 @@ import app.katari.entry.interactions.media.session.EntryMediaSessionEventSink
 import app.katari.entry.interactions.runtime.EntryTypeKey
 import app.katari.entry.interactions.runtime.usage.ReadingSessionReports
 import app.katari.entry.interactions.settings.AnimePlayerPreferences
+import app.katari.entry.interactions.settings.DefaultSubtitleLookPage
 import app.katari.entry.interactions.source.EntrySourceSettingsFeature
 import app.katari.entry.interactions.source.EntryWebViewFeature
 import dev.zacsweers.metro.AppScope
@@ -35,6 +36,7 @@ import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.ResolveVideoStream
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
+import eu.kanade.tachiyomi.ui.video.player.settings.VideoSubtitleDefaultLookPage
 import kotlinx.coroutines.CoroutineScope
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
@@ -89,6 +91,10 @@ object AnimePlayerBindings {
         AnimePlayerBasePreferences(preferenceStore)
 
     @Provides
+    internal fun defaultSubtitleLookPage(preferences: AnimePlayerPreferences): DefaultSubtitleLookPage =
+        VideoSubtitleDefaultLookPage(preferences)
+
+    @Provides
     @SingleIn(AppScope::class)
     internal fun mediaSession(sink: EntryMediaSessionEventSink): AnimeMediaSessionProcessor =
         AnimeMediaSessionProcessor(sink)
@@ -118,6 +124,7 @@ object AnimePlayerBindings {
         sourceSettingsFeature: EntrySourceSettingsFeature,
         downloadRuntime: EntryDownloadRuntimeFeature,
         libraryPreferences: LibraryPreferences,
+        playerPreferences: AnimePlayerPreferences,
         introTimesEpisodes: IntroTimesEpisodeReader,
         aniSkipLookup: AniSkipLookup,
         theIntroDbLookup: TheIntroDbLookup,
@@ -144,6 +151,7 @@ object AnimePlayerBindings {
             sourceSettingsFeature = sourceSettingsFeature,
             downloadRuntime = downloadRuntime,
             libraryPreferences = libraryPreferences,
+            playerPreferences = playerPreferences,
             introTimesEpisodes = introTimesEpisodes,
             aniSkipLookup = aniSkipLookup,
             theIntroDbLookup = theIntroDbLookup,

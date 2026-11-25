@@ -69,8 +69,7 @@ class SettingEncodingTest {
                 delay(10)
                 drainAll()
                 stored = handler.await {
-                    sync_recordsQueries.pendingAfter("", Long.MAX_VALUE).awaitAsList()
-                        .filter { it.kind == ProfileSettingKind.name }
+                    sync_recordsQueries.pendingOfKindAfter(ProfileSettingKind.name, "", Long.MAX_VALUE).awaitAsList()
                         .associate { it.record_key to ProfileSettingKind.decode(it.payload) }
                 }
             }

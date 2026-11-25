@@ -12,9 +12,10 @@ import app.katari.sync.protocol.record.SequencedRecord
 import dev.zacsweers.metro.Inject
 
 /**
- * Pushes every change waiting to be sent, in chunks of [CHUNK] in key order. A change keeps its id until the server
- * acknowledges it, and only an acknowledgement marks it sent, so a push retried after its answer was lost is
- * recognised by the server as the one it took (D022) and nothing is stored twice.
+ * Pushes every change waiting to be sent, a kind at a time with parents first ([PendingChanges.kinds]), in chunks of
+ * [CHUNK] in key order. A change keeps its id until the server acknowledges it, and only an acknowledgement marks it
+ * sent, so a push retried after its answer was lost is recognised by the server as the one it took (D022) and nothing
+ * is stored twice.
  *
  * Records naming custom covers or fonts go after the rest of their chunk, once the server has their files
  * ([FileUploads]); a record whose file waits for Wi-Fi stays unsent with it, holding back nothing else.
@@ -51,23 +52,38 @@ class PushChanges(
         onTaken: (Int) -> Unit = {},
     ): Boolean {
         var stale = false
-        var after = ""
-        while (true) {
-            val chunk = pending.after(after, CHUNK)
-            if (chunk.isEmpty()) return stale
-            val (plain, naming) = chunk.partition { it.files.isEmpty() }
-            if (push(client, plain, afterPull, onTaken)) stale = true
-            if (naming.isNotEmpty()) {
-                val files = naming.flatMap { it.files }.distinct()
-                var settled = 0L
-                val waiting = uploads.ensure(client, files) { count ->
-                    settled += count
-                    onFiles(settled, files.size.toLong())
+        pending.kinds().forEach { kind ->
+            var after = ""
+            while (true) {
+                val chunk = pending.after(kind, after, CHUNK).withinBytes()
+                if (chunk.isEmpty()) break
+                val (plain, naming) = chunk.partition { it.files.isEmpty() }
+                if (push(client, plain, afterPull, onTaken)) stale = true
+                if (naming.isNotEmpty()) {
+                    val files = naming.flatMap { it.files }.distinct()
+                    var settled = 0L
+                    val waiting = uploads.ensure(client, files) { count ->
+                        settled += count
+                        onFiles(settled, files.size.toLong())
+                    }
+                    if (push(client, naming.filter { it.files.none(waiting::contains) }, afterPull, onTaken)) {
+                        stale = true
+                    }
                 }
-                if (push(client, naming.filter { it.files.none(waiting::contains) }, afterPull, onTaken)) stale = true
+                after = chunk.last().key
             }
-            after = chunk.last().key
         }
+        return stale
+    }
+
+    /** The first of these changes that fit in [CHUNK_BYTES] of payload, and always the first one. */
+    private fun List<RecordEnvelope>.withinBytes(): List<RecordEnvelope> {
+        var bytes = 0L
+        val fitting = indexOfFirst { envelope ->
+            bytes += envelope.payload.size
+            bytes > CHUNK_BYTES
+        }
+        return if (fitting == -1) this else take(maxOf(fitting, 1))
     }
 
     /** Pushes [records], tells [onTaken] how many the server took, and returns whether it refused some as stale. */
@@ -104,8 +120,10 @@ class PushChanges(
     }
 
     private companion object {
-        // Well under the server's request limit for any payload this app writes, and small enough that a lost answer
-        // costs little to send again.
-        const val CHUNK = 200L
+        // Each push is a round trip and a commit on both ends, which a large library's first upload makes thousands of;
+        // a lost answer costs little to send again either way. The payload bound keeps a chunk of large records under
+        // the smallest request limit a server can be given (1 MiB).
+        const val CHUNK = 1000L
+        const val CHUNK_BYTES = 512L * 1024
     }
 }

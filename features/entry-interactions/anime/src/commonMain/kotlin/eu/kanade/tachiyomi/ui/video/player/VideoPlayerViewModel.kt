@@ -22,6 +22,7 @@ import app.katari.entry.interactions.media.session.EntryMediaSessionActivitySess
 import app.katari.entry.interactions.media.session.EntryMediaSessionEvent
 import app.katari.entry.interactions.player.PlaybackSpeed
 import app.katari.entry.interactions.runtime.usage.ReadingSessionReport
+import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.entry.interactions.source.EntryChildWebViewResolution
 import app.katari.entry.interactions.source.EntrySourceSettingsFeature
 import app.katari.entry.interactions.source.EntrySourceSettingsResolution
@@ -49,16 +50,10 @@ import eu.kanade.tachiyomi.ui.video.player.server.allowsServerFallback
 import eu.kanade.tachiyomi.ui.video.player.server.playingServer
 import eu.kanade.tachiyomi.ui.video.player.server.withServersListedBefore
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
+import eu.kanade.tachiyomi.ui.video.player.subtitle.ownSubtitleLook
+import eu.kanade.tachiyomi.ui.video.player.subtitle.subtitleDefault
 import eu.kanade.tachiyomi.ui.video.player.subtitle.timing.VideoPlayerSubtitleTiming
-import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedBackgroundColor
-import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedBackgroundOpacity
-import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedOffsetX
-import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedOffsetY
-import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedPosition
-import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedTextColor
-import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedTextEdge
-import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedTextSize
-import eu.kanade.tachiyomi.ui.video.player.subtitle.toSubtitleAppearance
+import eu.kanade.tachiyomi.ui.video.player.subtitle.withOwnSubtitleLook
 import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -133,6 +128,7 @@ internal class VideoPlayerViewModel(
     private val sourceSettingsFeature: EntrySourceSettingsFeature,
     private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val libraryPreferences: LibraryPreferences,
+    private val playerPreferences: AnimePlayerPreferences,
     introTimesEpisodes: IntroTimesEpisodeReader,
     aniSkipLookup: AniSkipLookup,
     theIntroDbLookup: TheIntroDbLookup,
@@ -244,6 +240,24 @@ internal class VideoPlayerViewModel(
 
     // The engines that showed a frame this session, the last one last, for its usage report
     private val enginesPlayed = linkedSetOf<String>()
+
+    init {
+        // The default look changes in Settings while the player plays in picture-in-picture, and on other devices
+        viewModelScope.launch {
+            playerPreferences.defaultSubtitleLookChanges().collect {
+                val default = playerPreferences.subtitleDefault()
+                mutableState.update { state ->
+                    if (state is State.Ready) {
+                        state.copy(
+                            playback = state.playback.copy(subtitleDefault = default),
+                        )
+                    } else {
+                        state
+                    }
+                }
+            }
+        }
+    }
 
     fun init(
         entryId: Long,
@@ -518,19 +532,14 @@ internal class VideoPlayerViewModel(
         }
     }
 
+    /** The series keeps [appearance] as its own look, or follows the default while it matches it. */
     fun updateSubtitleAppearance(appearance: VideoSubtitleAppearance) {
         val current = mutableState.value as? State.Ready ?: return
-        val normalizedAppearance = appearance.normalized()
-        if (current.playback.subtitleAppearance == normalizedAppearance) return
-        mutableState.value = current.copy(
-            playback = current.playback.copy(subtitleAppearance = normalizedAppearance),
-        )
+        val own = appearance.normalized().takeIf { it != current.playback.subtitleDefault }
+        if (own == current.playback.ownSubtitleLook) return
+        mutableState.value = current.copy(playback = current.playback.copy(ownSubtitleLook = own))
         viewModelScope.launch {
-            persistPlaybackPreferences(
-                entryId = current.ownerEntryId,
-                adaptiveQuality = current.playback.currentAdaptiveQuality,
-                subtitleAppearance = normalizedAppearance,
-            )
+            updatePlaybackPreferences(current.ownerEntryId) { it.withOwnSubtitleLook(own) }
         }
     }
 
@@ -1412,7 +1421,8 @@ internal class VideoPlayerViewModel(
             streamOptions = streamOptions,
             playbackData = playbackData,
             currentAdaptiveQuality = savedPreferences.toAdaptiveQualityPreference(),
-            subtitleAppearance = savedPreferences.toSubtitleAppearance(),
+            ownSubtitleLook = savedPreferences.ownSubtitleLook(),
+            subtitleDefault = playerPreferences.subtitleDefault(),
             engineOverride = savedPreferences.playerEngine,
             mpvHintShown = savedPreferences.mpvHintShown,
             downloaded = downloaded,
@@ -1482,7 +1492,6 @@ internal class VideoPlayerViewModel(
         entryId: Long,
         sourceSelection: PlaybackSelection? = null,
         adaptiveQuality: VideoAdaptiveQualityPreference? = null,
-        subtitleAppearance: VideoSubtitleAppearance? = null,
         subtitleKey: String? = null,
         updateSubtitleKey: Boolean = false,
     ) {
@@ -1494,8 +1503,6 @@ internal class VideoPlayerViewModel(
                 sourceQualityKey = existingPreferences.sourceQualityKey,
             )
             val resolvedAdaptiveQuality = adaptiveQuality ?: existingPreferences.toAdaptiveQualityPreference()
-            val resolvedSubtitleAppearance =
-                (subtitleAppearance ?: existingPreferences.toSubtitleAppearance()).normalized()
             existingPreferences.copy(
                 dubKey = resolvedSourceSelection.dubKey,
                 serverKey = resolvedSourceSelection.serverKey,
@@ -1504,14 +1511,6 @@ internal class VideoPlayerViewModel(
                 subtitleKey = if (updateSubtitleKey) subtitleKey else existingPreferences.subtitleKey,
                 playerQualityMode = resolvedAdaptiveQuality.toPlayerQualityMode(),
                 playerQualityHeight = resolvedAdaptiveQuality.heightOrNull(),
-                subtitleOffsetX = resolvedSubtitleAppearance.toPersistedOffsetX(),
-                subtitleOffsetY = resolvedSubtitleAppearance.toPersistedOffsetY(),
-                subtitleTextSize = resolvedSubtitleAppearance.toPersistedTextSize(),
-                subtitleTextColor = resolvedSubtitleAppearance.toPersistedTextColor(),
-                subtitleBackgroundColor = resolvedSubtitleAppearance.toPersistedBackgroundColor(),
-                subtitleBackgroundOpacity = resolvedSubtitleAppearance.toPersistedBackgroundOpacity(),
-                subtitleTextEdge = resolvedSubtitleAppearance.toPersistedTextEdge(),
-                subtitlePosition = resolvedSubtitleAppearance.toPersistedPosition(),
             )
         }
     }

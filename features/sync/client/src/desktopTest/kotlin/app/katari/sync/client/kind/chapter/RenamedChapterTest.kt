@@ -33,9 +33,6 @@ class RenamedChapterTest {
                     "INSERT INTO history(entry_id, chapter_id, last_read, time_read) VALUES (1, 10, 1000, 600)",
                 )
                 exchange.settle(listOf(a, b))
-                b.sql(
-                    "INSERT INTO chapters(entry_id, url, name, chapter_number) SELECT _id, '/show/2', 'Episode 2', 2 FROM entries",
-                )
 
                 // The source moved its episodes, which A's refresh matched to the rows it had
                 a.sql(
@@ -44,11 +41,11 @@ class RenamedChapterTest {
                 )
                 exchange.settle(listOf(a, b))
 
-                // B's own refresh moves the episode nobody marked, as A's did
+                // The episode nobody marked moves as well, as B holds every episode A listed
                 b.library().filter { it.startsWith("""["chapter"""") || it.startsWith("""["history"""") } shouldBe
                     listOf(
-                        """["chapter","/show","/show/2",0,0]""",
                         """["chapter","/show","/show/e1",1,0]""",
+                        """["chapter","/show","/show/e2",0,0]""",
                         """["history","/show/e1",1000,600]""",
                     )
             }

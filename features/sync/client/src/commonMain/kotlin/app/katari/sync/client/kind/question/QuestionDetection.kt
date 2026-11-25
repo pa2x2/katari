@@ -1,6 +1,7 @@
 package app.katari.sync.client.kind.question
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.kind.entry.EntryKind
@@ -44,7 +45,9 @@ internal class QuestionDetection(private val writes: LocalWrites) {
                 notes(key, stored, EntryKind.decode(local.bytes), EntryKind.decode(incoming.bytes))
             kind === ProfileKind && incoming is RecordState.Deleted ->
                 profileDeletedHere(ProfileKind.decodeUuid(key, local), incoming.tombstone.deletedAt)
-            incoming is RecordState.Live -> changeInDeletedProfile(kind, kind.decode(incoming.bytes))
+            // Read only while a profile is deleted, which the person is asked about, not for each record of a library
+            incoming is RecordState.Live && hasDeletedProfile() ->
+                changeInDeletedProfile(kind, kind.decode(incoming.bytes))
         }
     }
 
@@ -109,6 +112,9 @@ internal class QuestionDetection(private val writes: LocalWrites) {
         val edited = profileRecords(writes.database, uuid).mapNotNull { it.edited }.maxOrNull() ?: return
         if (edited > deletedAt) raiseProfileDeletion(uuid, deletedAt, edited)
     }
+
+    private suspend fun hasDeletedProfile(): Boolean =
+        writes.database.sync_recordsQueries.hasDeleted(ProfileKind.name).awaitAsOne()
 
     /** A change arriving for something in a profile already deleted, made after the deletion. */
     private suspend fun <P : Any> changeInDeletedProfile(kind: SyncedKind<P>, payload: P) {

@@ -49,8 +49,6 @@ class EntryRecordKeyTest {
     }
 
     private suspend fun SyncTestDevice.entryKeys(): List<String> = handler.await {
-        sync_recordsQueries.pendingAfter("", Long.MAX_VALUE).awaitAsList().filter {
-            it.kind == "entry"
-        }.map { it.record_key }
+        sync_recordsQueries.pendingOfKindAfter("entry", "", Long.MAX_VALUE).awaitAsList().map { it.record_key }
     }
 }

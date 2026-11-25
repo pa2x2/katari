@@ -6,10 +6,9 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import app.katari.icons.materialsymbols.MaterialSymbols
-import app.katari.icons.materialsymbols.rounded.DragHandle
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.LogoSize
+import app.katari.presentation.kit.list.ReorderHandle
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.list.SettingsRow
@@ -55,11 +54,7 @@ internal fun LazyItemScope.MigrationConfigSourceRow(
                                 Pill(text = LocaleHelper.getShortDisplayName(source.shortLanguage, uppercase = true))
                             }
                             if (dragEnabled) {
-                                Icon(
-                                    imageVector = MaterialSymbols.Rounded.DragHandle,
-                                    contentDescription = null,
-                                    modifier = Modifier.draggableHandle(),
-                                )
+                                ReorderHandle(Modifier.draggableHandle())
                             }
                         }
                     }

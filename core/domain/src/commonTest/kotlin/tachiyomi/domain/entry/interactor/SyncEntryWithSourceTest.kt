@@ -187,7 +187,7 @@ class SyncEntryWithSourceTest {
 
     @Test
     fun `first listing of an entry holding chapters from another device reports only newer ones`() = runTest {
-        // Only the chapter read on another device is stored, as sync leaves an entry this device never listed
+        // Another device synced the list it had, chapter 2: chapter 3 came out since, and chapter 1 is older
         val stored =
             chapter(id = 1L, url = "/2", name = "Chapter 2", chapterNumber = 2.0, sourceOrder = 0L, read = true)
         val insertedChapters = slot<List<EntryChapter>>()

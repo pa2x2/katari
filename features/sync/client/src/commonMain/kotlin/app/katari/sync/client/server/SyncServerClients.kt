@@ -29,7 +29,9 @@ class SyncServerClients internal constructor(base: () -> OkHttpClient) {
     constructor(network: NetworkHelper) : this({ network.client.withoutSourceHandling() })
 
     private val transports: SyncTransports by lazy {
-        val calls = base().newBuilder()
+        val base = base()
+        val calls = base.newBuilder()
+            .socketFactory(NoDelaySocketFactory(base.socketFactory))
             .followRedirects(false)
             .followSslRedirects(false)
             .connectTimeout(CONNECT_TIMEOUT.toJavaDuration())

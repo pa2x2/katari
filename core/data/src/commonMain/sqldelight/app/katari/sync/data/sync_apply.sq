@@ -195,7 +195,7 @@ VALUES (
     :previewUrl,
     :kind,
     :groupKey,
-    (SELECT position FROM chapter_groups WHERE entry_id = :entryId AND group_key = :groupKey),
+    (SELECT position FROM chapter_groups WHERE entry_id = :entryId AND group_key IS :groupKey),
     :dateText
 )
 RETURNING _id;
@@ -224,7 +224,7 @@ fillChapterDetails {
         kind = :kind,
         group_key = :groupKey,
         group_position = (
-            SELECT position FROM chapter_groups WHERE entry_id = chapters.entry_id AND group_key = :groupKey
+            SELECT position FROM chapter_groups WHERE entry_id = chapters.entry_id AND group_key IS :groupKey
         ),
         date_text = :dateText
     WHERE _id = :chapterId;

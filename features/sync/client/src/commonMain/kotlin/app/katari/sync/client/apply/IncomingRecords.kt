@@ -30,7 +30,7 @@ import tachiyomi.data.Database
 class IncomingRecords(private val writing: SyncWriting) {
     suspend fun apply(page: PullPage) = writing.writeHoldingFailures { session ->
         page.records
-            .sortedBy { kindOrder[it.record.kind] ?: Int.MAX_VALUE }
+            .sortedBy { SyncKinds.rank(it.record.kind) }
             .forEach { session.receive(it) }
         notePulled(page.records)
         sync_stateQueries.setPosition(
@@ -50,7 +50,7 @@ class IncomingRecords(private val writing: SyncWriting) {
      */
     suspend fun applyAhead(records: List<SequencedRecord>) = writing.writeHoldingFailures { session ->
         records
-            .sortedBy { kindOrder[it.record.kind] ?: Int.MAX_VALUE }
+            .sortedBy { SyncKinds.rank(it.record.kind) }
             .forEach { session.receive(it) }
         notePulled(records)
     }
@@ -68,7 +68,6 @@ class IncomingRecords(private val writing: SyncWriting) {
     suspend fun retryHeld() = writing.writeHoldingFailures { session -> session.retryHeld() }
 
     private companion object {
-        val kindOrder = SyncKinds.all.withIndex().associate { (index, kind) -> kind.name to index }
         val DOWNLOADING_STAGES = SyncStage.entries.filter { it.isDownloading }.map { it.stored }
     }
 }

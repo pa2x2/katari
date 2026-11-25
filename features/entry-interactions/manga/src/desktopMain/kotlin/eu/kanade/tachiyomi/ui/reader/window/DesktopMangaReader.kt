@@ -91,8 +91,12 @@ internal class DesktopMangaReader(
         var viewer by remember(controller) { mutableStateOf<ReaderViewer?>(null) }
         LaunchedEffect(controller, readingMode, loaded) {
             if (!loaded) return@LaunchedEffect
-            // A page that failed to load offers its address, which the desktop opens in the browser
-            val next = readingMode.viewer(controller) { url, _ -> linkOpener.open(context, url) }
+            val openPageInWebView: ((String, Long?) -> Unit)? = if (latestNavigation.webViewAvailable) {
+                { url, sourceId -> latestNavigation.openWebView(url, title = null, sourceId) }
+            } else {
+                null
+            }
+            val next = readingMode.viewer(controller, openPageInWebView)
             controller.setViewer(next)
             viewer = next
         }

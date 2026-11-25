@@ -10,16 +10,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
-import app.katari.icons.materialsymbols.MaterialSymbols
-import app.katari.icons.materialsymbols.rounded.DragHandle
-import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.LibraryMetrics
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.CheckRow
+import app.katari.presentation.kit.list.ReorderHandle
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.RowGroupPosition
-import app.katari.presentation.kit.theme.ContentTone
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -136,12 +133,7 @@ private fun ReorderableCollectionItemScope.LibraryGroupingDimensionItem(
         onCheckedChange = onCheckedChange,
         subtitle = roleLabel,
         trailing = {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.DragHandle,
-                contentDescription = null,
-                modifier = Modifier.draggableHandle(),
-                tone = ContentTone.Secondary,
-            )
+            ReorderHandle(Modifier.draggableHandle())
         },
     )
 }

@@ -55,8 +55,9 @@ object ImportedFontKind : SyncedKind<ImportedFontPayload>(
     override fun merge(local: ImportedFontPayload, incoming: ImportedFontPayload) =
         local.copy(file = latest(local.file, incoming.file))
 
-    override fun files(payload: ImportedFontPayload): List<FileReference> =
+    override val files: (ImportedFontPayload) -> List<FileReference> = { payload ->
         listOf(payload.file.value.reference(FileCategory.FONT))
+    }
 
     /**
      * Names the font's file for the profile; it is put in place after the transaction. A name that isn't a plain

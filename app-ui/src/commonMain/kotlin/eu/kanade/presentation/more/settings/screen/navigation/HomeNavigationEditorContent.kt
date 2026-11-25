@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.screen.navigation
 
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,18 +19,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import app.katari.core.common.HomeScreenTabs
 import app.katari.core.common.homeScreenTabOrder
 import app.katari.core.common.navigation.HomeNavigationMoveResult
 import app.katari.core.common.navigation.HomeNavigationSection
 import app.katari.core.common.navigation.move
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.control.DropEdge
+import app.katari.presentation.kit.control.dragSource
 import app.katari.presentation.kit.control.dropInsertionIndicator
 import app.katari.presentation.kit.feedback.SnackbarDuration
 import app.katari.presentation.kit.feedback.SnackbarHost
@@ -74,7 +75,9 @@ internal fun HomeNavigationEditorContent(
     var overflowSlotBounds by remember { mutableStateOf(Rect.Zero) }
     var hiddenBounds by remember { mutableStateOf(Rect.Zero) }
     var draggedTab by remember { mutableStateOf<HomeScreenTabs?>(null) }
+    // In the window's coordinates, as the bounds above; the editor starts elsewhere when it is a pane beside others.
     var pointerPosition by remember { mutableStateOf(Offset.Unspecified) }
+    var editorOrigin by remember { mutableStateOf(Offset.Zero) }
     var dropTarget by remember { mutableStateOf<HomeNavigationDropTarget?>(null) }
     val dropIsValid = when {
         draggedTab == null || dropTarget == null -> true
@@ -149,36 +152,33 @@ internal fun HomeNavigationEditorContent(
     fun Modifier.navigationDragSource(tab: HomeScreenTabs): Modifier {
         return this
             .onGloballyPositioned { itemBounds[tab] = it.boundsInRoot() }
-            .pointerInput(tab, draft.configuration) {
-                detectDragGesturesAfterLongPress(
-                    onDragStart = { localPosition ->
-                        draggedTab = tab
-                        pointerPosition = (itemBounds[tab]?.topLeft ?: Offset.Zero) + localPosition
-                        dropTarget = resolveDropTarget(pointerPosition)
-                    },
-                    onDrag = { change, _ ->
-                        change.consume()
-                        pointerPosition = (itemBounds[tab]?.topLeft ?: Offset.Zero) + change.position
-                        dropTarget = resolveDropTarget(pointerPosition)
-                    },
-                    onDragCancel = {
-                        draggedTab = null
-                        pointerPosition = Offset.Unspecified
-                        dropTarget = null
-                    },
-                    onDragEnd = {
-                        val tabToMove = draggedTab
-                        val target = dropTarget
-                        draggedTab = null
-                        pointerPosition = Offset.Unspecified
-                        dropTarget = null
-                        if (tabToMove != null) applyDrop(tabToMove, target)
-                    },
-                )
-            }
+            .dragSource(
+                onDragStart = { localPosition ->
+                    draggedTab = tab
+                    pointerPosition = (itemBounds[tab]?.topLeft ?: Offset.Zero) + localPosition
+                    dropTarget = resolveDropTarget(pointerPosition)
+                },
+                onDrag = { localPosition ->
+                    pointerPosition = (itemBounds[tab]?.topLeft ?: Offset.Zero) + localPosition
+                    dropTarget = resolveDropTarget(pointerPosition)
+                },
+                onDragCancel = {
+                    draggedTab = null
+                    pointerPosition = Offset.Unspecified
+                    dropTarget = null
+                },
+                onDragEnd = {
+                    val tabToMove = draggedTab
+                    val target = dropTarget
+                    draggedTab = null
+                    pointerPosition = Offset.Unspecified
+                    dropTarget = null
+                    if (tabToMove != null) applyDrop(tabToMove, target)
+                },
+            )
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().onGloballyPositioned { editorOrigin = it.positionInRoot() }) {
         Scaffold(
             topBar = { scrollBehavior ->
                 AppBar(
@@ -253,7 +253,7 @@ internal fun HomeNavigationEditorContent(
                             .padding(bottom = overflowClearance),
                         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
                     ) {
-                        RowGroupNote(text = stringResource(MR.strings.home_navigation_editor_instructions))
+                        RowGroupNote(text = stringResource(platformPresentation.navigationEditorInstructions))
                         RowGroup(rows = listOf { StartupTabSelector(draft = draft, onDraftChange = onDraftChange) })
                         UnusedDestinations(
                             modifier = Modifier.padding(horizontal = KatariTheme.spacing.contentInset),
@@ -309,7 +309,7 @@ internal fun HomeNavigationEditorContent(
         draggedTab?.takeIf { pointerPosition != Offset.Unspecified }?.let { tab ->
             DraggedDestination(
                 tab = tab,
-                pointerPosition = pointerPosition,
+                pointerPosition = pointerPosition - editorOrigin,
                 dropValid = dropIsValid,
             )
         }

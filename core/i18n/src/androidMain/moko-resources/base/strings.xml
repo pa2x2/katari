@@ -63,6 +63,8 @@
     <string name="pref_browse_long_press_action_open_settings">Long-press actions</string>
     <string name="browse_feed_long_press_actions_for_source">Long-press actions for %1$s</string>
     <string name="filter_tristate_chip_hint">Tap to include, tap again to exclude. Long-press to exclude.</string>
+    <string name="home_navigation_editor_instructions">Press and hold a destination, then drop it exactly where you want it.</string>
+    <string name="home_navigation_destination_move_hint">%1$s. Press and hold to move</string>
     <string name="ext_permission_install_apps_warning">Permissions are needed to install extensions. Tap here to grant.</string>
     <string name="pref_anime_remember_brightness_summary">Open at the brightness last swiped to, in every profile</string>
     <string name="connected_to_wifi">Only on Wi-Fi</string>

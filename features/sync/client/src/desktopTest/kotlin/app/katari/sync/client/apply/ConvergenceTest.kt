@@ -65,16 +65,6 @@ class ConvergenceTest {
                     b.pending.count() shouldBe 0
                     b.outboxKinds().shouldBeEmpty()
                 }
-                // B's refresh of the entry brings the chapters nobody marked, which is no change
-                b.sql(
-                    """
-                    INSERT INTO chapters(entry_id, url, name, chapter_number)
-                    SELECT _id, '/show/2', 'Episode 2', 2 FROM entries
-                    UNION ALL SELECT _id, '/show/3', 'Episode 3', 3 FROM entries
-                    """,
-                )
-                b.outboxKinds().shouldBeEmpty()
-
                 b.sql("UPDATE viewer_setting_overrides SET encoded_value = '1.5'")
                 b.drainAll()
                 delay(5)

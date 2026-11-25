@@ -11,6 +11,7 @@ import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.capture.CaptureTrigger.Owner
+import app.katari.sync.client.capture.CaptureTrigger.Rows
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.merge.fieldOfNewer
 import app.katari.sync.client.merge.latest
@@ -26,14 +27,17 @@ import kotlinx.serialization.json.JsonObject
 /**
  * Chapters, keyed by their entry's key and URL. Local ref: `[chapters._id]`.
  *
- * Rows come from source refreshes, which are no change but for what they find: read and bookmark are captured, and a
- * new row when it arrives already marked (a restore, a migration) or when a refresh found it as a new release of an
- * entry in the Library, which Updates shows, so every device shows it there without refreshing the entry first. A
- * refresh that lists a chapter holding stand-ins for the source's details (`chapters_placeholder_details`) has its
- * record read again, as no edit. A chapter the source dropped keeps its record, since a refresh never deletes anything
- * on other devices. A chapter a refresh moved to another URL takes its record's marks to the record under its new
- * key, which names the URL it had ([ChapterPayload.renamedFrom]); the record under its old key is deleted in favour of
- * it, so no device makes the chapter again at that URL, and records naming the old key apply to the new one.
+ * Every chapter of an entry in the Library syncs, so each device holds the list as the devices that refreshed the entry
+ * found it, with when each chapter was first found: a device that refreshes it for the first time takes as new releases
+ * only the chapters none of them found, and a device that never refreshed it shows the same list, and the same Updates,
+ * without refreshing. Rows come from source refreshes, which are no change but for what they find: read and bookmark
+ * are captured, as is a new row of an entry in the Library or one that arrives already marked (a restore, a migration),
+ * and the rows an entry held before it joined the Library or moved to another profile in it. A refresh that lists a
+ * chapter holding stand-ins for the source's details (`chapters_placeholder_details`) has its record read again, as no
+ * edit. A chapter the source dropped keeps its record, since a refresh never deletes anything on other devices. A
+ * chapter a refresh moved to another URL takes its record's marks to the record under its new key, which names the URL
+ * it had ([ChapterPayload.renamedFrom]); the record under its old key is deleted in favour of it, so no device makes
+ * the chapter again at that URL, and records naming the old key apply to the new one.
  */
 object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPayload.serializer(), Absence.KEEP) {
     override val capture = listOf(
@@ -44,8 +48,19 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
             Event.INSERT,
             listOf("NEW._id"),
             condition = "NEW.read = 0 AND NEW.bookmark = 0 AND " +
-                "NEW.date_fetch > (SELECT date_added FROM main.entries WHERE _id = NEW.entry_id AND favorite = 1)",
+                "EXISTS (SELECT 1 FROM main.entries WHERE _id = NEW.entry_id AND favorite = 1)",
             personsEdit = false,
+        ),
+        // The entry joined the Library, or moved to another profile, which keys its chapters anew: the chapters it
+        // lists are recorded as a refresh brings them
+        CaptureTrigger(
+            "entries",
+            Event.UPDATE,
+            listOf("CHAPTER._id"),
+            fields = listOf(Field(Field.EVERY, "favorite", "profile_id")),
+            condition = "NEW.favorite = 1",
+            personsEdit = false,
+            rows = Rows("chapters", "CHAPTER", "CHAPTER.entry_id = NEW._id"),
         ),
         CaptureTrigger(
             "chapters",

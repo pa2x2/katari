@@ -38,7 +38,7 @@ import app.katari.sync.client.kind.statistics.StatisticsEpochKind
 import app.katari.sync.client.kind.subtitletiming.SubtitleTimingKind
 import app.katari.sync.client.record.SyncedKind
 
-/** Every kind of record this app version syncs. */
+/** Every kind of record this app version syncs, each after the kinds its records refer to. */
 object SyncKinds {
     val all: List<SyncedKind<*>> = listOf(
         ProfileKind,
@@ -80,10 +80,17 @@ object SyncKinds {
     )
 
     private val byName = all.associateBy { it.name }
+    private val ranks = all.withIndex().associate { (rank, kind) -> kind.name to rank }
 
     init {
         require(byName.size == all.size) { "Kind names must be unique" }
     }
 
     fun named(name: String): SyncedKind<*>? = byName[name]
+
+    /**
+     * Where records of the kind [name] go among others, as [all] lists them: a record after those it refers to, such as
+     * a chapter after its entry. A kind this version doesn't know goes last.
+     */
+    fun rank(name: String): Int = ranks[name] ?: all.size
 }

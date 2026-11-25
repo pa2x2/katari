@@ -1,16 +1,11 @@
 package eu.kanade.presentation.more.settings.screen.browse.longpress
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.katari.core.common.CustomPreferences
-import app.katari.icons.materialsymbols.MaterialSymbols
-import app.katari.icons.materialsymbols.rounded.DragHandle
-import app.katari.presentation.kit.content.Icon
+import app.katari.presentation.kit.list.ReorderHandle
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.SettingsRow
-import app.katari.presentation.kit.theme.ContentTone
-import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -26,14 +21,7 @@ internal fun LongPressActionRow(
         title = stringResource(action.titleRes),
         subtitle = supportingText,
         trailing = if (showDragHandle) {
-            {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.DragHandle,
-                    contentDescription = null,
-                    modifier = handleModifier.padding(KatariTheme.spacing.s),
-                    tone = ContentTone.Secondary,
-                )
-            }
+            { ReorderHandle(handleModifier) }
         } else {
             null
         },
