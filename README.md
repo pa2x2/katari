@@ -8,12 +8,13 @@
 
 Comics, books, and video in one app.
 
-[Download](https://pa2x2.github.io/katari/download/) · [Website](https://pa2x2.github.io/katari/)
+[![Download for Android](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=semver&filter=v*&label=Android&style=for-the-badge&logo=android&logoColor=white&color=1f6feb)](https://pa2x2.github.io/katari/download/#android)
+[![Download for Linux](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=date&filter=desktop-v*&label=Linux&style=for-the-badge&logo=linux&logoColor=white&color=1f6feb)](https://pa2x2.github.io/katari/download/#linux)
+
+[Website](https://pa2x2.github.io/katari/)
 
 <img src="https://raw.githubusercontent.com/pa2x2/katari/assets/library.png" alt="A Katari library holding comics, books, and films" width="300" />
 
-[![Latest Android release](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=semver&filter=v*&label=Android%20release)](https://github.com/pa2x2/katari/releases/latest)
-[![Latest Linux release](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=date&filter=desktop-v*&label=Linux%20release)](https://github.com/pa2x2/katari/releases?q=desktop-v&expanded=true)
 ![Android 10+](https://img.shields.io/badge/Android-10%2B-3DDC84?logo=android&logoColor=white)
 [![License](https://img.shields.io/github/license/pa2x2/katari)](./LICENSE)
 
