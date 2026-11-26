@@ -1,7 +1,6 @@
 > [!IMPORTANT]
-> This is an independent, preference-driven fork—not an official Mihon project.
+> This is an independent, preference-driven project.
 > Built for my personal use and my needs. Do not expect me to add features or make changes on your request. I may consider it but no guarantees here.
-> If you don't like something and I don't like your suggestion - fork.
 
 <div align="center">
 
