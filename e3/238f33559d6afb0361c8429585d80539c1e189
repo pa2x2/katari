@@ -1,0 +1,19 @@
+README.md
+  s_0a1b9d3d07d2d3::t_457cad8e18fdc8 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e3238f33559d6afb0361c8429585d80539c1e189",
+  "prompts": {},
+  "sessions": {
+    "s_0a1b9d3d07d2d3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "189a94ef-f81b-456c-b377-f8ffb053dc21",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
