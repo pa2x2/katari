@@ -44,9 +44,9 @@ export const SCENE_GROUPS: Record<string, SceneGroup> = {
   "library-and-statistics": {
     scenes: phone("library.LibraryScenes", "library.EntryScenes", "statistics.StatisticsScenes"),
   },
-  "browse-and-backup": { scenes: phone("browse.BrowseScenes", "settings.BackupScenes") },
+  "browse-and-backup": { scenes: phone("browse.BrowseScenes", "settings.BackupScenes", "settings.BringOverScenes") },
   readers: { scenes: phone("reader.BookScenes", "reader.ComicScenes", "reader.PlayerScenes") },
-  desktop: { scenes: desktop("reader.BookScenes", "reader.ComicScenes", "reader.PlayerScenes") },
+  desktop: { scenes: desktop("reader.BookScenes", "reader.ComicScenes", "reader.PlayerScenes", "settings.BringOverScenes") },
   // The phone signs in with its seeded library, the desktop joins and takes it in, and the phone's reader then hears
   // of the desktop reading on.
   sync: {
