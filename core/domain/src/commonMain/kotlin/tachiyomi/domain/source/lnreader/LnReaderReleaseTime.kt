@@ -1,8 +1,8 @@
-package eu.kanade.tachiyomi.source.lnreader.entry
+package tachiyomi.domain.source.lnreader
 
-import eu.kanade.tachiyomi.source.lnreader.runtime.asNumber
-import eu.kanade.tachiyomi.source.lnreader.runtime.asText
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -21,11 +21,12 @@ import java.util.Locale
  * LNReader's in English, so `format('LLL')` gives "October 26, 2026 11:20 PM". A format dayjs left unexpanded ("LLL"),
  * "Invalid Date" and blanks say nothing.
  */
-internal class LnReaderReleaseTime(val date: Long, val text: String?)
+class LnReaderReleaseTime(val date: Long, val text: String?)
 
-internal fun lnReaderReleaseTime(value: JsonElement?, zone: ZoneId = ZoneId.systemDefault()): LnReaderReleaseTime? {
-    value.asNumber()?.let { return epoch(it.toLong()) }
-    val text = value.asText()?.trim()?.takeIf { it.isNotEmpty() && it !in NOTHING } ?: return null
+fun lnReaderReleaseTime(value: JsonElement?, zone: ZoneId = ZoneId.systemDefault()): LnReaderReleaseTime? {
+    val primitive = value as? JsonPrimitive ?: return null
+    if (!primitive.isString) return primitive.doubleOrNull?.let { epoch(it.toLong()) }
+    val text = primitive.content.trim().takeIf { it.isNotEmpty() && it !in NOTHING } ?: return null
     if (text.all(Char::isDigit)) text.toLongOrNull()?.let { return epoch(it) }
     return parse(text, zone)?.let { LnReaderReleaseTime(it, null) } ?: LnReaderReleaseTime(0L, text)
 }

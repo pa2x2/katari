@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.source.lnreader.runtime.asText
 import eu.kanade.tachiyomi.source.lnreader.runtime.text
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import tachiyomi.domain.source.lnreader.lnReaderReleaseTime
 
 /** Chapters newest first, as Katari lists them, and the groups they belong to in reading order. */
 internal class LnReaderChapterList(val chapters: List<SEntryChapter>, val groups: List<SEntryChapterGroup>)

@@ -1852,6 +1852,13 @@
     <string name="backup_conversion_install_from_store">Install from a store after restoring</string>
     <string name="backup_conversion_extension_files">Extension files saved in the backup</string>
     <string name="backup_conversion_custom_button">A custom player button. Katari\'s player has none</string>
+    <string name="backup_conversion_imported_book">An imported book. Import its file in Katari</string>
+    <string name="backup_conversion_built_in_category">The other app\'s own category. Its entries are in Katari\'s Default</string>
+    <string name="backup_conversion_store_from_addresses">Worked out from the extensions\' addresses, as the backup doesn\'t list its stores</string>
+    <string name="backup_conversion_saved_covers">Covers saved in the backup</string>
+    <string name="backup_conversion_covers_reload">Katari loads covers from the source</string>
+    <string name="backup_conversion_downloaded_chapters">Downloaded chapters</string>
+    <string name="backup_conversion_download_again">Download them again in Katari</string>
     <string name="backup_conversion_old_repo_format">Saved in an old repo format that stores no longer serve. Add the repo\'s current address in Katari</string>
     <string name="backup_restore_missing_sources">Missing sources:</string>
     <string name="backup_restore_content_full">You may need to install any missing extensions afterwards to use them.</string>

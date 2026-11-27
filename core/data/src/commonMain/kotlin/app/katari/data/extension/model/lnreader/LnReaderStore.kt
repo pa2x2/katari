@@ -9,7 +9,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
  * live on GitHub, so the store is named after the repository's owner and links to the repository; an index elsewhere
  * is named after its host.
  */
-internal fun lnReaderStore(indexUrl: String): ExtensionStore {
+fun lnReaderStore(indexUrl: String): ExtensionStore {
     val url = indexUrl.toHttpUrl()
     val segments = url.pathSegments.filter { it.isNotEmpty() }
     val repository = segments.takeIf { url.host in GITHUB_HOSTS && it.size >= 2 }?.take(2)
