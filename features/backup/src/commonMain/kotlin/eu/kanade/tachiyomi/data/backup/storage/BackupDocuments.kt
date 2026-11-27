@@ -22,6 +22,9 @@ class BackupDocuments(private val files: StorageFileResolver) {
      */
     fun isWritableFile(uri: DocumentUri): Boolean = files.fromUri(uri.value)?.let { it.isFile || !it.exists() } == true
 
+    /** The document's name and size, as the document's storage gives them; a null name when it has none. */
+    fun describe(uri: DocumentUri): BackupDocument = file(uri).let { BackupDocument(it.name, it.length()) }
+
     /** Writes the document from its start, replacing whatever it held. */
     fun write(uri: DocumentUri): Sink = file(uri).openOutputStream().sink()
 
@@ -32,3 +35,6 @@ class BackupDocuments(private val files: StorageFileResolver) {
     private fun file(uri: DocumentUri): StorageFile =
         files.fromUri(uri.value) ?: throw FileNotFoundException("No storage opens the backup document ${uri.value}")
 }
+
+/** [size] is in bytes. */
+data class BackupDocument(val name: String?, val size: Long)

@@ -15,6 +15,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import app.katari.backupconversion.BringOverScreen
 import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.media.EntryMediaCacheClearResult
 import app.katari.entry.interactions.media.EntryMediaCacheId
@@ -57,6 +58,7 @@ import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 import tachiyomi.presentation.core.i18n.fileSize
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
@@ -125,6 +127,7 @@ class SettingsDataScreen : SearchableSettings() {
         val lastAutoBackup by backupPreferences.lastAutoBackupTimestamp.collectAsState()
 
         val restoreBackup = rememberRestoreBackupLauncher()
+        val convertedFormats = remember(graph) { graph.backupConverter.formats }
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.label_backup),
@@ -150,6 +153,16 @@ class SettingsDataScreen : SearchableSettings() {
                         }
                     }
                 },
+
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(MR.strings.backup_conversion_title),
+                    subtitle = pluralStringResource(
+                        MR.plurals.backup_conversion_entry_summary,
+                        convertedFormats.size,
+                        convertedFormats.joinToString { it.appName },
+                    ),
+                    onClick = { navigator.push(BringOverScreen()) },
+                ),
 
                 // Automatic backups
                 Preference.PreferenceItem.ListPreference(

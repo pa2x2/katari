@@ -67,6 +67,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A row whose body the caller lays out, such as a segmented choice or a pair of buttons | `ControlRow` | |
 | Chips under a group header, such as quick filters in a sheet | `ChipsRow` | |
 | An explanation or note in a sheet or dialog | `InfoRow` | |
+| How much of one kind of data came over from elsewhere, such as a row of what another app's backup brings over | `CoverageRow` | A mark for all, part or none, an amount line and a bar; `details` opens under it, such as the lists of what came over and what didn't |
 | A part of a whole and how much it took, compact inside a card, such as an episode watched that day | `TallyRow` | An optional mark after the value, such as finished; `heading` for a row naming the rows under it, such as a session's span; `underCover` for rows unfolded under a `CoverRow` |
 | Options as icon-and-label tiles, such as reading modes | `IconChoiceGrid` | |
 | A choice of colour swatches | `ColorChoiceRow`, `ColorSwatches` | Swatches alone where tabs already name the colour |

@@ -68,7 +68,7 @@ internal fun RestoreIntoSection(into: RestoreInto, onClick: () -> Unit) {
 
 /**
  * Picks the profile in use or a new one; the new one's name is changed through Katari's profile name dialog, which
- * refuses a name [profiles] already holds.
+ * refuses a name [profiles] already holds. Renaming picks the new profile.
  */
 @Composable
 internal fun RestoreIntoDialog(

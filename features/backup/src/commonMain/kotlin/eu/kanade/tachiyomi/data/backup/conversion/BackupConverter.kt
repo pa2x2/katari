@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.backup.conversion
 
 import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
+import eu.kanade.tachiyomi.data.backup.storage.BackupDocument
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocuments
 import eu.kanade.tachiyomi.data.backup.storage.BackupWorkingFiles
 import eu.kanade.tachiyomi.data.backup.stream.BackupContainer
@@ -38,6 +39,16 @@ class BackupConverter(
     /** Every format, in the order the tool lists them. */
     val formats: List<BackupFormat> = formats.sortedBy { it.appName.lowercase() }
 
+    /** Every app the tool reads backups of, each family's own app before its forks. */
+    val apps: List<BackupApp> = this.formats.flatMap { format ->
+        (listOf(format.appName) + format.relatedAppNames).map { BackupApp(it, format) }
+    }
+
+    /** The name and size of the file at [uri]. */
+    suspend fun describe(uri: DocumentUri): BackupDocument = withContext(Dispatchers.IO) {
+        readable { documents.describe(uri) }
+    }
+
     /** Which app wrote the backup at [uri], read to its end. Throws for a file that is damaged or old JSON. */
     suspend fun identify(uri: DocumentUri): BackupIdentity = withContext(Dispatchers.IO) {
         val contents = readable { documents.read(uri).buffer().use(::readBackupFileContents) }
@@ -48,14 +59,19 @@ class BackupConverter(
             contents.fieldNumbers.any { it in BackupLayout.KATARI_FIELD_NUMBERS }
         if (isKatari) return@withContext BackupIdentity.Katari
         val fitting = formats.filter { it.recognizes(contents) }
-        if (fitting.isEmpty()) BackupIdentity.Unsupported else BackupIdentity.Foreign(fitting)
+        if (fitting.isEmpty()) {
+            BackupIdentity.Unsupported
+        } else {
+            BackupIdentity.Foreign(fitting.map { BackupApp(it.appName, it) })
+        }
     }
 
     /**
-     * Converts the backup at [uri] with [format] into a Katari backup in the app's cache. The file stays until the next
+     * Converts the backup at [uri] as [app]'s into a Katari backup in the app's cache. The file stays until the next
      * conversion, so a restore started from it can read it to the end.
      */
-    suspend fun convert(uri: DocumentUri, format: BackupFormat): ConvertedBackup = withContext(Dispatchers.IO) {
+    suspend fun convert(uri: DocumentUri, app: BackupApp): ConvertedBackup = withContext(Dispatchers.IO) {
+        val format = app.format
         val file = newConvertedFile()
         try {
             val content = file.sink().gzip().buffer().use { sink ->
@@ -66,13 +82,20 @@ class BackupConverter(
                     }
                     format.convert(open, writer::writeEntry)
                 }
-                writer.writeMetadata(content.metadata.copy(convertedFrom = format.appName))
+                writer.writeMetadata(content.metadata.copy(convertedFrom = app.name))
                 content
             }
             ConvertedBackup(DocumentUri(file.toURI().toString()), content.report)
         } catch (e: Throwable) {
             file.delete()
             throw e
+        }
+    }
+
+    /** Copies [converted] to [to], a file the user picked to keep it in. */
+    suspend fun save(converted: ConvertedBackup, to: DocumentUri) = withContext(Dispatchers.IO) {
+        documents.read(converted.uri).buffer().use { source ->
+            documents.write(to).buffer().use { it.writeAll(source) }
         }
     }
 
@@ -105,10 +128,10 @@ sealed interface BackupIdentity {
     data object Katari : BackupIdentity
 
     /**
-     * Another app's backup, which any of [formats] could have written: one names the app, more leave the user to say
-     * which.
+     * Another app's backup, which any of [apps] could have written, each the own app of a family whose format reads the
+     * file: one names the app, more leave the user to say which.
      */
-    data class Foreign(val formats: List<BackupFormat>) : BackupIdentity
+    data class Foreign(val apps: List<BackupApp>) : BackupIdentity
 
     /** No format the tool knows wrote it. */
     data object Unsupported : BackupIdentity

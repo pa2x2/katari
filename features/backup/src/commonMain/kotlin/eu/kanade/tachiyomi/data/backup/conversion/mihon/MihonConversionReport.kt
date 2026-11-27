@@ -57,7 +57,7 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
                 ),
                 row(
                     Kind.CUSTOM_INFO,
-                    carried = customTitles.values.map { Item(it) },
+                    carried = customTitles.values.map { Item(it, MR.strings.backup_conversion_custom_title) },
                     leftBehind = customInfoLeftBehind.values.flatten(),
                 ),
                 row(

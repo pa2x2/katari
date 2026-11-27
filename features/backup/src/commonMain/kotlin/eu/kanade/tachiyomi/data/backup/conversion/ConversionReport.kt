@@ -9,7 +9,7 @@ import dev.icerock.moko.resources.StringResource
 data class ConversionReport(val rows: List<Row>) {
     data class Row(val kind: Kind, val carried: List<Item>, val leftBehind: List<Item>)
 
-    /** An entry, setting, store or other thing the backup held. [note] says why it was left behind, or how it changed. */
+    /** An entry, setting, store or other thing the backup held. [note] says what of it came over or was left behind, and why, or how it changed. */
     data class Item(val name: Name, val note: StringResource? = null) {
         constructor(text: String, note: StringResource? = null) : this(Name.Text(text), note)
     }

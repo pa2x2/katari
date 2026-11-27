@@ -591,4 +591,36 @@
         <item quantity="one">%1$s uninstalled %2$d extension this device still has. Uninstall it here too?</item>
         <item quantity="other">%1$s uninstalled %2$d extensions this device still has. Uninstall them here too?</item>
     </plurals>
+    <plurals name="backup_conversion_entry_summary">
+        <item quantity="one">Backups of %1$s and the apps built on it</item>
+        <item quantity="other">Backups of %1$s and the apps built on them</item>
+    </plurals>
+    <plurals name="backup_conversion_count_entries">
+        <item quantity="one">%d entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+    <plurals name="backup_conversion_count_categories">
+        <item quantity="one">%d category</item>
+        <item quantity="other">%d categories</item>
+    </plurals>
+    <plurals name="backup_conversion_count_settings">
+        <item quantity="one">%d setting</item>
+        <item quantity="other">%d settings</item>
+    </plurals>
+    <plurals name="backup_conversion_count_sources">
+        <item quantity="one">%d source</item>
+        <item quantity="other">%d sources</item>
+    </plurals>
+    <plurals name="backup_conversion_count_stores">
+        <item quantity="one">%d store</item>
+        <item quantity="other">%d stores</item>
+    </plurals>
+    <plurals name="backup_conversion_count_extensions">
+        <item quantity="one">%d extension</item>
+        <item quantity="other">%d extensions</item>
+    </plurals>
+    <plurals name="backup_conversion_count_items">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
 </resources>

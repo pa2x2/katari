@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.conversion.mihon
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
@@ -14,15 +16,19 @@ import okio.Buffer
 import okio.BufferedSource
 import tachiyomi.domain.source.identity.SourceIdentity
 
-/** Mihon's backups, and those of the forks that keep its fields: TachiyomiSY, Komikku, TachiyomiJ2K, Yōkai, Suwayomi. */
+/**
+ * Mihon's backups, and those of the apps that keep its fields: TachiyomiSY, Komikku, TachiyomiJ2K, Yōkai, Suwayomi and
+ * Tachiyomi.
+ */
 @Inject
+@ContributesIntoSet(AppScope::class)
 class MihonBackupFormat(
     private val parser: ProtoBuf,
     private val json: Json,
 ) : BackupFormat {
     override val appName = "Mihon"
 
-    override val relatedAppNames = listOf("TachiyomiSY", "Komikku", "TachiyomiJ2K", "Yōkai", "Suwayomi")
+    override val relatedAppNames = listOf("TachiyomiSY", "Komikku", "TachiyomiJ2K", "Yōkai", "Suwayomi", "Tachiyomi")
 
     // A field outside the family's means another app wrote the file, such as Aniyomi's anime at 3 or 500 and up
     override fun recognizes(contents: BackupFileContents): Boolean =

@@ -199,7 +199,10 @@ class RestoreBackupScreen(
                     model.setIntoNewProfile(it)
                     choosingProfile = false
                 },
-                onRename = model::renameNewProfile,
+                onRename = {
+                    model.renameNewProfile(it)
+                    choosingProfile = false
+                },
                 onDismissRequest = { choosingProfile = false },
             )
         }
@@ -386,7 +389,11 @@ internal class RestoreBackupViewModel(
         // Made only now, so leaving the screen leaves no profile behind (D050)
         val newProfile = current.into?.takeIf { it.intoNewProfile && !current.options.rollBackAccount }
             ?.let {
-                profileManager.createProfile(deviceProfiles.value.unusedName(it.newProfileName), it.newProfileColorSeed)
+                profileManager.createProfile(
+                    name = deviceProfiles.value.unusedName(it.newProfileName),
+                    colorSeed = it.newProfileColorSeed,
+                    hideInstalledSources = false,
+                )
             }
         backupRestoreRunner.start(
             uri = uri,
