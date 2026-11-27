@@ -4,20 +4,18 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
+import eu.kanade.tachiyomi.data.backup.conversion.ConvertedSettings
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.i18n.*
 
-/** A Mihon backup's app settings as Katari's, with what the report lists of them. */
-internal class ConvertedMihonSettings(
-    val preferences: List<BackupPreference>,
-    val carried: List<Item>,
-    val leftBehind: List<Item>,
-)
-
-/** Only what the backup holds is written: a setting it lacks takes Katari's default, not Mihon's (D041). */
-internal fun convertMihonSettings(backedUp: List<BackupPreference>): ConvertedMihonSettings {
+/**
+ * Mihon's app settings as Katari's, as the Mihon family and the Aniyomi family keep them; [app] is the app the report
+ * names for a setting Katari has nothing for. Only what the backup holds is written: a setting it lacks takes Katari's
+ * default, not Mihon's (D041).
+ */
+internal fun convertMihonSettings(backedUp: List<BackupPreference>, app: String): ConvertedSettings {
     val preferences = mutableListOf<BackupPreference>()
     val carried = mutableListOf<Item>()
     val leftBehind = mutableListOf<Item>()
@@ -33,15 +31,21 @@ internal fun convertMihonSettings(backedUp: List<BackupPreference>): ConvertedMi
         when {
             Preference.isAppState(key) || key in MihonSettings.IGNORED -> Unit
             key in MihonSettings.CONSENT ->
-                leaveBehind(MihonSettings.CONSENT.getValue(key), MR.strings.backup_conversion_consent_not_carried)
-            tracker != null -> leaveBehind(tracker, MR.strings.backup_conversion_no_trackers)
+                leaveBehind(
+                    MihonSettings.CONSENT.getValue(key).nameIn(app),
+                    MR.strings.backup_conversion_consent_not_carried,
+                )
+            tracker != null -> leaveBehind(tracker.nameIn(app), MR.strings.backup_conversion_no_trackers)
             name in MihonSettings.CARRIED -> {
                 preferences += preference
                 carried += Item(Name.Setting(name))
             }
             name in MihonSettings.CARRIED_UNLISTED -> preferences += preference
             name in MihonSettings.NO_COUNTERPART ->
-                leaveBehind(MihonSettings.NO_COUNTERPART.getValue(name), MR.strings.backup_conversion_no_counterpart)
+                leaveBehind(
+                    MihonSettings.NO_COUNTERPART.getValue(name).nameIn(app),
+                    MR.strings.backup_conversion_no_counterpart,
+                )
             else -> {
                 val renamed = MihonSettings.renamed(preference)
                 if (renamed == null) {
@@ -55,7 +59,7 @@ internal fun convertMihonSettings(backedUp: List<BackupPreference>): ConvertedMi
             }
         }
     }
-    return ConvertedMihonSettings(preferences, carried, leftBehind)
+    return ConvertedSettings(preferences, carried, leftBehind)
 }
 
 private fun BackupPreference.tabletUiModeNote(): StringResource? {

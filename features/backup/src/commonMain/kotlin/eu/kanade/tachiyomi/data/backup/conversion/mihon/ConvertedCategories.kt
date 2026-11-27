@@ -15,6 +15,8 @@ import tachiyomi.i18n.*
 internal class ConvertedCategories(vararg lists: List<MihonCategory>) {
     private val orders: List<Map<Long, List<Long>>>
 
+    private val ids: List<Map<Long, Long>>
+
     val backupCategories: List<BackupCategory>
 
     val reportItems: List<Item>
@@ -33,6 +35,8 @@ internal class ConvertedCategories(vararg lists: List<MihonCategory>) {
             }
         }
         val orderByName = backupCategories.associate { it.name to it.order }
+        val idByName = backupCategories.associate { it.name to it.id }
+        ids = lists.map { list -> list.associate { it.id to idByName.getValue(it.name) } }
         orders = lists.map { list ->
             list.groupBy({ it.order }, { orderByName.getValue(it.name) }).mapValues { (_, merged) -> merged.distinct() }
         }
@@ -44,6 +48,9 @@ internal class ConvertedCategories(vararg lists: List<MihonCategory>) {
     /** The merged list's orders for an entry of the [list]-th list that names [entryOrders]. */
     fun of(list: Int, entryOrders: List<Long>): List<Long> =
         entryOrders.flatMap { orders[list][it].orEmpty() }.distinct()
+
+    /** The merged list's id for the [list]-th list's category [id], as settings name it; null for an id not listed. */
+    fun idOf(list: Int, id: Long): Long? = ids[list][id]
 }
 
 private fun MihonCategory.toBackupCategory(order: Long): BackupCategory = BackupCategory(

@@ -53,6 +53,10 @@ class AnimePlayerPreferences(
         /** The subtitles' text size before the viewer sets one, a share of the picture's height. */
         const val BUILT_IN_SUBTITLE_TEXT_SIZE = 0.0533f
 
+        /** The smallest and largest subtitle text sizes the player draws, shares of the picture's height. */
+        const val MIN_SUBTITLE_TEXT_SIZE = 0.03f
+        const val MAX_SUBTITLE_TEXT_SIZE = 0.12f
+
         /** ARGB. */
         const val BUILT_IN_SUBTITLE_TEXT_COLOR = 0xFFFFFFFF.toInt()
 

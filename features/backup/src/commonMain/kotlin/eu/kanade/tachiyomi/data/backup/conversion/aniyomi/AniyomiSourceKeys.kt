@@ -2,6 +2,8 @@ package eu.kanade.tachiyomi.data.backup.conversion.aniyomi
 
 import eu.kanade.tachiyomi.data.backup.conversion.withTachiyomiIdentity
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
+import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
+import eu.kanade.tachiyomi.data.backup.sourcekeys.backupSourceKey
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.domain.source.identity.SourceIdScheme
 
@@ -12,11 +14,12 @@ import tachiyomi.domain.source.identity.SourceIdScheme
  * Katari's one local source.
  *
  * @param mangaSourceIds every manga source the backup lists or an entry uses.
- * @param animeSources every anime source the backup lists or an entry uses, by id, with the name the backup gives.
+ * @param animeSources every anime source the backup lists, an entry uses or a setting names, by id, with the name the
+ * backup gives.
  */
 internal class AniyomiSourceKeys(
     mangaSources: List<BackupSource>,
-    mangaSourceIds: Set<Long>,
+    private val mangaSourceIds: Set<Long>,
     animeSources: Map<Long, String>,
 ) {
     private val animeKeys: Map<Long, Long>
@@ -50,4 +53,22 @@ internal class AniyomiSourceKeys(
     }
 
     fun animeKey(id: Long): Long = animeKeys.getValue(id)
+
+    /**
+     * Extension settings with each anime source's key. Aniyomi names both kinds' settings `source_<id>` and lists the
+     * anime sources' first, so of an id both kinds have, the first is the anime source's. A source no entry or setting
+     * names can't be told apart and stays a Tachiyomi source.
+     */
+    fun withAnimeKeys(preferences: List<BackupSourcePreferences>): List<BackupSourcePreferences> {
+        val seen = hashSetOf<Long>()
+        return preferences.map { sourcePreferences ->
+            val id = sourcePreferences.backupSourceKey ?: return@map sourcePreferences
+            val first = seen.add(id)
+            if (id in animeKeys && (id !in mangaSourceIds || first)) {
+                sourcePreferences.copy(sourceId = animeKey(id))
+            } else {
+                sourcePreferences
+            }
+        }
+    }
 }

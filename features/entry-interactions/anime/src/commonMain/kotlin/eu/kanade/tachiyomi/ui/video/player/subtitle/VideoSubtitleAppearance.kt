@@ -5,6 +5,8 @@ import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.B
 import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.BUILT_IN_SUBTITLE_BACKGROUND_OPACITY
 import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.BUILT_IN_SUBTITLE_TEXT_COLOR
 import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.BUILT_IN_SUBTITLE_TEXT_SIZE
+import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.MAX_SUBTITLE_TEXT_SIZE
+import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.MIN_SUBTITLE_TEXT_SIZE
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.SubtitlePosition
 import tachiyomi.domain.entry.model.SubtitleTextEdge
@@ -119,9 +121,6 @@ internal fun PlaybackPreferences.withOwnSubtitleLook(own: VideoSubtitleAppearanc
     subtitleBackgroundOpacity = own?.backgroundOpacity?.toDouble(),
     subtitleTextEdge = own?.textEdge,
 )
-
-internal const val MIN_SUBTITLE_TEXT_SIZE = 0.03f
-internal const val MAX_SUBTITLE_TEXT_SIZE = 0.12f
 
 // How far subtitles rest from the picture's edges, a share of its height
 internal const val SUBTITLE_EDGE_FRACTION = 0.08f

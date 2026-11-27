@@ -68,7 +68,7 @@ class MihonBackupFormat(
                 writeEntry(entry)
             }
         }
-        val settings = convertMihonSettings(backup.preferences)
+        val settings = convertMihonSettings(backup.preferences, appName)
         val sourceNames = backup.sources.associate { it.sourceId to it.name }
         val savedSearches =
             convertSavedSearches(backup.savedSearches, backup.syFeeds + backup.komikkuFeeds, sourceNames, json)

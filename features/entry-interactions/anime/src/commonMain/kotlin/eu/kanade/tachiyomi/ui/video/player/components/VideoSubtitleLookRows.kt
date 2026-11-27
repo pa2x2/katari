@@ -3,14 +3,14 @@ package eu.kanade.tachiyomi.ui.video.player.components
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.BUILT_IN_SUBTITLE_TEXT_SIZE
+import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.MAX_SUBTITLE_TEXT_SIZE
+import app.katari.entry.interactions.settings.AnimePlayerPreferences.Companion.MIN_SUBTITLE_TEXT_SIZE
 import app.katari.presentation.kit.chip.FilterChip
 import app.katari.presentation.kit.list.ChipsRow
 import app.katari.presentation.kit.list.ColorChoiceRow
 import app.katari.presentation.kit.list.PositionChoiceRow
 import app.katari.presentation.kit.list.SliderRow
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.tachiyomi.ui.video.player.subtitle.MAX_SUBTITLE_TEXT_SIZE
-import eu.kanade.tachiyomi.ui.video.player.subtitle.MIN_SUBTITLE_TEXT_SIZE
 import eu.kanade.tachiyomi.ui.video.player.subtitle.SUBTITLE_BACKGROUND_COLOR_PRESETS
 import eu.kanade.tachiyomi.ui.video.player.subtitle.SUBTITLE_TEXT_COLOR_PRESETS
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance

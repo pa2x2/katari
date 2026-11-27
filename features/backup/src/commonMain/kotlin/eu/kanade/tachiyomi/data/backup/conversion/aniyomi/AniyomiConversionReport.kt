@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Kind
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
+import eu.kanade.tachiyomi.data.backup.conversion.ConvertedSettings
 import eu.kanade.tachiyomi.data.backup.conversion.CustomInfoReport
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedSavedSearches
@@ -12,6 +13,7 @@ import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonMerges
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.hasProgress
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.isStore
 import eu.kanade.tachiyomi.data.backup.conversion.reportName
+import eu.kanade.tachiyomi.data.backup.sourcekeys.backupSourceKey
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
@@ -55,11 +57,14 @@ internal class AniyomiConversionReport(private val merges: MihonMerges) {
         backup: AniyomiBackup,
         categories: ConvertedCategories,
         seasons: AniyomiSeasons,
+        settings: ConvertedSettings,
         savedSearches: ConvertedSavedSearches,
     ): ConversionReport {
         val (stores, repos) = backup.extensionSources.partition { it.isStore }
         val extensions = backup.mangaSources.filter { it.sourceId in mangaSources } +
             backup.animeSources.filter { it.sourceId in animeSources }
+        // Where both kinds have an id, the anime source's name is used
+        val sourceNames = (backup.mangaSources + backup.animeSources).associate { it.sourceId to it.reportName }
         return ConversionReport(
             listOfNotNull(
                 Row.of(Kind.LIBRARY, carried = library.values.map { Item(it) }),
@@ -72,6 +77,13 @@ internal class AniyomiConversionReport(private val merges: MihonMerges) {
                     leftBehind = merges.leftBehind,
                 ),
                 customInfo.row(),
+                Row.of(Kind.APP_SETTINGS, carried = settings.carried, leftBehind = settings.leftBehind),
+                Row.of(
+                    Kind.EXTENSION_SETTINGS,
+                    carried = backup.sourcePreferences.map { preferences ->
+                        Item(preferences.backupSourceKey?.let(sourceNames::get) ?: preferences.sourceKey)
+                    },
+                ),
                 Row.of(
                     Kind.EXTENSION_STORES,
                     carried = stores.map { Item(it.name) },

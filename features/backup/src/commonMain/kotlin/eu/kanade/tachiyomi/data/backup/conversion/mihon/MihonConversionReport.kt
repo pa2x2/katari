@@ -5,8 +5,10 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Kind
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
+import eu.kanade.tachiyomi.data.backup.conversion.ConvertedSettings
 import eu.kanade.tachiyomi.data.backup.conversion.CustomInfoReport
 import eu.kanade.tachiyomi.data.backup.conversion.reportName
+import eu.kanade.tachiyomi.data.backup.sourcekeys.backupSourceKey
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
 
@@ -39,7 +41,7 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
     fun build(
         backup: MihonBackup,
         categories: ConvertedCategories,
-        settings: ConvertedMihonSettings,
+        settings: ConvertedSettings,
         savedSearches: ConvertedSavedSearches,
     ): ConversionReport {
         val (stores, repos) = backup.extensionSources.partition { it.isStore }
@@ -64,8 +66,7 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
                 Row.of(
                     Kind.EXTENSION_SETTINGS,
                     carried = backup.sourcePreferences.map { preferences ->
-                        val sourceId = preferences.sourceKey.removePrefix(SOURCE_KEY_PREFIX).toLongOrNull()
-                        Item(sourceNames[sourceId] ?: preferences.sourceKey)
+                        Item(preferences.backupSourceKey?.let(sourceNames::get) ?: preferences.sourceKey)
                     },
                 ),
                 Row.of(
@@ -99,6 +100,3 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
         MR.strings.backup_conversion_client_settings.takeIf { suwayomiMeta.isNotEmpty() },
     ).map { Item(Name.Part(it), MR.strings.backup_conversion_app_own_setting) }
 }
-
-// Mihon names a source's settings after its id (ConfigurableSource.preferenceKey)
-private const val SOURCE_KEY_PREFIX = "source_"

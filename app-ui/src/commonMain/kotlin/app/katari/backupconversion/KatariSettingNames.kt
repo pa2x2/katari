@@ -1,6 +1,8 @@
 package app.katari.backupconversion
 
 import app.katari.entry.interactions.reader.settings.MangaReaderSettings
+import app.katari.entry.interactions.settings.AnimePlayerDevicePreferences
+import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.platform.presentation.platformPresentation
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.source.service.SourcePreferences
@@ -106,8 +108,13 @@ internal val katariSettingNames: Map<String, KatariSettingName> = buildMap {
         "default_chapter_sort_by_ascending_or_descending" to MR.strings.backup_conversion_setting_chapter_sort,
     )
     put(
+        listOf(chapterSettings, MR.strings.action_filter),
+        "default_chapter_filter_by_filler" to MR.strings.chapter_kind_filler,
+    )
+    put(
         listOf(chapterSettings, MR.strings.action_display),
         "default_chapter_display_by_name_or_number" to MR.strings.backup_conversion_setting_chapter_titles,
+        "default_chapter_show_previews" to MR.strings.chapter_previews_and_summaries,
     )
 
     put(
@@ -214,6 +221,38 @@ internal val katariSettingNames: Map<String, KatariSettingName> = buildMap {
     put(
         listOf(data, MR.strings.pref_storage_usage),
         "auto_clear_chapter_cache" to MR.strings.pref_auto_clear_chapter_cache,
+    )
+
+    val animePlayer = listOf(MR.strings.pref_category_players, MR.strings.pref_anime_player)
+    put(
+        animePlayer + MR.strings.pref_anime_playback,
+        AnimePlayerPreferences.ORIENTATION_KEY to MR.strings.pref_anime_orientation,
+        AnimePlayerPreferences.AUTO_PLAY_NEXT_KEY to MR.strings.pref_anime_auto_play_next,
+        AnimePlayerPreferences.MARKER_SKIP_KEY to MR.strings.anime_marker_skip,
+        AnimePlayerPreferences.FIND_INTRO_TIMES_ONLINE_KEY to MR.strings.pref_anime_find_intro_times_online,
+        AnimePlayerPreferences.DEFAULT_PLAYBACK_SPEED_PERCENT_KEY to MR.strings.pref_anime_default_speed,
+        AnimePlayerPreferences.AUTO_ENTER_PICTURE_IN_PICTURE_KEY to MR.strings.pref_anime_auto_enter_picture_in_picture,
+        AnimePlayerPreferences.SEEK_STEP_SECONDS_KEY to MR.strings.pref_anime_seek_step,
+    )
+    put(
+        animePlayer + MR.strings.pref_anime_subtitles + MR.strings.pref_anime_default_subtitle_look,
+        AnimePlayerPreferences.DEFAULT_SUBTITLE_POSITION_KEY to MR.strings.anime_playback_subtitle_position,
+        AnimePlayerPreferences.DEFAULT_SUBTITLE_TEXT_SIZE_KEY to MR.strings.anime_playback_subtitle_size,
+        AnimePlayerPreferences.DEFAULT_SUBTITLE_TEXT_COLOR_KEY to MR.strings.anime_playback_subtitle_text_color,
+        AnimePlayerPreferences.DEFAULT_SUBTITLE_BACKGROUND_COLOR_KEY to
+            MR.strings.anime_playback_subtitle_background_color,
+        AnimePlayerPreferences.DEFAULT_SUBTITLE_BACKGROUND_OPACITY_KEY to
+            MR.strings.anime_playback_subtitle_background_opacity,
+        AnimePlayerPreferences.DEFAULT_SUBTITLE_TEXT_EDGE_KEY to MR.strings.anime_playback_subtitle_text_edge,
+    )
+    put(
+        animePlayer + MR.strings.pref_anime_gestures,
+        AnimePlayerDevicePreferences.REMEMBER_BRIGHTNESS_KEY to MR.strings.pref_anime_remember_brightness,
+    )
+    // Set in the player, by choosing its time
+    put(
+        listOf(MR.strings.pref_anime_player),
+        AnimePlayerPreferences.SHOWS_REMAINING_TIME_KEY to MR.strings.anime_playback_show_remaining_time,
     )
 
     val reader = MR.strings.pref_manga_reader

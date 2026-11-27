@@ -5,7 +5,7 @@ import app.katari.entry.interactions.reader.settings.MangaReaderSettings
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.model.TabletUiMode
-import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
+import eu.kanade.tachiyomi.data.backup.conversion.OtherAppSettingLabel
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BooleanPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
@@ -178,7 +178,7 @@ internal object MihonSettings {
     )
 
     /** Mihon settings Katari has nothing for, by key: its WebGPU reader options and a few others (D055). */
-    val NO_COUNTERPART: Map<String, Name> = mapOf(
+    val NO_COUNTERPART: Map<String, OtherAppSettingLabel> = mapOf(
         "pref_high_quality_renderer_key" to
             mihon(MR.strings.backup_conversion_mihon_high_quality_renderer, MR.strings.pref_category_advanced),
         "pref_dual_page_view" to renderer(MR.strings.backup_conversion_mihon_dual_page_view),
@@ -212,14 +212,14 @@ internal object MihonSettings {
     )
 
     /** Consent given to Mihon, which isn't consent to Katari (D040). */
-    val CONSENT: Map<String, Name> = mapOf(
+    val CONSENT: Map<String, OtherAppSettingLabel> = mapOf(
         "analytics" to mihon(MR.strings.backup_conversion_mihon_analytics, MR.strings.backup_conversion_mihon_privacy),
         "crashlytics" to
             mihon(MR.strings.backup_conversion_mihon_crash_logs, MR.strings.backup_conversion_mihon_privacy),
     )
 
     /** Trackers' settings, which Katari has no trackers for, by [key] and the [name] it has without its private mark. */
-    fun trackerSetting(key: String, name: String): Name? =
+    fun trackerSetting(key: String, name: String): OtherAppSettingLabel? =
         TRACKER_KEYS[name] ?: TRACKER_KEY_PREFIXES.firstOrNull { (prefix) -> key.startsWith(prefix) }?.second
 
     private val TRACKER_KEYS = mapOf(
@@ -296,10 +296,7 @@ internal object MihonSettings {
 
     const val TABLET_UI_MODE_KEY = "tablet_ui_mode"
 
-    private const val APP = "Mihon"
-
-    private fun mihon(label: StringResource, vararg place: StringResource) =
-        Name.OtherAppSetting(APP, place.toList(), label)
+    private fun mihon(label: StringResource, vararg place: StringResource) = OtherAppSettingLabel(label, place.toList())
 
     private fun renderer(label: StringResource, vararg place: StringResource) =
         mihon(label, MR.strings.backup_conversion_mihon_high_quality_renderer_group, *place)

@@ -99,33 +99,13 @@ private fun katariChapterFlags(episodeFlags: Long): Long {
         Entry.CHAPTER_SORT_DIR_MASK or Entry.CHAPTER_UNREAD_MASK or Entry.CHAPTER_DOWNLOADED_MASK or
             Entry.CHAPTER_BOOKMARKED_MASK or Entry.CHAPTER_DISPLAY_MASK
         )
-    val filler = when (episodeFlags and EPISODE_FILLERMARKED_MASK) {
-        EPISODE_SHOW_FILLERMARKED -> Entry.CHAPTER_SHOW_FILLER
-        EPISODE_SHOW_NOT_FILLERMARKED -> Entry.CHAPTER_SHOW_NOT_FILLER
-        else -> Entry.SHOW_ALL
-    }
-    val sorting = when (episodeFlags and EPISODE_SORTING_MASK) {
-        EPISODE_SORTING_NUMBER -> Entry.CHAPTER_SORTING_NUMBER
-        EPISODE_SORTING_UPLOAD_DATE -> Entry.CHAPTER_SORTING_UPLOAD_DATE
-        EPISODE_SORTING_ALPHABET -> Entry.CHAPTER_SORTING_ALPHABET
-        else -> Entry.CHAPTER_SORTING_SOURCE
-    }
-    val previews = if (episodeFlags and (EPISODE_HIDE_PREVIEWS or EPISODE_HIDE_SUMMARIES) != 0L) {
+    val previews = if (hidesPreviews(episodeFlags) || hidesSummaries(episodeFlags)) {
         Entry.CHAPTER_HIDE_PREVIEWS
     } else {
         Entry.SHOW_ALL
     }
-    return kept or filler or sorting or previews
+    return kept or katariFillerFilter(episodeFlags) or katariSorting(episodeFlags) or previews
 }
 
 // Aniyomi's tachiyomi.domain.entries.anime.model.Anime (aniyomiorg/aniyomi 97414446b8a9)
-private const val EPISODE_SHOW_FILLERMARKED = 0x00000080L
-private const val EPISODE_SHOW_NOT_FILLERMARKED = 0x00000100L
-private const val EPISODE_FILLERMARKED_MASK = 0x00000180L
-private const val EPISODE_SORTING_NUMBER = 0x00000200L
-private const val EPISODE_SORTING_UPLOAD_DATE = 0x00000400L
-private const val EPISODE_SORTING_ALPHABET = 0x00000600L
-private const val EPISODE_SORTING_MASK = 0x00000600L
-private const val EPISODE_HIDE_PREVIEWS = 0x00000800L
-private const val EPISODE_HIDE_SUMMARIES = 0x00001000L
 private const val ANIME_INTRO_MASK = 0x00000000000000FFL

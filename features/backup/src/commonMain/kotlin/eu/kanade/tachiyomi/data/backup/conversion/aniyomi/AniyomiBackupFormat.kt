@@ -5,6 +5,8 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
+import eu.kanade.tachiyomi.data.backup.conversion.aniyomi.settings.animeSourceIdsInSettings
+import eu.kanade.tachiyomi.data.backup.conversion.aniyomi.settings.convertAniyomiSettings
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonMerges
@@ -76,9 +78,18 @@ class AniyomiBackupFormat(
         val sourceKeys = AniyomiSourceKeys(
             mangaSources = backup.mangaSources,
             mangaSourceIds = mangaSourceIds + backup.mangaSources.map { it.sourceId },
-            animeSources = (animeSourceNames.keys + seasonInfos.map { it.source } + searchSources)
+            animeSources = (
+                animeSourceNames.keys + seasonInfos.map { it.source } + searchSources +
+                    animeSourceIdsInSettings(backup.preferences)
+                )
                 .filterNot(merges::isMergedEntry)
                 .associateWith { animeSourceNames[it].orEmpty() },
+        )
+        val settings = convertAniyomiSettings(
+            backup.preferences,
+            appName,
+            animeCategoryId = { mergedCategories.idOf(ANIME_LIST, it) },
+            animeSourceKey = sourceKeys::animeKey,
         )
         val savedSearches = convertSavedSearches(
             backup.savedSearches,
@@ -122,10 +133,15 @@ class AniyomiBackupFormat(
         val metadata = Backup(
             backupCategories = mergedCategories.backupCategories,
             backupSources = sourceKeys.backupSources,
-            backupPreferences = savedSearches.preferences,
+            backupPreferences = settings.preferences + savedSearches.preferences,
+            // Extensions define their own settings, which Katari keeps for them as they are
+            backupSourcePreferences = sourceKeys.withAnimeKeys(backup.sourcePreferences),
             backupExtensionStores = backup.extensionSources.mapNotNull { it.toBackupExtensionStore() },
         )
-        return BackupFormat.ConvertedContent(metadata, report.build(backup, mergedCategories, seasons, savedSearches))
+        return BackupFormat.ConvertedContent(
+            metadata,
+            report.build(backup, mergedCategories, seasons, settings, savedSearches),
+        )
     }
 
     private fun <T> ProtoInput.readEntry(deserializer: DeserializationStrategy<T>): T =
