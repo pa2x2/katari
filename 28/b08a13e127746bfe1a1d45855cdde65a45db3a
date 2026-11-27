@@ -1,0 +1,21 @@
+core/domain/src/commonMain/kotlin/tachiyomi/domain/source/lnreader/LnReaderReleaseTime.kt
+  s_0e279b045f255e::t_590a09f5aaa01b 6,14-17,20,44-50,52,57-65,68-69
+core/domain/src/commonTest/kotlin/tachiyomi/domain/source/lnreader/LnReaderReleaseTimeTest.kt
+  s_0e279b045f255e::t_7aa5e2bbea0ac3 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "28b08a13e127746bfe1a1d45855cdde65a45db3a",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
