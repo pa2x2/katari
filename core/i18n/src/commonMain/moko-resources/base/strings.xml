@@ -1602,6 +1602,9 @@
     <string name="invalid_backup_file_json">JSON backup not supported</string>
     <string name="invalid_backup_file_unknown">Backup file is corrupted</string>
     <string name="backup_conversion_no_trackers">Katari has no trackers</string>
+    <string name="backup_conversion_no_counterpart">Katari has no such setting</string>
+    <string name="backup_conversion_consent_not_carried">Consent given to another app doesn\'t carry over to Katari</string>
+    <string name="backup_conversion_tablet_ui_automatic">Set to Automatic: Katari has no Always or In landscape</string>
     <string name="backup_conversion_install_from_store">Install it from a store after restoring</string>
     <string name="backup_conversion_old_repo_format">Saved in an old repo format that stores no longer serve. Add the repo\'s current address in Katari</string>
     <string name="backup_restore_missing_sources">Missing sources:</string>

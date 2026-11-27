@@ -42,15 +42,19 @@ class MihonBackupFormat(private val parser: ProtoBuf) : BackupFormat {
             writeEntry(manga.toBackupEntry())
         }
         val backup = parser.decodeBackup(MihonBackup.serializer(), rest.readByteArray())
+        val settings = convertMihonSettings(backup.preferences)
         val metadata = Backup(
             backupCategories = backup.categories,
             backupSources = backup.sources.map { source ->
                 val identity = SourceIdentity.ofLegacyKey(source.sourceId)
                 source.copy(idScheme = identity.scheme.key, externalId = identity.externalId)
             },
+            backupPreferences = settings.preferences,
+            // Extensions define their own settings, which Katari keeps for them as they are
+            backupSourcePreferences = backup.sourcePreferences,
             backupExtensionStores = backup.extensionSources.mapNotNull { it.toBackupExtensionStore() },
         )
-        return BackupFormat.ConvertedContent(metadata, report.build(backup))
+        return BackupFormat.ConvertedContent(metadata, report.build(backup, settings))
     }
 
     private companion object {

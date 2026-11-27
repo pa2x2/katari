@@ -3,7 +3,9 @@ package eu.kanade.tachiyomi.data.backup.conversion.mihon
 import app.katari.core.common.extensions.JsonObjectEmptyBytes
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
+import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
+import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
@@ -11,8 +13,8 @@ import kotlinx.serialization.protobuf.ProtoNumber
 /*
  * The Mihon family's backup, as far as converting it needs: field numbers from Mihon's
  * app/src/main/java/eu/kanade/tachiyomi/data/backup/models (mihonapp/mihon f8e30a860860), which TachiyomiSY, Komikku,
- * TachiyomiJ2K, Yōkai and Suwayomi keep for these fields. Fields not declared here are skipped; categories, sources
- * and history have the same fields as Katari's and decode into its models.
+ * TachiyomiJ2K, Yōkai and Suwayomi keep for these fields. Fields not declared here are skipped; categories, sources,
+ * history and preferences have the same fields as Katari's and decode into its models.
  */
 
 /** The backup without its entries, which are read one at a time from field 1. */
@@ -20,6 +22,8 @@ import kotlinx.serialization.protobuf.ProtoNumber
 internal class MihonBackup(
     @ProtoNumber(2) val categories: List<BackupCategory> = emptyList(),
     @ProtoNumber(101) val sources: List<BackupSource> = emptyList(),
+    @ProtoNumber(104) val preferences: List<BackupPreference> = emptyList(),
+    @ProtoNumber(105) val sourcePreferences: List<BackupSourcePreferences> = emptyList(),
     @ProtoNumber(106) val extensionSources: List<MihonExtensionSource> = emptyList(),
 )
 

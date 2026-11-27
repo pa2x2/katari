@@ -24,14 +24,23 @@ internal class MihonConversionReport {
         entrySources += manga.source
     }
 
-    fun build(backup: MihonBackup): ConversionReport {
+    fun build(backup: MihonBackup, settings: ConvertedMihonSettings): ConversionReport {
         val (stores, repos) = backup.extensionSources.partition { it.isStore }
+        val sourceNames = backup.sources.associate { it.sourceId to it.name }
         val extensions = backup.sources.filter { it.sourceId in entrySources && it.sourceId != LOCAL_SOURCE_ID }
         return ConversionReport(
             listOfNotNull(
-                row(Kind.LIBRARY, carried = library.values.map(::Item)),
+                row(Kind.LIBRARY, carried = library.values.map { Item(it) }),
                 row(Kind.CATEGORIES, carried = backup.categories.map { Item(it.name) }),
-                row(Kind.PROGRESS_AND_HISTORY, carried = progress.values.map(::Item)),
+                row(Kind.PROGRESS_AND_HISTORY, carried = progress.values.map { Item(it) }),
+                row(Kind.APP_SETTINGS, carried = settings.carried, leftBehind = settings.leftBehind),
+                row(
+                    Kind.EXTENSION_SETTINGS,
+                    carried = backup.sourcePreferences.map { preferences ->
+                        val sourceId = preferences.sourceKey.removePrefix(SOURCE_KEY_PREFIX).toLongOrNull()
+                        Item(sourceNames[sourceId] ?: preferences.sourceKey)
+                    },
+                ),
                 row(
                     Kind.EXTENSION_STORES,
                     carried = stores.map { Item(it.name) },
@@ -52,3 +61,6 @@ internal class MihonConversionReport {
     private fun row(kind: Kind, carried: List<Item> = emptyList(), leftBehind: List<Item> = emptyList()) =
         ConversionReport.Row(kind, carried, leftBehind).takeIf { carried.isNotEmpty() || leftBehind.isNotEmpty() }
 }
+
+// Mihon names a source's settings after its id (ConfigurableSource.preferenceKey)
+private const val SOURCE_KEY_PREFIX = "source_"
