@@ -1,5 +1,6 @@
 package tachiyomi.data.history.activity
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
@@ -12,6 +13,8 @@ import tachiyomi.domain.history.model.activity.HistoryActivitySnapshot
 import tachiyomi.domain.history.model.activity.HistoryCompletionCause
 import tachiyomi.domain.history.model.activity.HistoryCompletionSnapshot
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
+import java.nio.charset.StandardCharsets
+import java.util.UUID
 
 @Inject
 @SingleIn(AppScope::class)
@@ -95,22 +98,36 @@ class HistoryActivityBackupRepositoryImpl(
 
     override suspend fun restoreActivity(entryId: Long, snapshot: HistoryActivitySnapshot) {
         handler.await(inTransaction = true) {
-            val validSessionIds = mutableSetOf<String>()
+            val profile = activityQueries.getEntryProfile(entryId).awaitAsOne()
+
+            // Session and event ids key their rows across every profile, and sync keys a session's record by its id
+            // alone, but one backup restored into two profiles brings the same ids into both. The profile that gets
+            // an id second stores the activity under an id of its own, made from the backup's, so restoring there
+            // again still finds and merges it.
+            fun String.inRestoredProfile(holderProfileId: Long?): String {
+                if (holderProfileId == null || holderProfileId == profile._id) return this
+                val identity = listOf(profile.uuid, this).joinToString(separator = "\u001f")
+                return UUID.nameUUIDFromBytes(identity.toByteArray(StandardCharsets.UTF_8)).toString()
+            }
+            val restoredSessionIds = mutableMapOf<String, String>()
             snapshot.sessions.filter(HistoryActivitySessionSnapshot::isValidForRestore).forEach { session ->
+                val sessionId = session.sessionId.inRestoredProfile(
+                    activityQueries.getActivitySessionProfile(session.sessionId).awaitAsOneOrNull(),
+                )
                 activityQueries.restoreActivitySession(
-                    sessionId = session.sessionId,
+                    sessionId = sessionId,
                     entryId = entryId,
                     startedAt = session.startedAtEpochMillis,
                     endedAt = session.endedAtEpochMillis,
                     duration = session.durationMillis,
                     lastSequence = session.lastSequence,
                 )
-                val restored = activityQueries.getActivitySessionCheckpoint(session.sessionId).awaitAsOneOrNull()
+                val restored = activityQueries.getActivitySessionCheckpoint(sessionId).awaitAsOneOrNull()
                 if (restored?.entry_id != entryId) return@forEach
-                validSessionIds += session.sessionId
+                restoredSessionIds[session.sessionId] = sessionId
                 session.segments.filter(HistoryActivitySegmentSnapshot::isValidForRestore).forEach { segment ->
                     activityQueries.restoreActivitySegment(
-                        sessionId = session.sessionId,
+                        sessionId = sessionId,
                         chapterId = segment.chapterId,
                         localDate = segment.localDate,
                         timeZoneId = segment.timeZoneId,
@@ -119,7 +136,7 @@ class HistoryActivityBackupRepositoryImpl(
                         duration = segment.durationMillis,
                     )
                     activityQueries.insertActivitySegmentIfAbsent(
-                        sessionId = session.sessionId,
+                        sessionId = sessionId,
                         chapterId = segment.chapterId,
                         localDate = segment.localDate,
                         timeZoneId = segment.timeZoneId,
@@ -131,10 +148,12 @@ class HistoryActivityBackupRepositoryImpl(
             }
             snapshot.completions.filter(HistoryCompletionSnapshot::isValidForRestore).forEach { completion ->
                 activityQueries.insertCompletionEvent(
-                    eventId = completion.eventId,
+                    eventId = completion.eventId.inRestoredProfile(
+                        activityQueries.getCompletionEventProfile(completion.eventId).awaitAsOneOrNull(),
+                    ),
                     entryId = entryId,
                     chapterId = completion.chapterId,
-                    sessionId = completion.sessionId?.takeIf(validSessionIds::contains),
+                    sessionId = completion.sessionId?.let(restoredSessionIds::get),
                     occurredAt = completion.occurredAtEpochMillis,
                     localDate = completion.localDate,
                     timeZoneId = completion.timeZoneId,
