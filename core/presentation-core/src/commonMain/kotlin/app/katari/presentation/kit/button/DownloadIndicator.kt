@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -25,8 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -52,6 +56,7 @@ import app.katari.presentation.kit.selection.secondaryClick
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.components.material.IconButtonTokens
+import kotlin.math.roundToInt
 
 enum class DownloadIndicatorState {
     NOT_DOWNLOADED,
@@ -69,6 +74,12 @@ enum class DownloadIndicatorAction {
     DELETE,
 }
 
+/** How many of a group's chapters are downloaded, out of all of them. */
+@Immutable
+data class DownloadedShare(val downloaded: Int, val total: Int) {
+    val isPartial: Boolean get() = downloaded in 1 until total
+}
+
 /** A menu entry an indicator offers besides its own download actions. */
 @Immutable
 class DownloadIndicatorMenuItem(
@@ -83,6 +94,10 @@ class DownloadIndicatorMenuItem(
  * actions, such as downloading on another device. [badge] is pinned to its bottom end corner, such as the chapter's
  * translation mark.
  *
+ * A group of chapters gives [downloadedShareProvider]. While some but not all of them are downloaded and none is on its
+ * way, the ring around the arrow is drawn in pieces, the downloaded ones bright, so the group reads neither as
+ * untouched nor as a download that stopped; its menu can then delete the downloaded ones.
+ *
  * [downloadProgressProvider] gives 0–100, and 0 shows a spinner. A group's progress can be above 0 while it is queued,
  * once some of its chapters are done; the ring then keeps that share and stays still until the next one starts.
  */
@@ -96,11 +111,14 @@ fun DownloadIndicator(
     queuedContentDescription: String,
     downloadingContentDescription: String,
     downloadedContentDescription: String,
+    partlyDownloadedContentDescription: @Composable (DownloadedShare) -> String,
     startNowText: String,
     cancelText: String,
     deleteText: String,
+    deleteDownloadedText: String,
     onClick: (DownloadIndicatorAction) -> Unit,
     modifier: Modifier = Modifier,
+    downloadedShareProvider: () -> DownloadedShare? = { null },
     badge: (@Composable () -> Unit)? = null,
     menuItems: List<DownloadIndicatorMenuItem> = emptyList(),
     notDownloadedMenuItems: List<DownloadIndicatorMenuItem> = emptyList(),
@@ -109,15 +127,18 @@ fun DownloadIndicator(
         DownloadIndicatorContent(
             enabled = enabled,
             downloadState = downloadStateProvider(),
+            downloadedShare = downloadedShareProvider(),
             downloadProgressProvider = downloadProgressProvider,
             startContentDescription = startContentDescription,
             errorContentDescription = errorContentDescription,
             queuedContentDescription = queuedContentDescription,
             downloadingContentDescription = downloadingContentDescription,
             downloadedContentDescription = downloadedContentDescription,
+            partlyDownloadedContentDescription = partlyDownloadedContentDescription,
             startNowText = startNowText,
             cancelText = cancelText,
             deleteText = deleteText,
+            deleteDownloadedText = deleteDownloadedText,
             menuItems = menuItems,
             notDownloadedMenuItems = notDownloadedMenuItems,
             onClick = onClick,
@@ -138,20 +159,32 @@ fun DownloadIndicator(
 private fun DownloadIndicatorContent(
     enabled: Boolean,
     downloadState: DownloadIndicatorState,
+    downloadedShare: DownloadedShare?,
     downloadProgressProvider: () -> Int,
     startContentDescription: String,
     errorContentDescription: String,
     queuedContentDescription: String,
     downloadingContentDescription: String,
     downloadedContentDescription: String,
+    partlyDownloadedContentDescription: @Composable (DownloadedShare) -> String,
     startNowText: String,
     cancelText: String,
     deleteText: String,
+    deleteDownloadedText: String,
     menuItems: List<DownloadIndicatorMenuItem>,
     notDownloadedMenuItems: List<DownloadIndicatorMenuItem>,
     onClick: (DownloadIndicatorAction) -> Unit,
 ) {
     when (downloadState) {
+        DownloadIndicatorState.NOT_DOWNLOADED if downloadedShare?.isPartial == true -> PartlyDownloadedIndicator(
+            enabled = enabled,
+            downloadedShare = downloadedShare,
+            contentDescription = partlyDownloadedContentDescription(downloadedShare),
+            startNowText = startNowText,
+            deleteDownloadedText = deleteDownloadedText,
+            menuItems = notDownloadedMenuItems,
+            onClick = onClick,
+        )
         DownloadIndicatorState.NOT_DOWNLOADED -> NotDownloadedIndicator(
             enabled = enabled,
             startContentDescription = startContentDescription,
@@ -274,6 +307,97 @@ private fun NotDownloadedIndicator(
             )
             MenuItems(menuItems, onDismiss = { isMenuExpanded = false })
         }
+    }
+}
+
+@Composable
+private fun PartlyDownloadedIndicator(
+    enabled: Boolean,
+    downloadedShare: DownloadedShare,
+    contentDescription: String,
+    startNowText: String,
+    deleteDownloadedText: String,
+    menuItems: List<DownloadIndicatorMenuItem>,
+    onClick: (DownloadIndicatorAction) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var isMenuExpanded by remember { mutableStateOf(false) }
+    Box(
+        modifier = modifier
+            .size(IconButtonTokens.StateLayerSize)
+            .commonClickable(
+                enabled = enabled,
+                hapticFeedback = LocalHapticFeedback.current,
+                onLongClick = { isMenuExpanded = true },
+                onClick = { onClick(DownloadIndicatorAction.START) },
+            )
+            .secondaryClick(enabled) { isMenuExpanded = true },
+        contentAlignment = Alignment.Center,
+    ) {
+        val color = KatariTheme.colors.onSurfaceVariant
+        Canvas(modifier = Modifier.size(IndicatorSize)) {
+            drawDownloadedPieces(downloadedShare, color)
+        }
+        Icon(
+            imageVector = CustomMaterialSymbols.Rounded.DownloadArrow,
+            contentDescription = contentDescription,
+            modifier = ArrowModifier,
+            tone = ContentTone.Secondary,
+        )
+        DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
+            DropdownMenuItem(
+                label = startNowText,
+                onClick = {
+                    onClick(DownloadIndicatorAction.START_NOW)
+                    isMenuExpanded = false
+                },
+                icon = MaterialSymbols.Rounded.Download,
+            )
+            MenuItems(menuItems, onDismiss = { isMenuExpanded = false })
+            DropdownMenuItem(
+                label = deleteDownloadedText,
+                onClick = {
+                    onClick(DownloadIndicatorAction.DELETE)
+                    isMenuExpanded = false
+                },
+                icon = MaterialSymbols.Rounded.Delete,
+            )
+        }
+    }
+}
+
+/**
+ * The ring of the download icon cut into pieces, one per chapter up to [MAX_DOWNLOADED_PIECES]; past that each piece
+ * stands for a share of the group. A piece is lit while anything is downloaded and one stays dim until all are, so the
+ * ring never looks untouched or complete when it isn't. The pieces have gaps and don't move, unlike a running download's
+ * continuous wavy ring.
+ */
+private fun DrawScope.drawDownloadedPieces(share: DownloadedShare, color: Color) {
+    val pieces = minOf(share.total, MAX_DOWNLOADED_PIECES)
+    val lit = if (share.total <= MAX_DOWNLOADED_PIECES) {
+        share.downloaded
+    } else {
+        (share.downloaded * pieces.toFloat() / share.total).roundToInt().coerceIn(1, pieces - 1)
+    }
+    // The ring's centre line and width in the download_circle icon, which spans 960 units
+    val radius = size.minDimension * RING_RADIUS
+    val litStroke = size.minDimension * RING_WIDTH
+    val dimStroke = litStroke * DIM_PIECE_WIDTH_RATIO
+    val step = 360f / pieces
+    val gap = minOf(MAX_PIECE_GAP_DEGREES, step * PIECE_GAP_RATIO)
+    val topLeft = Offset(center.x - radius, center.y - radius)
+    val arcSize = Size(radius * 2, radius * 2)
+    repeat(pieces) { index ->
+        val isLit = index < lit
+        drawArc(
+            color = if (isLit) color else color.copy(alpha = DIM_PIECE_ALPHA),
+            startAngle = -90f + index * step + gap / 2,
+            sweepAngle = step - gap,
+            useCenter = false,
+            topLeft = topLeft,
+            size = arcSize,
+            style = Stroke(width = if (isLit) litStroke else dimStroke, cap = StrokeCap.Round),
+        )
     }
 }
 
@@ -486,6 +610,13 @@ private val IndicatorWavelength = 7.dp
 private const val INDICATOR_AMPLITUDE = 0.6f
 private const val TRACK_ALPHA = 0.25f
 private const val DELETING_RING_ALPHA = 0.18f
+private const val MAX_DOWNLOADED_PIECES = 8
+private const val RING_RADIUS = 365f / 960f
+private const val RING_WIDTH = 70f / 960f
+private const val DIM_PIECE_WIDTH_RATIO = 0.6f
+private const val DIM_PIECE_ALPHA = 0.45f
+private const val MAX_PIECE_GAP_DEGREES = 26f
+private const val PIECE_GAP_RATIO = 0.3f
 
 private val IndicatorModifier = Modifier
     .size(IndicatorSize)
