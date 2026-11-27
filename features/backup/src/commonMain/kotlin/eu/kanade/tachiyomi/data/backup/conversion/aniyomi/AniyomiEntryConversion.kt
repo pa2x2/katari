@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.conversion.aniyomi
 
+import eu.kanade.tachiyomi.data.backup.conversion.CustomInfo
 import eu.kanade.tachiyomi.data.backup.conversion.validMemo
 import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
@@ -17,6 +18,7 @@ internal fun AniyomiAnime.toBackupEntry(source: Long, categories: List<Long>): B
         source = source,
         url = url,
         title = title,
+        displayName = customInfo.displayName,
         artist = artist,
         author = author,
         description = description,
@@ -31,7 +33,11 @@ internal fun AniyomiAnime.toBackupEntry(source: Long, categories: List<Long>): B
         history = history,
         updateStrategy = updateStrategy,
         favoriteModifiedAt = favoriteModifiedAt,
+        excludedScanlators = excludedScanlators + animiruExcludedScanlators,
+        notes = notes,
+        initialized = initialized,
         memo = memo.validMemo(),
+        nextUpdate = nextUpdate,
         backgroundUrl = backgroundUrl,
         type = EntryType.ANIME,
         progressStates = episodes.mapNotNull { episode ->
@@ -45,6 +51,18 @@ internal fun AniyomiAnime.toBackupEntry(source: Long, categories: List<Long>): B
         },
     )
 }
+
+/** The custom info Animetail, Anikku and Animiru keep, each at its own field numbers. */
+internal val AniyomiAnime.customInfo: CustomInfo
+    get() = CustomInfo(
+        title = customTitle ?: animiruCustomTitle,
+        artist = customArtist ?: animiruCustomArtist,
+        author = customAuthor ?: animiruCustomAuthor,
+        description = customDescription ?: animiruCustomDescription,
+        genre = customGenre ?: animiruCustomGenre,
+        status = customStatus ?: animiruCustomStatus,
+        cover = customThumbnailUrl,
+    )
 
 /** Whether the anime holds watching state worth carrying even outside the library. */
 internal val AniyomiAnime.hasProgress: Boolean

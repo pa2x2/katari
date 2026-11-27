@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.conversion
 
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.data.backup.models.BackupSource
 
 /**
  * What a conversion brought into the Katari backup and what it left behind, one row per kind of data. A kind the
@@ -56,3 +57,10 @@ data class ConversionReport(val rows: List<Row>) {
         APP_SPECIFIC,
     }
 }
+
+/**
+ * How the report names a source: by its name, or by its id where the backup has none, as TachiyomiSY and Aniyomi write a
+ * source whose extension isn't installed. Katari's restore names such a source by its id too.
+ */
+internal val BackupSource.reportName: String
+    get() = name.ifEmpty { sourceId.toString() }

@@ -4,10 +4,12 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Kind
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
+import eu.kanade.tachiyomi.data.backup.conversion.CustomInfoReport
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.hasProgress
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.isStore
+import eu.kanade.tachiyomi.data.backup.conversion.reportName
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
@@ -21,6 +23,7 @@ internal class AniyomiConversionReport {
     private val progress = linkedMapOf<EntryKey, String>()
     private val tracked = linkedMapOf<EntryKey, String>()
     private val skipIntroLengths = linkedMapOf<EntryKey, String>()
+    private val customInfo = CustomInfoReport<EntryKey>()
     private val mangaSources = hashSetOf<Long>()
     private val animeSources = hashSetOf<Long>()
 
@@ -34,10 +37,12 @@ internal class AniyomiConversionReport {
 
     fun add(anime: AniyomiAnime) {
         val key = EntryKey(EntryType.ANIME, anime.source, anime.url)
-        if (anime.favorite) library[key] = anime.title
-        if (anime.hasProgress) progress[key] = anime.title
-        if (anime.tracking.isNotEmpty()) tracked[key] = anime.title
-        if (anime.hasSkipIntroLength) skipIntroLengths[key] = anime.title
+        val title = anime.customInfo.displayName ?: anime.title
+        if (anime.favorite) library[key] = title
+        if (anime.hasProgress) progress[key] = title
+        if (anime.tracking.isNotEmpty()) tracked[key] = title
+        if (anime.hasSkipIntroLength) skipIntroLengths[key] = title
+        customInfo.add(key, title, anime.customInfo)
         animeSources += anime.source
     }
 
@@ -54,6 +59,7 @@ internal class AniyomiConversionReport {
                     Kind.MERGED_ENTRIES,
                     carried = seasons.parentTitles.map { Item(it, MR.strings.backup_conversion_seasons) },
                 ),
+                customInfo.row(),
                 Row.of(
                     Kind.EXTENSION_STORES,
                     carried = stores.map { Item(it.name) },
@@ -63,7 +69,7 @@ internal class AniyomiConversionReport {
                     Kind.INSTALLED_EXTENSIONS,
                     leftBehind = extensions
                         .filter { it.sourceId != LOCAL_SOURCE_ID }
-                        .map { Item(it.name, MR.strings.backup_conversion_install_from_store) },
+                        .map { Item(it.reportName, MR.strings.backup_conversion_install_from_store) },
                 ),
                 Row.of(
                     Kind.TRACKERS,

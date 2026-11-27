@@ -109,9 +109,33 @@ internal class AniyomiAnime(
     @ProtoNumber(104) val history: List<BackupHistory> = emptyList(),
     @ProtoNumber(105) val updateStrategy: EntryUpdateStrategy = EntryUpdateStrategy.ALWAYS_UPDATE,
     @ProtoNumber(107) val favoriteModifiedAt: Long? = null,
+    /** Anikku's. */
+    @ProtoNumber(108) val excludedScanlators: List<String> = emptyList(),
+    /** Animetail's, Anikku's and Animiru's. */
+    @ProtoNumber(110) val notes: String = "",
+    /** Anikku's and Animiru's. */
+    @ProtoNumber(111) val initialized: Boolean = false,
     /** In Aniyomi 0.18.2 and later. */
     @ProtoNumber(112) val memo: ByteArray = JsonObjectEmptyBytes,
+    /** Animiru's, epoch millis. */
+    @ProtoNumber(113) val nextUpdate: Long = 0,
+    // Animiru keeps its custom info and excluded scanlators at 200-206, Animetail and Anikku theirs at 602-603 and 800-805
+    @ProtoNumber(200) val animiruCustomStatus: Int? = null,
+    @ProtoNumber(201) val animiruCustomTitle: String? = null,
+    @ProtoNumber(202) val animiruCustomArtist: String? = null,
+    @ProtoNumber(203) val animiruCustomAuthor: String? = null,
+    @ProtoNumber(204) val animiruCustomDescription: String? = null,
+    @ProtoNumber(205) val animiruCustomGenre: List<String>? = null,
+    @ProtoNumber(206) val animiruExcludedScanlators: List<String> = emptyList(),
     @ProtoNumber(500) val backgroundUrl: String? = null,
+    @ProtoNumber(602) val customStatus: Int? = null,
+    /** Anikku's. */
+    @ProtoNumber(603) val customThumbnailUrl: String? = null,
+    @ProtoNumber(800) val customTitle: String? = null,
+    @ProtoNumber(801) val customArtist: String? = null,
+    @ProtoNumber(802) val customAuthor: String? = null,
+    @ProtoNumber(804) val customDescription: String? = null,
+    @ProtoNumber(805) val customGenre: List<String>? = null,
 )
 
 @Serializable

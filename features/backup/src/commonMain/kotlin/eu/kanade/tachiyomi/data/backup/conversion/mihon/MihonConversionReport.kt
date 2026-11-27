@@ -5,6 +5,8 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Kind
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
+import eu.kanade.tachiyomi.data.backup.conversion.CustomInfoReport
+import eu.kanade.tachiyomi.data.backup.conversion.reportName
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
 
@@ -16,8 +18,7 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
     private val library = linkedMapOf<EntryKey, String>()
     private val progress = linkedMapOf<EntryKey, String>()
     private val tracked = linkedMapOf<EntryKey, String>()
-    private val customTitles = linkedMapOf<EntryKey, String>()
-    private val customInfoLeftBehind = linkedMapOf<EntryKey, List<Item>>()
+    private val customInfo = CustomInfoReport<EntryKey>()
     private val searchMetadata = linkedMapOf<EntryKey, String>()
     private val clientData = linkedMapOf<EntryKey, String>()
     private val entrySources = hashSetOf<Long>()
@@ -29,10 +30,7 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
         if (manga.favorite && !merges.isMember(manga)) library[key] = title
         if (manga.hasProgress) progress[key] = title
         if (manga.tracking.isNotEmpty()) tracked[key] = title
-        if (manga.customTitle != null) customTitles[key] = title
-        manga.customInfoLeftBehind.takeIf { it.isNotEmpty() }?.let { notes ->
-            customInfoLeftBehind[key] = notes.map { Item(title, it) }
-        }
+        customInfo.add(key, title, manga.customInfo)
         if (manga.flatMetadata != null) searchMetadata[key] = title
         if (manga.hasSuwayomiMeta) clientData[key] = title
         if (!merges.isMergedEntry(manga)) entrySources += manga.source
@@ -45,7 +43,7 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
         savedSearches: ConvertedSavedSearches,
     ): ConversionReport {
         val (stores, repos) = backup.extensionSources.partition { it.isStore }
-        val sourceNames = backup.sources.associate { it.sourceId to it.name }
+        val sourceNames = backup.sources.associate { it.sourceId to it.reportName }
         val extensions = backup.sources.filter { it.sourceId in entrySources && it.sourceId != LOCAL_SOURCE_ID }
         return ConversionReport(
             listOfNotNull(
@@ -57,11 +55,7 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
                     carried = merges.merges.map { Item(it.title) },
                     leftBehind = merges.merges.flatMap { it.leftBehind() },
                 ),
-                Row.of(
-                    Kind.CUSTOM_INFO,
-                    carried = customTitles.values.map { Item(it, MR.strings.backup_conversion_custom_title) },
-                    leftBehind = customInfoLeftBehind.values.flatten(),
-                ),
+                customInfo.row(),
                 Row.of(
                     Kind.APP_SETTINGS,
                     carried = settings.carried,
@@ -81,7 +75,9 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
                 ),
                 Row.of(
                     Kind.INSTALLED_EXTENSIONS,
-                    leftBehind = extensions.map { Item(it.name, MR.strings.backup_conversion_install_from_store) },
+                    leftBehind = extensions.map {
+                        Item(it.reportName, MR.strings.backup_conversion_install_from_store)
+                    },
                 ),
                 Row.of(
                     Kind.TRACKERS,
