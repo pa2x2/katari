@@ -27,6 +27,8 @@ import java.util.zip.ZipInputStream
 class LnReaderBackupFormat(private val json: Json) : BackupFormat {
     override val appName = "LNReader"
 
+    override val fileReads = 2
+
     override val relatedAppNames = emptyList<String>()
 
     override fun recognizes(contents: BackupFileContents): Boolean =

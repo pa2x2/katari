@@ -1615,6 +1615,9 @@
     <string name="backup_conversion_unsupported">No app Katari reads wrote this file. If you know which app did, pick it with Change.</string>
     <string name="backup_conversion_convert">Convert</string>
     <string name="backup_conversion_converting">Converting</string>
+    <string name="backup_conversion_reading">Reading the file</string>
+    <string name="backup_conversion_reading_why">To tell which app made it</string>
+    <string name="backup_conversion_converting_amount">%1$s · %2$s</string>
     <string name="backup_conversion_failed">Converting failed: %1$s</string>
     <string name="backup_conversion_what_comes_over">What comes over</string>
     <string name="backup_conversion_save">Save as Katari backup</string>
@@ -1944,6 +1947,9 @@
     <string name="restore_profile_merge">Merges into this device\'s profile</string>
     <string name="restore_profile_locked">Locked on this device, asks to unlock</string>
     <string name="restore_into">Restore into</string>
+    <string name="restore_reading_backup">Reading the backup</string>
+    <string name="restore_checking_extensions">Checking which extensions these titles need</string>
+    <string name="backup_read_amount">%1$s of %2$s</string>
     <string name="restore_into_profile_in_use">The profile in use</string>
     <string name="restore_into_new_profile">New profile</string>
     <string name="restore_into_new_profile_named">New profile “%1$s”</string>

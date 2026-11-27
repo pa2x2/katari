@@ -4,10 +4,13 @@ import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocument
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocuments
+import eu.kanade.tachiyomi.data.backup.storage.BackupReadCounter
+import eu.kanade.tachiyomi.data.backup.storage.BackupReadProgress
 import eu.kanade.tachiyomi.data.backup.storage.BackupWorkingFiles
 import eu.kanade.tachiyomi.data.backup.stream.BackupContainer
 import eu.kanade.tachiyomi.data.backup.stream.BackupLayout
 import eu.kanade.tachiyomi.data.backup.stream.BackupWriter
+import eu.kanade.tachiyomi.data.backup.stream.ProtoInput
 import eu.kanade.tachiyomi.data.backup.stream.protobuf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -49,9 +52,19 @@ class BackupConverter(
         readable { documents.describe(uri) }
     }
 
-    /** Which app wrote the backup at [uri], read to its end. Throws for a file that is damaged or old JSON. */
-    suspend fun identify(uri: DocumentUri): BackupIdentity = withContext(Dispatchers.IO) {
-        val contents = readable { documents.read(uri).buffer().use(::readBackupFileContents) }
+    /**
+     * Which app wrote the backup at [uri], telling [onProgress] how far reading it has got. Another app's backup is read
+     * to its end, and throws when it is damaged or old JSON. A Katari backup is told from its first field, as Katari
+     * writes a backup's profiles or entries before anything else; restoring it reads it to its end, which finds any
+     * damage after that.
+     */
+    suspend fun identify(
+        uri: DocumentUri,
+        onProgress: (BackupReadProgress) -> Unit,
+    ): BackupIdentity = withContext(Dispatchers.IO) {
+        if (readable { startsAsKatari(uri) }) return@withContext BackupIdentity.Katari
+        val counter = BackupReadCounter(documents.describe(uri).size, reads = 1, onProgress)
+        val contents = readable { counter.counted(documents.read(uri)).buffer().use(::readBackupFileContents) }
         if (contents == BackupFileContents.Json) {
             throw IOException(context.stringResource(MR.strings.invalid_backup_file_json))
         }
@@ -67,20 +80,30 @@ class BackupConverter(
     }
 
     /**
-     * Converts the backup at [uri] as [app]'s into a Katari backup in the app's cache. The file stays until the next
-     * conversion, so a restore started from it can read it to the end.
+     * Converts the backup at [uri] as [app]'s into a Katari backup in the app's cache, telling [onProgress] how far it
+     * has got. The file stays until the next conversion, so a restore started from it can read it to the end. It isn't
+     * compressed: it is read once more by the restore and then deleted, and [save] compresses the copy it keeps.
      */
-    suspend fun convert(uri: DocumentUri, app: BackupApp): ConvertedBackup = withContext(Dispatchers.IO) {
+    suspend fun convert(
+        uri: DocumentUri,
+        app: BackupApp,
+        onProgress: (BackupReadProgress) -> Unit,
+    ): ConvertedBackup = withContext(Dispatchers.IO) {
         val format = app.format
         val file = newConvertedFile()
         try {
-            val content = file.sink().gzip().buffer().use { sink ->
+            val content = file.sink().buffer().use { sink ->
                 val writer = BackupWriter(sink, parser, workingFiles.scratchDirectory)
+                val counter = BackupReadCounter(documents.describe(uri).size, format.fileReads, onProgress)
                 val content = readable {
                     val open = {
-                        documents.read(uri).buffer().let { source -> BackupContainer.of(source).protobuf(source) }
+                        counter.counted(documents.read(uri)).buffer()
+                            .let { source -> BackupContainer.of(source).protobuf(source) }
                     }
-                    format.convert(open, writer::writeEntry)
+                    format.convert(open) { entry ->
+                        writer.writeEntry(entry)
+                        counter.countEntry()
+                    }
                 }
                 writer.writeMetadata(content.metadata.copy(convertedFrom = app.name))
                 content
@@ -92,10 +115,19 @@ class BackupConverter(
         }
     }
 
-    /** Copies [converted] to [to], a file the user picked to keep it in. */
+    /** Copies [converted] to [to], a file the user picked to keep it in, gzipped as every Katari backup is. */
     suspend fun save(converted: ConvertedBackup, to: DocumentUri) = withContext(Dispatchers.IO) {
         documents.read(converted.uri).buffer().use { source ->
-            documents.write(to).buffer().use { it.writeAll(source) }
+            documents.write(to).gzip().buffer().use { it.writeAll(source) }
+        }
+    }
+
+    // Katari writes a backup's profiles or entries before anything else
+    private fun startsAsKatari(uri: DocumentUri): Boolean = documents.read(uri).buffer().use { source ->
+        val container = BackupContainer.of(source)
+        val protobuf = container == BackupContainer.GZIP || container == BackupContainer.RAW
+        protobuf && container.protobuf(source).let { content ->
+            !content.exhausted() && (ProtoInput(content).readTag() ushr 3).toInt() in BackupLayout.KATARI_FIELD_NUMBERS
         }
     }
 

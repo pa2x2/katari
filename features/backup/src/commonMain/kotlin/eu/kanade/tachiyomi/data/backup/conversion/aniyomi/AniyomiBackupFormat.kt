@@ -37,6 +37,8 @@ class AniyomiBackupFormat(
 ) : BackupFormat {
     override val appName = "Aniyomi"
 
+    override val fileReads = 3
+
     override val relatedAppNames = listOf("Animetail", "Anikku", "Animiru")
 
     // Manga alone is Mihon's layout, so a backup is Aniyomi's by its anime part
@@ -50,10 +52,10 @@ class AniyomiBackupFormat(
         writeEntry: (BackupEntry) -> Unit,
     ): BackupFormat.ConvertedContent {
         val layout = open().use(AniyomiLayout::of)
-        // Anikku's merged anime can come after their members, which are written with their merge
-        val merges = open().use { MihonMerges.read(it, parser, layout.animeTag, EntryType.ANIME) }
-        // Entries name sources, categories and parents that come after them, so everything else is read first
+        // Entries name sources, categories and parents that come after them, and Anikku's merged anime can come after
+        // their members, which are written with their merge: everything else, and the merges, are read first
         val rest = Buffer()
+        val mergeCollector = MihonMerges.Collector(parser, EntryType.ANIME)
         val mangaSourceIds = hashSetOf<Long>()
         val seasonInfos = mutableListOf<AniyomiSeasonInfo>()
         var extensionApks = 0
@@ -62,7 +64,11 @@ class AniyomiBackupFormat(
             while (!input.exhausted()) {
                 when (val tag = input.readTag()) {
                     MANGA_TAG -> mangaSourceIds += input.readEntry(AniyomiEntrySource.serializer()).source
-                    layout.animeTag -> seasonInfos += input.readEntry(AniyomiSeasonInfo.serializer())
+                    layout.animeTag -> {
+                        val anime = input.readByteArray(input.readLength())
+                        seasonInfos += parser.decodeBackup(AniyomiSeasonInfo.serializer(), anime)
+                        mergeCollector.add(anime)
+                    }
                     // Extension APKs are left behind, and holding them would take the whole of each
                     layout.extensionApkTag -> {
                         input.skipField(tag)
@@ -72,6 +78,7 @@ class AniyomiBackupFormat(
                 }
             }
         }
+        val merges = mergeCollector.build()
         val backup = layout.decode(parser, rest.readByteArray())
         val mergedCategories = ConvertedCategories(backup.mangaCategories, backup.animeCategories)
         val seasons = AniyomiSeasons(seasonInfos)

@@ -23,12 +23,16 @@ import app.katari.missingextensions.model.MissingExtension
 import app.katari.missingextensions.restore.BackupMissingExtensions
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.CheckRow
 import app.katari.presentation.kit.list.RowGroupNote
+import app.katari.presentation.kit.list.SettingsRow
+import app.katari.presentation.kit.list.rowGroupItems
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.progress.LoadingIndicator
 import app.katari.presentation.kit.surface.GroupCard
 import app.katari.presentation.kit.surface.NoticeCard
 import app.katari.presentation.kit.surface.NoticeTone
@@ -57,6 +61,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.conversion.BackupConverter
 import eu.kanade.tachiyomi.data.backup.conversion.BackupIdentity
+import eu.kanade.tachiyomi.data.backup.storage.BackupReadProgress
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -130,6 +135,19 @@ class RestoreBackupScreen(
                 }
             },
         ) { contentPadding ->
+            if (state.reading) {
+                // D102
+                val progress = state.readProgress
+                LoadingScreen(
+                    modifier = Modifier.padding(contentPadding),
+                    message = listOfNotNull(
+                        stringResource(MR.strings.restore_reading_backup),
+                        progress?.let { backupReadAmount(it) },
+                    ).joinToString("\n"),
+                    progress = progress?.let { { it.fraction } },
+                )
+                return@Scaffold
+            }
             RowList(contentPadding = contentPadding) {
                 if (backupSystemWarning.applies) {
                     item {
@@ -208,6 +226,15 @@ class RestoreBackupScreen(
                                     )
                                 }
                             },
+                        )
+                    }
+                }
+
+                if (state.checkingExtensions) {
+                    rowGroupItems(listOf(Unit), key = { "checking-extensions" }) {
+                        SettingsRow(
+                            title = stringResource(MR.strings.restore_checking_extensions),
+                            leading = { LoadingIndicator() },
                         )
                     }
                 }
@@ -438,19 +465,25 @@ internal class RestoreBackupViewModel(
     }
 
     private suspend fun validate(uri: DocumentUri) {
+        val onProgress = { progress: BackupReadProgress -> state.update { it.copy(readProgress = progress) } }
         val identity = try {
-            backupConverter.identify(uri)
+            backupConverter.identify(uri, onProgress)
         } catch (e: Exception) {
+            state.update { it.copy(reading = false) }
             setError(error = InvalidRestore(uri, e.message.toString()), canRestore = false)
             return
         }
-        state.update { it.copy(identity = identity) }
         // Restore reads Katari backups only; another app's is brought over through the tool (D002)
-        if (identity != BackupIdentity.Katari) return
+        if (identity != BackupIdentity.Katari) {
+            state.update { it.copy(identity = identity, reading = false) }
+            return
+        }
+        state.update { it.copy(identity = identity, readProgress = null) }
 
         val results = try {
-            backupFileValidator.validate(uri)
+            backupFileValidator.validate(uri, onProgress)
         } catch (e: Exception) {
+            state.update { it.copy(reading = false) }
             setError(
                 error = InvalidRestore(uri, e.message.toString()),
                 canRestore = false,
@@ -485,22 +518,24 @@ internal class RestoreBackupViewModel(
                 )
             }
         }
+        // The options show once the file is read; the extension check only fills the note under them (D103)
         state.update {
             it.copy(
+                reading = false,
                 profiles = profiles,
                 selectedProfileUuids = allUuids,
                 createdAt = results.createdAt,
                 into = into,
+                checkingExtensions = results.missingSources.isNotEmpty(),
             )
         }
+        setError(error = null, canRestore = true)
 
         if (results.missingSources.isNotEmpty()) {
             missingExtensions = backupMissingExtensions.check(results.missingSources, results.extensionStores)
+            state.update { it.copy(checkingExtensions = false) }
             showMissingExtensions()
-            return
         }
-
-        setError(error = null, canRestore = true)
     }
 
     private fun setError(error: Any?, canRestore: Boolean) {
@@ -527,6 +562,12 @@ internal class RestoreBackupViewModel(
         val into: RestoreInto? = null,
         /** Which app wrote the file; null until it's read. Only a Katari backup restores here. */
         val identity: BackupIdentity? = null,
+        /** Whether the file is still being read, which the options wait for. */
+        val reading: Boolean = true,
+        /** How far reading the file has got; null before the first count or when its size isn't known. */
+        val readProgress: BackupReadProgress? = null,
+        /** Whether the stores' lists are still being read for the extensions the backup's titles need. */
+        val checkingExtensions: Boolean = false,
     ) {
         val lockedSelectedProfileNames: List<String>
             get() = profiles

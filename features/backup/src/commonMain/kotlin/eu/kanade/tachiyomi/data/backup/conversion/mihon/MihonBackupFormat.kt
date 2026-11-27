@@ -28,6 +28,8 @@ class MihonBackupFormat(
 ) : BackupFormat {
     override val appName = "Mihon"
 
+    override val fileReads = 2
+
     override val relatedAppNames = listOf("TachiyomiSY", "Komikku", "TachiyomiJ2K", "Yōkai", "Suwayomi", "Tachiyomi")
 
     // A field outside the family's means another app wrote the file, such as Aniyomi's anime at 3 or 500 and up
@@ -38,17 +40,22 @@ class MihonBackupFormat(
         open: () -> BufferedSource,
         writeEntry: (BackupEntry) -> Unit,
     ): BackupFormat.ConvertedContent {
-        // Merged entries can come after their members, which are written with their merge
-        val merges = open().use { MihonMerges.read(it, parser) }
-        // Categories come after the entries that name them, so everything but the entries is read first
+        // Categories come after the entries that name them, and merged entries can come after their members, which are
+        // written with their merge: everything but the entries, and the merges among them, are read first
         val rest = Buffer()
+        val mergeCollector = MihonMerges.Collector(parser)
         open().use { content ->
             val input = ProtoInput(content)
             while (!input.exhausted()) {
                 val tag = input.readTag()
-                if (tag == ENTRY_TAG) input.skipField(tag) else input.copyField(tag, rest)
+                if (tag == ENTRY_TAG) {
+                    mergeCollector.add(input.readByteArray(input.readLength()))
+                } else {
+                    input.copyField(tag, rest)
+                }
             }
         }
+        val merges = mergeCollector.build()
         val backup = parser.decodeBackup(MihonBackup.serializer(), rest.readByteArray())
         val categories = ConvertedCategories(backup.categories)
         val report = MihonConversionReport(merges)

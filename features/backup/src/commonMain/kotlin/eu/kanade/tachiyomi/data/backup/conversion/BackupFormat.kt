@@ -24,9 +24,15 @@ interface BackupFormat {
     fun recognizes(contents: BackupFileContents): Boolean
 
     /**
+     * How many times [convert] calls its `open`: the bar of how far converting has got shares the file's size out
+     * between the reads.
+     */
+    val fileReads: Int
+
+    /**
      * Converts the backup, handing each Katari entry to [writeEntry] as soon as it is complete. [open] reads the backup
-     * from its start, gunzipped where the file was gzipped, as often as the format needs to, and the format closes what
-     * it opens. Throws when the content isn't a backup of this format after all.
+     * from its start, gunzipped where the file was gzipped, [fileReads] times, and the format closes what it opens.
+     * Throws when the content isn't a backup of this format after all.
      */
     suspend fun convert(open: () -> BufferedSource, writeEntry: (BackupEntry) -> Unit): ConvertedContent
 

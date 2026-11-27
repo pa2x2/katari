@@ -2,14 +2,11 @@ package eu.kanade.tachiyomi.data.backup.conversion.mihon
 
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
-import eu.kanade.tachiyomi.data.backup.stream.ProtoInput
 import eu.kanade.tachiyomi.data.backup.stream.decodeBackup
-import eu.kanade.tachiyomi.data.backup.stream.lengthDelimitedTag
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.protobuf.ProtoNumber
-import okio.BufferedSource
 import tachiyomi.domain.library.update.model.EntryUpdateMode
 import tachiyomi.i18n.*
 
@@ -81,39 +78,31 @@ internal class MihonMerges private constructor(
         if (member.updatesOff) entry.updateMode = EntryUpdateMode.NEVER.name.lowercase()
     }
 
+    /**
+     * Collects the merges among the entries of [type] from their encoded entries, one at a time and in any order;
+     * [build] gives the merges once every entry has been added.
+     */
+    class Collector(private val parser: ProtoBuf, private val type: EntryType = EntryType.MANGA) {
+        private val members = mutableMapOf<EntryKey, Member>()
+        private val merges = mutableListOf<Merge>()
+        private val seen = hashSetOf<String>()
+
+        fun add(entry: ByteArray) {
+            val merged = parser.decodeBackup(MergedEntry.serializer(), entry)
+            // TachiyomiSY writes each merged entry twice
+            if (merged.source != MERGED_SOURCE_ID || !seen.add(merged.url)) return
+            merges += merged.plan(members)
+        }
+
+        fun build() = MihonMerges(members, merges, type)
+    }
+
     companion object {
         /** TachiyomiSY's merged source (exh.source.SourceIds.MERGED_SOURCE_ID), which Komikku keeps. */
         const val MERGED_SOURCE_ID = 6969L
 
         /** TachiyomiSY's built-in E-Hentai and ExHentai. */
         private val BUILT_IN_SOURCE_IDS = setOf(6901L, 6902L)
-
-        private val ENTRY_TAG = lengthDelimitedTag(1)
-
-        /** The merges among the entries of [type] that [content] holds at [entryTag]. */
-        fun read(
-            content: BufferedSource,
-            parser: ProtoBuf,
-            entryTag: Long = ENTRY_TAG,
-            type: EntryType = EntryType.MANGA,
-        ): MihonMerges {
-            val members = mutableMapOf<EntryKey, Member>()
-            val merges = mutableListOf<Merge>()
-            val seen = hashSetOf<String>()
-            val input = ProtoInput(content)
-            while (!input.exhausted()) {
-                val tag = input.readTag()
-                if (tag != entryTag) {
-                    input.skipField(tag)
-                    continue
-                }
-                val entry = parser.decodeBackup(MergedEntry.serializer(), input.readByteArray(input.readLength()))
-                // TachiyomiSY writes each merged entry twice
-                if (entry.source != MERGED_SOURCE_ID || !seen.add(entry.url)) continue
-                merges += entry.plan(members)
-            }
-            return MihonMerges(members, merges, type)
-        }
 
         private fun MergedEntry.plan(members: MutableMap<EntryKey, Member>): Merge {
             val (builtIn, titles) = references

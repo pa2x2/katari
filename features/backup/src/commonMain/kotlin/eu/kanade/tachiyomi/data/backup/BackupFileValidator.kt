@@ -4,6 +4,7 @@ import app.katari.domain.extension.model.ExtensionStore
 import app.katari.profiles.core.ProfileBackup
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.toExtensionStore
+import eu.kanade.tachiyomi.data.backup.storage.BackupReadProgress
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.CancellationException
 import tachiyomi.domain.source.identity.SourceIdentity
@@ -20,10 +21,13 @@ class BackupFileValidator(
     private val sourceIdentities: SourceIdentityRepository,
 ) {
 
-    /** Checks for critical backup file data, such as the sources its entries need that aren't installed. */
-    suspend fun validate(uri: DocumentUri): Results {
+    /**
+     * Checks for critical backup file data, such as the sources its entries need that aren't installed, telling
+     * [onProgress] how far reading the file has got.
+     */
+    suspend fun validate(uri: DocumentUri, onProgress: (BackupReadProgress) -> Unit = {}): Results {
         val summary = try {
-            backupDecoder.summarize(uri)
+            backupDecoder.summarize(uri, onProgress)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

@@ -591,6 +591,10 @@
         <item quantity="one">%1$s uninstalled %2$d extension this device still has. Uninstall it here too?</item>
         <item quantity="other">%1$s uninstalled %2$d extensions this device still has. Uninstall them here too?</item>
     </plurals>
+    <plurals name="backup_conversion_entries_so_far">
+        <item quantity="one">%d entry so far</item>
+        <item quantity="other">%d entries so far</item>
+    </plurals>
     <plurals name="backup_conversion_entry_summary">
         <item quantity="one">Backups of %1$s and the apps built on it</item>
         <item quantity="other">Backups of %1$s and the apps built on them</item>

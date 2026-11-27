@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.data.backup.conversion.BackupIdentity
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport
 import eu.kanade.tachiyomi.data.backup.conversion.ConvertedBackup
 import eu.kanade.tachiyomi.data.backup.create.BackupFileNames
+import eu.kanade.tachiyomi.data.backup.storage.BackupReadProgress
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,7 +60,10 @@ internal class BringOverViewModel(
             val document = runCatching { converter.describe(uri) }.getOrNull()
             state.update { it.copy(file = ChosenFile(uri, document?.name, document?.size)) }
             val finding = try {
-                when (val identity = converter.identify(uri)) {
+                val onProgress = { progress: BackupReadProgress ->
+                    state.update { if (it.finding == Finding.Reading) it.copy(progress = progress) else it }
+                }
+                when (val identity = converter.identify(uri, onProgress)) {
                     BackupIdentity.Katari -> Finding.Katari
                     BackupIdentity.Unsupported -> Finding.Unsupported
                     is BackupIdentity.Foreign -> Finding.Fits(identity.apps)
@@ -70,7 +74,7 @@ internal class BringOverViewModel(
                 Finding.Unreadable(e.message.orEmpty())
             }
             val app = (finding as? Finding.Fits)?.apps?.singleOrNull()
-            state.update { it.copy(finding = finding, app = app, appDetected = app != null) }
+            state.update { it.copy(finding = finding, app = app, appDetected = app != null, progress = null) }
         }
     }
 
@@ -79,7 +83,13 @@ internal class BringOverViewModel(
         work?.cancel()
         state.update {
             val detected = (it.finding as? Finding.Fits)?.apps?.singleOrNull() == app
-            it.copy(app = app, appDetected = detected, conversion = Conversion.Idle, expanded = emptySet())
+            it.copy(
+                app = app,
+                appDetected = detected,
+                conversion = Conversion.Idle,
+                expanded = emptySet(),
+                progress = null,
+            )
         }
     }
 
@@ -87,16 +97,19 @@ internal class BringOverViewModel(
         val current = state.value
         val file = current.file ?: return
         val app = current.app ?: return
-        state.update { it.copy(conversion = Conversion.Running) }
+        state.update { it.copy(conversion = Conversion.Running, progress = null) }
         step {
+            val onProgress = { progress: BackupReadProgress ->
+                state.update { if (it.conversion == Conversion.Running) it.copy(progress = progress) else it }
+            }
             val conversion = try {
-                Conversion.Done(converter.convert(file.uri, app))
+                Conversion.Done(converter.convert(file.uri, app, onProgress))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Conversion.Failed(e.message.orEmpty())
             }
-            state.update { it.copy(conversion = conversion) }
+            state.update { it.copy(conversion = conversion, progress = null) }
         }
     }
 
@@ -137,6 +150,8 @@ internal class BringOverViewModel(
         val conversion: Conversion = Conversion.Idle,
         /** The report rows opened to their lists, kept here so they stay open as the window changes. */
         val expanded: Set<ConversionReport.Kind> = emptySet(),
+        /** How far reading or converting the file has got; null before the first count or when it isn't known. */
+        val progress: BackupReadProgress? = null,
     )
 
     /** [name] and [size] (in bytes) are null while they're read or when the file's storage doesn't say. */

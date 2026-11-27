@@ -17,6 +17,8 @@ import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Description
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.feedback.StatusLine
 import app.katari.presentation.kit.feedback.rememberScreenMessages
 import app.katari.presentation.kit.files.DocumentPickerRequest
 import app.katari.presentation.kit.files.rememberDocumentPicker
@@ -30,22 +32,25 @@ import app.katari.presentation.kit.list.rowGroupItems
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
-import app.katari.presentation.kit.progress.LinearProgressIndicator
 import app.katari.presentation.kit.surface.NoticeCard
 import app.katari.presentation.kit.surface.NoticeTone
+import app.katari.presentation.kit.theme.TextRole
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
+import eu.kanade.presentation.more.settings.screen.data.backupReadAmount
 import eu.kanade.presentation.more.settings.screen.data.rememberBackupFilePicker
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.conversion.BackupApp
+import eu.kanade.tachiyomi.data.backup.storage.BackupReadProgress
 import kotlinx.coroutines.launch
 import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 import tachiyomi.presentation.core.i18n.fileSize
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
@@ -201,7 +206,8 @@ private fun LazyListScope.fileItems(
     val finding = state.finding
     val fits = (finding as? Finding.Fits)?.apps.orEmpty()
     val asking = fits.size > 1 && !fits.contains(state.app)
-    rowGroupItems(listOfNotNull("file", "app".takeIf { finding.offersApps && !asking }), key = { it }) { row ->
+    val appRow = (finding.offersApps && !asking) || finding == Finding.Reading
+    rowGroupItems(listOfNotNull("file", "app".takeIf { appRow }), key = { it }) { row ->
         when (row) {
             "file" -> SettingsRow(
                 title = file.name ?: file.uri.value,
@@ -209,27 +215,24 @@ private fun LazyListScope.fileItems(
                 icon = MaterialSymbols.Rounded.Description,
                 onClick = onChooseFile,
             )
-            else -> SettingsRow(
-                title = state.app?.name ?: stringResource(MR.strings.backup_conversion_no_app),
-                subtitle = when {
-                    state.app == null -> null
-                    state.appDetected -> stringResource(MR.strings.backup_conversion_detected)
-                    else -> stringResource(MR.strings.backup_conversion_chosen)
-                },
-                trailing = {
-                    Button(
-                        label = stringResource(MR.strings.backup_conversion_change),
-                        onClick = onChangeApp,
-                        style = ButtonStyle.Text,
-                    )
-                },
-            )
+            else -> if (finding == Finding.Reading) {
+                SettingsRow(
+                    title = stringResource(MR.strings.backup_conversion_reading),
+                    subtitle = stringResource(MR.strings.backup_conversion_reading_why),
+                    enabled = false,
+                )
+            } else {
+                AppRow(state, onChangeApp)
+            }
         }
     }
     item(key = "file-gap") { RowGroupGap() }
     when {
-        finding == Finding.Reading || state.conversion == Conversion.Running -> item(key = "working") {
-            LinearProgressIndicator()
+        finding == Finding.Reading -> item(key = "working") {
+            WorkingLine(stringResource(MR.strings.backup_conversion_reading), state.progress, entries = false)
+        }
+        state.conversion == Conversion.Running -> item(key = "working") {
+            WorkingLine(stringResource(MR.strings.backup_conversion_converting), state.progress, entries = true)
         }
         finding == Finding.Katari -> item(key = "katari") {
             NoticeCard(stringResource(MR.strings.backup_conversion_is_katari), NoticeTone.Info)
@@ -259,6 +262,50 @@ private fun LazyListScope.fileItems(
     (state.conversion as? Conversion.Failed)?.let { failed ->
         item(key = "failed") {
             NoticeCard(stringResource(MR.strings.backup_conversion_failed, failed.message), NoticeTone.Warning)
+        }
+    }
+}
+
+/** The app the file is converted as, and whether it was detected or picked; Change picks another. */
+@Composable
+private fun AppRow(state: BringOverViewModel.State, onChangeApp: () -> Unit) {
+    SettingsRow(
+        title = state.app?.name ?: stringResource(MR.strings.backup_conversion_no_app),
+        subtitle = when {
+            state.app == null -> null
+            state.appDetected -> stringResource(MR.strings.backup_conversion_detected)
+            else -> stringResource(MR.strings.backup_conversion_chosen)
+        },
+        trailing = {
+            Button(
+                label = stringResource(MR.strings.backup_conversion_change),
+                onClick = onChangeApp,
+                style = ButtonStyle.Text,
+            )
+        },
+    )
+}
+
+/**
+ * The step running on the file, how much of the file it has got through and, while converting, the entries so far
+ * (D104); a bar without figures until the first count, or where the file's storage doesn't say its size.
+ */
+@Composable
+private fun WorkingLine(step: String, progress: BackupReadProgress?, entries: Boolean) {
+    StatusLine(onClick = null, progress = progress?.let { { it.fraction } }) {
+        Text(step)
+        if (progress != null) {
+            val amount = backupReadAmount(progress)
+            val count = progress.entries
+            Text(
+                text = if (entries) {
+                    val soFar = pluralStringResource(MR.plurals.backup_conversion_entries_so_far, count, count)
+                    stringResource(MR.strings.backup_conversion_converting_amount, amount, soFar)
+                } else {
+                    amount
+                },
+                role = TextRole.Supporting,
+            )
         }
     }
 }
