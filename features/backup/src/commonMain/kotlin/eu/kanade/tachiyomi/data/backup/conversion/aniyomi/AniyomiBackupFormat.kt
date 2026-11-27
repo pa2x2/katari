@@ -56,6 +56,7 @@ class AniyomiBackupFormat(
         val rest = Buffer()
         val mangaSourceIds = hashSetOf<Long>()
         val seasonInfos = mutableListOf<AniyomiSeasonInfo>()
+        var extensionApks = 0
         open().use { content ->
             val input = ProtoInput(content)
             while (!input.exhausted()) {
@@ -63,7 +64,10 @@ class AniyomiBackupFormat(
                     MANGA_TAG -> mangaSourceIds += input.readEntry(AniyomiEntrySource.serializer()).source
                     layout.animeTag -> seasonInfos += input.readEntry(AniyomiSeasonInfo.serializer())
                     // Extension APKs are left behind, and holding them would take the whole of each
-                    layout.extensionApkTag -> input.skipField(tag)
+                    layout.extensionApkTag -> {
+                        input.skipField(tag)
+                        extensionApks++
+                    }
                     else -> input.copyField(tag, rest)
                 }
             }
@@ -140,7 +144,7 @@ class AniyomiBackupFormat(
         )
         return BackupFormat.ConvertedContent(
             metadata,
-            report.build(backup, mergedCategories, seasons, settings, savedSearches),
+            report.build(backup, mergedCategories, seasons, settings, savedSearches, extensionApks),
         )
     }
 

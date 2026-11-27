@@ -34,6 +34,7 @@ internal class AniyomiBackup(
     /** Anikku's, as Komikku keeps them. */
     val savedSearches: List<MihonSavedSearch>,
     val feeds: List<MihonFeed>,
+    val customButtons: List<AniyomiCustomButton>,
 )
 
 /** Aniyomi 0.18.1 and later: anime from field 501 on, marked by `isLegacy` at 500, which these always write as false. */
@@ -49,6 +50,7 @@ internal class AniyomiCurrentBackup(
     @ProtoNumber(503) val animeSources: List<BackupSource> = emptyList(),
     /** Aniyomi 0.18.2 and later write a store, 0.18.1 and Anikku a repo. */
     @ProtoNumber(505) val animeExtensionSources: List<MihonExtensionSource> = emptyList(),
+    @ProtoNumber(506) val customButtons: List<AniyomiCustomButton> = emptyList(),
     @ProtoNumber(600) val savedSearches: List<MihonSavedSearch> = emptyList(),
     @ProtoNumber(610) val feeds: List<MihonFeed> = emptyList(),
 ) {
@@ -62,6 +64,7 @@ internal class AniyomiCurrentBackup(
         extensionSources = mangaExtensionSources + animeExtensionSources,
         savedSearches = savedSearches,
         feeds = feeds,
+        customButtons = customButtons,
     )
 }
 
@@ -76,6 +79,7 @@ internal class AniyomiLegacyBackup(
     @ProtoNumber(105) val sourcePreferences: List<BackupSourcePreferences> = emptyList(),
     @ProtoNumber(107) val animeExtensionSources: List<MihonExtensionSource> = emptyList(),
     @ProtoNumber(108) val mangaExtensionSources: List<MihonExtensionSource> = emptyList(),
+    @ProtoNumber(109) val customButtons: List<AniyomiCustomButton> = emptyList(),
     @ProtoNumber(600) val savedSearches: List<MihonSavedSearch> = emptyList(),
     @ProtoNumber(610) val feeds: List<MihonFeed> = emptyList(),
 ) {
@@ -89,8 +93,13 @@ internal class AniyomiLegacyBackup(
         extensionSources = mangaExtensionSources + animeExtensionSources,
         savedSearches = savedSearches,
         feeds = feeds,
+        customButtons = customButtons,
     )
 }
+
+/** A button Aniyomi's video player shows, running the mpv Lua script the person wrote. */
+@Serializable
+internal class AniyomiCustomButton(@ProtoNumber(1) val name: String = "")
 
 /** An entry's source alone, read to learn every source key before any entry is written. */
 @Serializable

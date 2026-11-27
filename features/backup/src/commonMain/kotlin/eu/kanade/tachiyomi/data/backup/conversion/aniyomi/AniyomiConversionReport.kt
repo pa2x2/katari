@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.backup.conversion.aniyomi
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Kind
+import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
 import eu.kanade.tachiyomi.data.backup.conversion.ConvertedSettings
 import eu.kanade.tachiyomi.data.backup.conversion.CustomInfoReport
@@ -59,6 +60,7 @@ internal class AniyomiConversionReport(private val merges: MihonMerges) {
         seasons: AniyomiSeasons,
         settings: ConvertedSettings,
         savedSearches: ConvertedSavedSearches,
+        extensionApks: Int,
     ): ConversionReport {
         val (stores, repos) = backup.extensionSources.partition { it.isStore }
         val extensions = backup.mangaSources.filter { it.sourceId in mangaSources } +
@@ -93,7 +95,13 @@ internal class AniyomiConversionReport(private val merges: MihonMerges) {
                     Kind.INSTALLED_EXTENSIONS,
                     leftBehind = extensions
                         .filter { it.sourceId != LOCAL_SOURCE_ID }
-                        .map { Item(it.reportName, MR.strings.backup_conversion_install_from_store) },
+                        .map { Item(it.reportName, MR.strings.backup_conversion_install_from_store) } +
+                        listOfNotNull(
+                            Item(
+                                Name.Part(MR.strings.backup_conversion_extension_files),
+                                MR.strings.backup_conversion_install_from_store,
+                            ).takeIf { extensionApks > 0 },
+                        ),
                 ),
                 Row.of(
                     Kind.TRACKERS,
@@ -105,7 +113,8 @@ internal class AniyomiConversionReport(private val merges: MihonMerges) {
                     leftBehind = skipIntroLengths.values.map {
                         Item(it, MR.strings.backup_conversion_skip_intro_length)
                     } + seasons.changedViewTitles.map { Item(it, MR.strings.backup_conversion_season_view) } +
-                        audioLanguages.values,
+                        audioLanguages.values +
+                        backup.customButtons.map { Item(it.name, MR.strings.backup_conversion_custom_button) },
                 ),
             ),
         )
