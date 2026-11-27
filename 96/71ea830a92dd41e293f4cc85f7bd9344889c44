@@ -1,0 +1,19 @@
+app-ui/src/commonMain/kotlin/app/katari/backupconversion/ConversionReportRows.kt
+  s_0e279b045f255e::t_e5796b8437c045 21-23,42,59-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9671ea830a92dd41e293f4cc85f7bd9344889c44",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
