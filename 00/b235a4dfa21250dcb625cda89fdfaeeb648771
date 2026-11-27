@@ -1,0 +1,19 @@
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/updates/UpdatesViewModel.kt
+  s_b77ec5099f03b1::t_2bc7f78dfcbf81 480,579,590
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "00b235a4dfa21250dcb625cda89fdfaeeb648771",
+  "prompts": {},
+  "sessions": {
+    "s_b77ec5099f03b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e1a489e0-5890-4fe5-84a9-04ba2a37f53e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
