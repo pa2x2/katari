@@ -17,30 +17,25 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The first-run guide: how the person starts (new, from a backup, or from Mihon where [offersMihon]), that start's own
- * page, then appearance, storage, permissions, linking to a sync account, and the last page.
+ * The first-run guide: how the person starts (new, from a Katari backup, or from another app's), that start's own page,
+ * then appearance, storage, permissions, linking to a sync account, and the last page.
  */
 @Composable
-fun OnboardingScreen(
-    onComplete: () -> Unit,
-    offersMihon: Boolean,
-    onOpenMihon: () -> Unit,
-    onChooseMihonBackup: () -> Unit,
-) {
+fun OnboardingScreen(onComplete: () -> Unit) {
     val graph = LocalAppUiGraph.current
     var currentStep by rememberSaveable { mutableIntStateOf(0) }
     var start by rememberSaveable { mutableStateOf(OnboardingStart.New) }
-    val steps = remember(graph, start, offersMihon, onOpenMihon, onChooseMihonBackup) {
+    val steps = remember(graph, start) {
         val hasPermissionStep = graph.onboardingPermissions.isOffered || Telemetry.isIncluded
         listOfNotNull(
-            WelcomeStep(start = start, onStartChange = { start = it }, offersMihon = offersMihon),
+            WelcomeStep(start = start, onStartChange = { start = it }),
             when (start) {
                 OnboardingStart.New -> null
                 OnboardingStart.Backup -> RestoreStep()
-                OnboardingStart.Mihon -> MihonStep(onOpenMihon, onChooseMihonBackup)
+                OnboardingStart.OtherApp -> OtherAppStep()
             },
             ThemeStep(graph.uiPreferences, graph.appThemeHost),
-            StorageStep(graph.storagePreferences, migratingFromMihon = start == OnboardingStart.Mihon),
+            StorageStep(graph.storagePreferences),
             PermissionStep(
                 permissions = graph.onboardingPermissions,
                 privacyPreferences = graph.privacyPreferences,

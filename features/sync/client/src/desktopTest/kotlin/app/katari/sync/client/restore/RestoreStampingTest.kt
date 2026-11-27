@@ -68,7 +68,9 @@ class RestoreStampingTest {
             SyncingTestDevice(directory.resolve("a.db")).use { a ->
                 SyncingTestDevice(directory.resolve("b.db")).use { b ->
                     a.join(server, account)
-                    a.sql("INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'work', 'Work', 1, 1)")
+                    a.sql(
+                        "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'work', 'Work', 1, 1)",
+                    )
                     a.displayMode(profileId = 2).set("list")
                     a.sync() shouldBe SyncOutcome.SYNCED
                     a.sql("DELETE FROM profiles WHERE uuid = 'work'")
@@ -76,7 +78,9 @@ class RestoreStampingTest {
                     a.sync() shouldBe SyncOutcome.SYNCED
 
                     // SQLite gives the next profile the deleted one's id, which the deleted profile's records still hold
-                    a.sql("INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'home', 'Home', 1, 1)")
+                    a.sql(
+                        "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'home', 'Home', 1, 1)",
+                    )
                     a.restoreStamping.restoreOnThisDevice(Clock.System.now().toEpochMilliseconds()) {
                         a.displayMode(profileId = 2).set("grid")
                     }

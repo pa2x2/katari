@@ -92,7 +92,9 @@ class RestoreBackupScreen(
             scope.launch {
                 if (profileUnlock.unlock(context, state.lockedSelectedProfileNames)) {
                     model.startRestore()
-                    navigator.pop()
+                    // A converted backup goes back past the tool too, to where it was opened from, such as the
+                    // first-run guide, which goes on while the restore runs.
+                    navigator.popUntil { it !is RestoreBackupScreen && it !is BringOverScreen }
                 }
             }
         }

@@ -8,5 +8,4 @@ interface OnboardingGraph {
     val onboardingPreferences: OnboardingPreferences
     val privacyPreferences: PrivacyPreferences
     val onboardingPermissions: OnboardingPermissions
-    val mihonApp: MihonApp
 }
