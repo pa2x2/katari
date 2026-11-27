@@ -1,0 +1,41 @@
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_0e279b045f255e::t_f02752c5820275 1608-1625
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/BackupConverter.kt
+  s_0e279b045f255e::t_2a430e53890b3b 64-65,67
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/BackupFormat.kt
+  s_0e279b045f255e::t_8321ae1b78c8eb 27-29,31
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/ConversionReport.kt
+  s_0e279b045f255e::t_e8f4b71d3c9810 23-25
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/ConvertedMihonSettings.kt
+  s_0e279b045f255e::t_75ed93551c49be 43,47-48
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/ConvertedSavedSearches.kt
+  s_0e279b045f255e::t_4caa147020a1a3 1-126
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonBackupFormat.kt
+  s_0e279b045f255e::t_d9fbc43732eedb 11,19-22,32,35-37,39-50,55-57,59-66,71
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonBackupModels.kt
+  s_0e279b045f255e::t_ec655169f735de 22,27-74,92,110-148,165-166
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonCategoryConversion.kt
+  s_0e279b045f255e::t_3c10e50a3aba86 1-42
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonConversionReport.kt
+  s_0e279b045f255e::t_5b76e3493e8b4e 6,14-21,25-37,40-44,51,53-67,88-93,98-109
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonEntryConversion.kt
+  s_0e279b045f255e::t_64a2c3dc1a7637 4,9,15-16,40-53
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonMerges.kt
+  s_0e279b045f255e::t_babab33497bf33 1-136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ef761b268a748afd264db878ff874a3e548d9716",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
