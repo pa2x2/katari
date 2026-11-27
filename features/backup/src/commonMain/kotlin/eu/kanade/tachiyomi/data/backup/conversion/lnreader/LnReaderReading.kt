@@ -31,6 +31,13 @@ internal class LnReaderReading(novel: LnReaderNovel, private val zone: ZoneId) {
         session(sessionId(novel, chapter), chapter.path, end - duration, end, duration)
     }
 
+    /**
+     * When Statistics started counting this reading, in epoch milliseconds: the start of its first session. Statistics
+     * show a profile's days only from its epoch on, and restoring keeps the earliest epoch it's given, so without one
+     * the sessions would sit before the profile's epoch and count as reading before Statistics were kept.
+     */
+    val statisticsEpoch: Long? = sessions.minOfOrNull(BackupActivitySession::startedAt)
+
     /** When the chapter was last read, in epoch milliseconds. */
     fun readAt(chapter: LnReaderChapter): Long? = readAt[chapter.path]
 

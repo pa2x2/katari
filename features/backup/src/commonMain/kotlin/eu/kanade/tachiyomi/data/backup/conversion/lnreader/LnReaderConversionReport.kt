@@ -6,6 +6,8 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Kind
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
+import eu.kanade.tachiyomi.data.backup.conversion.ConvertedSettings
+import eu.kanade.tachiyomi.data.backup.conversion.lnreader.settings.LnReaderChapterList
 import eu.kanade.tachiyomi.data.backup.conversion.reportName
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
@@ -16,15 +18,20 @@ internal class LnReaderConversionReport {
     private val library = linkedMapOf<NovelKey, String>()
     private val progress = linkedMapOf<NovelKey, String>()
     private val imported = linkedMapOf<NovelKey, String>()
+    private val tracked = linkedMapOf<NovelKey, String>()
+    private val unsortable = linkedMapOf<NovelKey, String>()
 
-    fun add(novel: LnReaderNovel) {
+    /** Adds [novel], whose chapters are listed as [chapterList] says and which [tracked] says a tracker follows. */
+    fun add(novel: LnReaderNovel, chapterList: LnReaderChapterList, tracked: Boolean) {
         val key = NovelKey(novel.pluginId, novel.path)
+        if (tracked) this.tracked[key] = novel.name
         if (novel.isLocal) {
             if (novel.inLibrary || novel.hasProgress) imported[key] = novel.name
             return
         }
         if (novel.inLibrary) library[key] = novel.name
         if (novel.hasProgress) progress[key] = novel.name
+        if (chapterList.unsortable) unsortable[key] = novel.name
     }
 
     fun build(
@@ -32,6 +39,7 @@ internal class LnReaderConversionReport {
         sources: List<BackupSource>,
         stores: List<BackupExtensionStore>,
         files: LnReaderFiles,
+        settings: ConvertedSettings,
     ): ConversionReport = ConversionReport(
         listOfNotNull(
             Row.of(
@@ -41,6 +49,7 @@ internal class LnReaderConversionReport {
             ),
             Row.of(Kind.CATEGORIES, carried = categories.reportItems),
             Row.of(Kind.PROGRESS_AND_HISTORY, carried = progress.values.map { Item(it) }),
+            Row.of(Kind.APP_SETTINGS, carried = settings.carried, leftBehind = settings.leftBehind),
             Row.of(
                 Kind.EXTENSION_STORES,
                 carried = stores.map { Item(it.name, MR.strings.backup_conversion_store_from_addresses) },
@@ -53,19 +62,26 @@ internal class LnReaderConversionReport {
                     ),
             ),
             Row.of(
+                Kind.TRACKERS,
+                leftBehind = tracked.values.map {
+                    Item(it, MR.strings.backup_conversion_no_trackers)
+                },
+            ),
+            Row.of(
                 Kind.APP_SPECIFIC,
-                leftBehind = listOfNotNull(
-                    part(
-                        MR.strings.backup_conversion_saved_covers,
-                        MR.strings.backup_conversion_covers_reload,
-                        files.covers,
+                leftBehind = unsortable.values.map { Item(it, MR.strings.backup_conversion_lnreader_sort_read_time) } +
+                    listOfNotNull(
+                        part(
+                            MR.strings.backup_conversion_saved_covers,
+                            MR.strings.backup_conversion_covers_reload,
+                            files.covers,
+                        ),
+                        part(
+                            MR.strings.backup_conversion_downloaded_chapters,
+                            MR.strings.backup_conversion_download_again,
+                            files.downloads,
+                        ),
                     ),
-                    part(
-                        MR.strings.backup_conversion_downloaded_chapters,
-                        MR.strings.backup_conversion_download_again,
-                        files.downloads,
-                    ),
-                ),
             ),
         ),
     )

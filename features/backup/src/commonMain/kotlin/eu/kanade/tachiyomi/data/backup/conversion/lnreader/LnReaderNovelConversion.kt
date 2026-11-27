@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.conversion.lnreader
 
+import eu.kanade.tachiyomi.data.backup.conversion.lnreader.settings.LnReaderChapterList
 import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupEntryProgressState
@@ -9,11 +10,17 @@ import tachiyomi.domain.source.lnreader.lnReaderStatus
 import java.time.ZoneId
 
 /**
- * The novel as a Katari book from [source], in the categories of [categories] orders. Details are read as Katari's
- * LNReader source reads them; the cover isn't carried, as the backup holds only LNReader's own copy of it (D080), so
- * the entry is left to fetch its details. Chapter times without a zone are read in [zone].
+ * The novel as a Katari book from [source], in the categories of [categories] orders, its chapters listed as
+ * [chapterList] says. Details are read as Katari's LNReader source reads them; the cover isn't carried, as the backup
+ * holds only LNReader's own copy of it (D080), so the entry is left to fetch its details. Chapter times without a zone
+ * are read in [zone].
  */
-internal fun LnReaderNovel.toBackupEntry(source: Long, categories: List<Long>, zone: ZoneId): BackupEntry {
+internal fun LnReaderNovel.toBackupEntry(
+    source: Long,
+    categories: List<Long>,
+    zone: ZoneId,
+    chapterList: LnReaderChapterList,
+): BackupEntry {
     val newest = chapters.maxOfOrNull { it.position } ?: 0
     val reading = LnReaderReading(this, zone)
     return BackupEntry(
@@ -28,9 +35,12 @@ internal fun LnReaderNovel.toBackupEntry(source: Long, categories: List<Long>, z
         chapters = chapters.map { it.toBackupChapter(newest, zone) },
         categories = categories,
         favorite = inLibrary,
+        chapterFlags = chapterList.chapterFlags,
+        excludedScanlators = chapterList.excludedScanlators,
         history = reading.history,
         progressStates = chapters.mapNotNull { it.progressState(reading.readAt(it)) },
         activitySessions = reading.sessions,
+        statisticsEpoch = reading.statisticsEpoch,
         type = EntryType.BOOK,
     )
 }

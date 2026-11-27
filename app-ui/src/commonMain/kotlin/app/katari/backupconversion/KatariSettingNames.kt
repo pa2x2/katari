@@ -1,5 +1,6 @@
 package app.katari.backupconversion
 
+import app.katari.core.common.CustomPreferences
 import app.katari.entry.interactions.reader.settings.MangaReaderSettings
 import app.katari.entry.interactions.settings.AnimePlayerDevicePreferences
 import app.katari.entry.interactions.settings.AnimePlayerPreferences
@@ -41,6 +42,10 @@ internal val katariSettingNames: Map<String, KatariSettingName> = buildMap {
         "pref_theme_mode_key" to MR.strings.backup_conversion_setting_light_or_dark,
     )
     put(
+        listOf(appearance, MR.strings.pref_category_home_screen),
+        CustomPreferences.HOME_SCREEN_TABS_KEY to MR.strings.pref_home_screen_tabs,
+    )
+    put(
         listOf(appearance, MR.strings.pref_category_display),
         "pref_render_images_description" to MR.strings.pref_display_images_description,
         "tablet_ui_mode" to MR.strings.pref_tablet_ui_mode,
@@ -51,6 +56,7 @@ internal val katariSettingNames: Map<String, KatariSettingName> = buildMap {
         listOf(library),
         "pref_display_mode_library" to MR.strings.action_display_mode,
         "pref_library_columns_portrait_key" to MR.strings.pref_library_cover_size,
+        "pref_library_cover_size" to MR.strings.pref_library_cover_size,
     )
     put(
         listOf(library, MR.strings.categories),
@@ -254,6 +260,36 @@ internal val katariSettingNames: Map<String, KatariSettingName> = buildMap {
         listOf(MR.strings.pref_anime_player),
         AnimePlayerPreferences.SHOWS_REMAINING_TIME_KEY to MR.strings.anime_playback_show_remaining_time,
     )
+
+    val bookReader = listOf(MR.strings.pref_category_readers, MR.strings.pref_book_document_reader)
+    put(
+        bookReader + MR.strings.pref_category_reading_mode,
+        "book_document_reader_reading_mode" to MR.strings.pref_viewer_type,
+        "book_document_reader_volume_keys" to MR.strings.pref_read_with_volume_keys,
+    )
+    put(
+        bookReader + MR.strings.pref_category_appearance,
+        "book_document_reader_theme_mode" to MR.strings.pref_book_document_reader_theme,
+        // Offered in the theme's list after the presets
+        "book_document_reader_saved_colors" to MR.strings.sync_setting_saved_colors,
+        "book_document_reader_text_size_percent" to MR.strings.pref_book_document_reader_text_size,
+        "book_document_reader_font" to MR.strings.pref_book_document_reader_font,
+        "book_document_reader_line_spacing" to MR.strings.pref_book_document_reader_line_spacing,
+        "book_document_reader_margins" to MR.strings.pref_book_document_reader_margins,
+        "book_document_reader_text_alignment" to MR.strings.pref_book_document_reader_text_alignment,
+    )
+    put(
+        bookReader + MR.strings.pref_behavior,
+        "book_document_reader_keep_screen_alive" to MR.strings.pref_book_document_reader_keep_screen_alive,
+        "book_document_reader_show_status_bar" to MR.strings.pref_reader_show_status_bar,
+        "book_document_reader_show_time_and_battery" to MR.strings.pref_book_document_reader_show_time_and_battery,
+        "book_document_reader_show_navigation_bar" to MR.strings.pref_reader_show_navigation_bar,
+        "book_document_reader_show_reading_progress" to MR.strings.pref_book_document_reader_show_reading_progress,
+        "book_document_reader_text_rules" to MR.strings.pref_book_text_rules,
+    )
+    put(listOf(MR.strings.tts_title, MR.strings.tts_settings_speech), "tts_pitch" to MR.strings.tts_settings_pitch)
+    // Text to speech has no row for it, so the report names the screen alone
+    put(listOf(MR.strings.tts_title), "tts_speech_rate" to MR.strings.sync_setting_speech_rate)
 
     val reader = MR.strings.pref_manga_reader
     put(
