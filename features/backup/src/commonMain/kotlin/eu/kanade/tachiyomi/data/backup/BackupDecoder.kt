@@ -5,19 +5,19 @@ import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocuments
+import eu.kanade.tachiyomi.data.backup.stream.BackupContainer
 import eu.kanade.tachiyomi.data.backup.stream.BackupReader
 import eu.kanade.tachiyomi.data.backup.stream.BackupSummary
 import eu.kanade.tachiyomi.data.backup.stream.BackupSummaryBuilder
 import eu.kanade.tachiyomi.data.backup.stream.MalformedBackupException
+import eu.kanade.tachiyomi.data.backup.stream.protobuf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.protobuf.ProtoBuf
-import okio.BufferedSource
 import okio.buffer
-import okio.gzip
 import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
@@ -49,17 +49,11 @@ class BackupDecoder(
 
     private suspend fun <T> read(uri: DocumentUri, block: suspend (BackupReader) -> T): T {
         return documents.read(uri).buffer().use { source ->
-            val peeked = source.peek().apply {
-                require(2)
+            val container = BackupContainer.of(source)
+            if (container == BackupContainer.JSON) {
+                throw IOException(context.stringResource(MR.strings.invalid_backup_file_json))
             }
-            val id1id2 = peeked.readShort()
-            val backupSource: BufferedSource = when (id1id2.toInt()) {
-                0x1f8b -> source.gzip().buffer() // 0x1f8b is gzip magic bytes
-                MAGIC_JSON_SIGNATURE1, MAGIC_JSON_SIGNATURE2, MAGIC_JSON_SIGNATURE3 -> {
-                    throw IOException(context.stringResource(MR.strings.invalid_backup_file_json))
-                }
-                else -> source
-            }
+            val backupSource = container.protobuf(source)
 
             try {
                 backupSource.use { block(BackupReader(it, parser)) }
@@ -67,11 +61,5 @@ class BackupDecoder(
                 throw IOException(context.stringResource(MR.strings.invalid_backup_file_unknown), e)
             }
         }
-    }
-
-    companion object {
-        private const val MAGIC_JSON_SIGNATURE1 = 0x7b7d // `{}`
-        private const val MAGIC_JSON_SIGNATURE2 = 0x7b22 // `{"`
-        private const val MAGIC_JSON_SIGNATURE3 = 0x7b0a // `{\n`
     }
 }
