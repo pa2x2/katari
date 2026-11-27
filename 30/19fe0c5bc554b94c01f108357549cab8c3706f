@@ -1,0 +1,47 @@
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_0e279b045f255e::t_bf6468d40a58b6 1643
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/ConversionReport.kt
+  s_0e279b045f255e::t_fddcb9854e1f0a 10-16
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/ConvertedMemo.kt
+  s_0e279b045f255e::t_49a6cb3a48816f 1-8
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/SourceIdentities.kt
+  s_0e279b045f255e::t_1cb45947dbb291 1-10
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiBackupFormat.kt
+  s_0e279b045f255e::t_bf888f1f3b7dd3 1-118
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiCategories.kt
+  s_0e279b045f255e::t_f774fde64dfa2e 1-45
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiConversionReport.kt
+  s_0e279b045f255e::t_3472be48bd2a38 1-79
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiEntryConversion.kt
+  s_0e279b045f255e::t_4a75b746ce5ff8 1-112
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiSourceKeys.kt
+  s_0e279b045f255e::t_1d3244c2acb936 1-53
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonBackupFormat.kt
+  s_0e279b045f255e::t_e83e3f113722f2 8,68
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonConversionReport.kt
+  s_0e279b045f255e::t_fec934cb719882 7,51-54,59,64,69,76,81,85,89
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonEntryConversion.kt
+  s_0e279b045f255e::t_7354ce055b6202 4
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/models/compatibility/EntryFeatureStateLegacyAdapter.kt
+  s_0e279b045f255e::t_5376f8bb27aa11 212
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiBackupModels.kt
+  s_0e279b045f255e::t_32ce4876109fb4 1-137
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiLayout.kt
+  s_0e279b045f255e::t_286486934a6c94 1-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3019fe0c5bc554b94c01f108357549cab8c3706f",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
