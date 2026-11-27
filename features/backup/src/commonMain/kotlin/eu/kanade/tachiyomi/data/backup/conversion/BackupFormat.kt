@@ -24,6 +24,12 @@ interface BackupFormat {
     fun recognizes(contents: BackupFileContents): Boolean
 
     /**
+     * Which of [appName] and [relatedAppNames] wrote a file holding [contents] that this format [recognizes]: the one
+     * whose own parts the file has, or [appName] when it has none or those of more than one (D109).
+     */
+    fun appWriting(contents: BackupFileContents): String = appName
+
+    /**
      * How many times [convert] calls its `open`: the bar of how far converting has got shares the file's size out
      * between the reads.
      */

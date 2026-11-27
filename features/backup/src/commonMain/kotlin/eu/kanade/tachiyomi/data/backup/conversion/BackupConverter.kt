@@ -77,7 +77,7 @@ class BackupConverter(
         if (fitting.isEmpty()) {
             BackupIdentity.Unsupported
         } else {
-            BackupIdentity.Foreign(fitting.map { BackupApp(it.appName, it) })
+            BackupIdentity.Foreign(fitting.map { BackupApp(it.appWriting(contents), it) })
         }
     }
 

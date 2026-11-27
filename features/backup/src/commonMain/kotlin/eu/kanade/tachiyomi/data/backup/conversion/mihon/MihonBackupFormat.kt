@@ -36,6 +36,9 @@ class MihonBackupFormat(
     override fun recognizes(contents: BackupFileContents): Boolean =
         contents is BackupFileContents.Protobuf && contents.fieldNumbers.all { it in FIELD_NUMBERS }
 
+    override fun appWriting(contents: BackupFileContents): String =
+        (contents as? BackupFileContents.Protobuf)?.let(::mihonFork) ?: appName
+
     override suspend fun convert(
         open: () -> BufferedSource,
         writeEntry: (BackupEntry) -> Unit,

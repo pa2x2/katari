@@ -47,6 +47,9 @@ class AniyomiBackupFormat(
             contents.fieldNumbers.all { it in FIELD_NUMBERS } &&
             contents.fieldNumbers.any { it in ANIME_FIELD_NUMBERS }
 
+    override fun appWriting(contents: BackupFileContents): String =
+        (contents as? BackupFileContents.Protobuf)?.let(::aniyomiFork) ?: appName
+
     override suspend fun convert(
         open: () -> BufferedSource,
         writeEntry: (BackupEntry) -> Unit,
