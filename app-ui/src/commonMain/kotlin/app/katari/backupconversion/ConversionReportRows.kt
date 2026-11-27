@@ -18,9 +18,9 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * "What comes over" (D023): one row per kind of data the backup holds, with its amount and bar. A kind that comes over
- * in part opens in place to what is left behind, then what comes over (D053), each thing with where it is and its
- * notes. A kind that comes over whole opens only when the report has notes on its things (D061), to what comes over.
+ * "What comes over" (D023): one row per kind of data the backup holds, with its amount and bar. A kind with things left
+ * behind opens in place to them, then to what comes over (D053, D076), each thing with where it is and its notes. A
+ * kind that comes over whole opens only when the report has notes on its things (D061), to what comes over.
  */
 internal fun LazyListScope.conversionReportItems(
     report: ConversionReport,
@@ -31,7 +31,6 @@ internal fun LazyListScope.conversionReportItems(
     rowGroupItems(report.rows, key = { it.kind }) { row ->
         val carried = row.carried.size
         val total = carried + row.leftBehind.size
-        val partial = carried > 0 && row.leftBehind.isNotEmpty()
         val notedWhole = row.leftBehind.isEmpty() && row.carried.any { it.note != null }
         CoverageRow(
             title = stringResource(row.kind.title),
@@ -40,7 +39,7 @@ internal fun LazyListScope.conversionReportItems(
             total = total,
             expanded = row.kind in expanded,
             onClick = { onToggle(row.kind) },
-            details = if (partial || notedWhole) {
+            details = if (row.leftBehind.isNotEmpty() || notedWhole) {
                 { CoverageDetails(row) }
             } else {
                 null
@@ -57,8 +56,10 @@ private fun CoverageDetails(row: ConversionReport.Row) {
             RowGroupSubheader(stringResource(MR.strings.backup_conversion_left_behind))
             ItemRows(row.leftBehind)
         }
-        RowGroupSubheader(stringResource(MR.strings.backup_conversion_comes_over))
-        ItemRows(row.carried)
+        if (row.carried.isNotEmpty()) {
+            RowGroupSubheader(stringResource(MR.strings.backup_conversion_comes_over))
+            ItemRows(row.carried)
+        }
     }
 }
 
