@@ -1,0 +1,31 @@
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/ConversionReport.kt
+  s_0e279b045f255e::t_3d9462ef72a056 4,60-66
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiConversionReport.kt
+  s_0e279b045f255e::t_ed6dfd0f35bd56 7,12,26,40-45,62,72
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiEntryConversion.kt
+  s_0e279b045f255e::t_00b8ec466353be 3,21,36-38,40,55-66
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonEntryConversion.kt
+  s_0e279b045f255e::t_5af951523ffcb3 3,13,37-45
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/CustomInfo.kt
+  s_0e279b045f255e::t_28b7893631d921 1-55
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiBackupModels.kt
+  s_0e279b045f255e::t_015fd49d1761fb 112-117,120-129,131-138
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonConversionReport.kt
+  s_0e279b045f255e::t_df1c7db5205f49 8-9,21,33,46,58,78-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2268a0e6a64650e0fe5da3f84df41a0f10541820",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
