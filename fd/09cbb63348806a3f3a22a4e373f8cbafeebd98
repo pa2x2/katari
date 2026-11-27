@@ -1,0 +1,39 @@
+website/src/docs/contents.ts
+  s_0e279b045f255e::t_9abccb3d54cedf 38,48-50,163
+website/src/guide/Storyboard.astro
+  s_0e279b045f255e::t_448e4ca1d307cf 1-108
+website/src/home/Feature.astro
+  s_0e279b045f255e::t_011cd80e3a88f5 2,27-28,30,33,60,75-76
+website/src/media/PlatformSwitch.astro
+  s_0e279b045f255e::t_35ee7b0f903239 1-74
+website/src/media/Viewer.astro
+  s_0e279b045f255e::t_92377273abcfd1 3-4,51
+website/src/pages/docs/[...slug].astro
+  s_0e279b045f255e::t_3b8ca2ef0291af 2-3,6
+website/src/pages/docs/backups-and-storage.astro
+  s_0e279b045f255e::t_64215476abac98 97-100,103,105-106
+website/src/pages/docs/coming-from-another-app.astro
+  s_0e279b045f255e::t_ec2fbbc9bb3128 5-6,8,10-14,17-27,29-30,32-34,37,39-40,42-85,99-100,105
+website/src/pages/docs/install.astro
+  s_0e279b045f255e::t_8b8146779471b4 72,74-75
+website/src/site/moved/moved-pages.ts
+  s_0e279b045f255e::t_c9bb83c073cd07 3-5,31
+website/src/guide/StoryboardScreen.astro
+  s_0e279b045f255e::t_1248d28431a0ae 1-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fd09cbb63348806a3f3a22a4e373f8cbafeebd98",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
