@@ -37,16 +37,16 @@ class AniyomiBackupFormat(private val parser: ProtoBuf) : BackupFormat {
         writeEntry: (BackupEntry) -> Unit,
     ): BackupFormat.ConvertedContent {
         val layout = open().use(AniyomiLayout::of)
-        // Entries name sources and categories that come after them, so everything else is read first
+        // Entries name sources, categories and parents that come after them, so everything else is read first
         val rest = Buffer()
         val mangaSourceIds = hashSetOf<Long>()
-        val animeSourceIds = linkedSetOf<Long>()
+        val seasonInfos = mutableListOf<AniyomiSeasonInfo>()
         open().use { content ->
             val input = ProtoInput(content)
             while (!input.exhausted()) {
                 when (val tag = input.readTag()) {
-                    MANGA_TAG -> mangaSourceIds += input.readEntrySource()
-                    layout.animeTag -> animeSourceIds += input.readEntrySource()
+                    MANGA_TAG -> mangaSourceIds += input.readEntry(AniyomiEntrySource.serializer()).source
+                    layout.animeTag -> seasonInfos += input.readEntry(AniyomiSeasonInfo.serializer())
                     // Extension APKs are left behind, and holding them would take the whole of each
                     layout.extensionApkTag -> input.skipField(tag)
                     else -> input.copyField(tag, rest)
@@ -55,11 +55,13 @@ class AniyomiBackupFormat(private val parser: ProtoBuf) : BackupFormat {
         }
         val backup = layout.decode(parser, rest.readByteArray())
         val mergedCategories = AniyomiCategories(backup.mangaCategories, backup.animeCategories)
+        val seasons = AniyomiSeasons(seasonInfos)
         val animeSourceNames = backup.animeSources.associate { it.sourceId to it.name }
         val sourceKeys = AniyomiSourceKeys(
             mangaSources = backup.mangaSources,
             mangaSourceIds = mangaSourceIds + backup.mangaSources.map { it.sourceId },
-            animeSources = (animeSourceNames.keys + animeSourceIds).associateWith { animeSourceNames[it].orEmpty() },
+            animeSources = (animeSourceNames.keys + seasonInfos.map { it.source })
+                .associateWith { animeSourceNames[it].orEmpty() },
         )
         val report = AniyomiConversionReport()
         open().use { content ->
@@ -78,12 +80,12 @@ class AniyomiBackupFormat(private val parser: ProtoBuf) : BackupFormat {
                     layout.animeTag -> {
                         val anime = input.readEntry(AniyomiAnime.serializer())
                         report.add(anime)
-                        writeEntry(
-                            anime.toBackupEntry(
-                                sourceKeys.animeKey(anime.source),
-                                mergedCategories.ofAnime(anime.categories),
-                            ),
+                        val entry = anime.toBackupEntry(
+                            source = sourceKeys.animeKey(anime.source),
+                            categories = mergedCategories.ofAnime(seasons.categoriesOf(anime)),
                         )
+                        seasons.applyTo(entry, anime.source, anime.url, sourceKeys::animeKey)
+                        writeEntry(entry)
                     }
                     else -> input.skipField(tag)
                 }
@@ -94,10 +96,8 @@ class AniyomiBackupFormat(private val parser: ProtoBuf) : BackupFormat {
             backupSources = sourceKeys.backupSources,
             backupExtensionStores = backup.extensionSources.mapNotNull { it.toBackupExtensionStore() },
         )
-        return BackupFormat.ConvertedContent(metadata, report.build(backup, mergedCategories))
+        return BackupFormat.ConvertedContent(metadata, report.build(backup, mergedCategories, seasons))
     }
-
-    private fun ProtoInput.readEntrySource(): Long = readEntry(AniyomiEntrySource.serializer()).source
 
     private fun <T> ProtoInput.readEntry(deserializer: DeserializationStrategy<T>): T =
         parser.decodeBackup(deserializer, readByteArray(readLength()))

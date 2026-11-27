@@ -40,7 +40,7 @@ internal class AniyomiConversionReport {
         animeSources += anime.source
     }
 
-    fun build(backup: AniyomiBackup, categories: AniyomiCategories): ConversionReport {
+    fun build(backup: AniyomiBackup, categories: AniyomiCategories, seasons: AniyomiSeasons): ConversionReport {
         val (stores, repos) = backup.extensionSources.partition { it.isStore }
         val extensions = backup.mangaSources.filter { it.sourceId in mangaSources } +
             backup.animeSources.filter { it.sourceId in animeSources }
@@ -49,6 +49,10 @@ internal class AniyomiConversionReport {
                 Row.of(Kind.LIBRARY, carried = library.values.map { Item(it) }),
                 Row.of(Kind.CATEGORIES, carried = categories.reportItems),
                 Row.of(Kind.PROGRESS_AND_HISTORY, carried = progress.values.map { Item(it) }),
+                Row.of(
+                    Kind.MERGED_ENTRIES,
+                    carried = seasons.parentTitles.map { Item(it, MR.strings.backup_conversion_seasons) },
+                ),
                 Row.of(
                     Kind.EXTENSION_STORES,
                     carried = stores.map { Item(it.name) },
@@ -68,7 +72,7 @@ internal class AniyomiConversionReport {
                     Kind.APP_SPECIFIC,
                     leftBehind = skipIntroLengths.values.map {
                         Item(it, MR.strings.backup_conversion_skip_intro_length)
-                    },
+                    } + seasons.changedViewTitles.map { Item(it, MR.strings.backup_conversion_season_view) },
                 ),
             ),
         )
