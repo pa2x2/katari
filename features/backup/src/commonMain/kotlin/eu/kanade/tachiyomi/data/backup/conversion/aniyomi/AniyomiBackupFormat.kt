@@ -35,7 +35,7 @@ class AniyomiBackupFormat(
 ) : BackupFormat {
     override val appName = "Aniyomi"
 
-    override val relatedAppNames = emptyList<String>()
+    override val relatedAppNames = listOf("Animetail", "Anikku", "Animiru")
 
     // Manga alone is Mihon's layout, so a backup is Aniyomi's by its anime part
     override fun recognizes(contents: BackupFileContents): Boolean =
