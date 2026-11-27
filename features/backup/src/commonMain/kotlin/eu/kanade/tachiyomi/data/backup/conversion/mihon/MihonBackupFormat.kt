@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.stream.ProtoInput
 import eu.kanade.tachiyomi.data.backup.stream.decodeBackup
 import eu.kanade.tachiyomi.data.backup.stream.lengthDelimitedTag
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import okio.Buffer
 import okio.BufferedSource
@@ -15,7 +16,10 @@ import tachiyomi.domain.source.identity.SourceIdentity
 
 /** Mihon's backups, and those of the forks that keep its fields: TachiyomiSY, Komikku, TachiyomiJ2K, Yōkai, Suwayomi. */
 @Inject
-class MihonBackupFormat(private val parser: ProtoBuf) : BackupFormat {
+class MihonBackupFormat(
+    private val parser: ProtoBuf,
+    private val json: Json,
+) : BackupFormat {
     override val appName = "Mihon"
 
     override val relatedAppNames = listOf("TachiyomiSY", "Komikku", "TachiyomiJ2K", "Yōkai", "Suwayomi")
@@ -25,36 +29,46 @@ class MihonBackupFormat(private val parser: ProtoBuf) : BackupFormat {
         contents is BackupFileContents.Protobuf && contents.fieldNumbers.all { it in FIELD_NUMBERS }
 
     override suspend fun convert(
-        content: BufferedSource,
+        open: () -> BufferedSource,
         writeEntry: (BackupEntry) -> Unit,
     ): BackupFormat.ConvertedContent {
-        val input = ProtoInput(content)
+        // Merged entries can come after their members, which are written with their merge
+        val merges = open().use { MihonMerges.read(it, parser) }
+        val report = MihonConversionReport(merges)
         val rest = Buffer()
-        val report = MihonConversionReport()
-        while (!input.exhausted()) {
-            val tag = input.readTag()
-            if (tag != ENTRY_TAG) {
-                input.copyField(tag, rest)
-                continue
+        open().use { content ->
+            val input = ProtoInput(content)
+            while (!input.exhausted()) {
+                val tag = input.readTag()
+                if (tag != ENTRY_TAG) {
+                    input.copyField(tag, rest)
+                    continue
+                }
+                val manga = parser.decodeBackup(MihonManga.serializer(), input.readByteArray(input.readLength()))
+                report.add(manga)
+                if (merges.isMergedEntry(manga)) continue
+                writeEntry(manga.toBackupEntry().also(merges::applyTo))
             }
-            val manga = parser.decodeBackup(MihonManga.serializer(), input.readByteArray(input.readLength()))
-            report.add(manga)
-            writeEntry(manga.toBackupEntry())
         }
         val backup = parser.decodeBackup(MihonBackup.serializer(), rest.readByteArray())
         val settings = convertMihonSettings(backup.preferences)
+        val sourceNames = backup.sources.associate { it.sourceId to it.name }
+        val savedSearches =
+            convertSavedSearches(backup.savedSearches, backup.syFeeds + backup.komikkuFeeds, sourceNames, json)
         val metadata = Backup(
-            backupCategories = backup.categories,
-            backupSources = backup.sources.map { source ->
-                val identity = SourceIdentity.ofLegacyKey(source.sourceId)
-                source.copy(idScheme = identity.scheme.key, externalId = identity.externalId)
-            },
-            backupPreferences = settings.preferences,
+            backupCategories = backup.categories.map { it.toBackupCategory() },
+            backupSources = backup.sources
+                .filter { it.sourceId != MihonMerges.MERGED_SOURCE_ID }
+                .map { source ->
+                    val identity = SourceIdentity.ofLegacyKey(source.sourceId)
+                    source.copy(idScheme = identity.scheme.key, externalId = identity.externalId)
+                },
+            backupPreferences = settings.preferences + savedSearches.preferences,
             // Extensions define their own settings, which Katari keeps for them as they are
             backupSourcePreferences = backup.sourcePreferences,
             backupExtensionStores = backup.extensionSources.mapNotNull { it.toBackupExtensionStore() },
         )
-        return BackupFormat.ConvertedContent(metadata, report.build(backup, settings))
+        return BackupFormat.ConvertedContent(metadata, report.build(backup, settings, savedSearches))
     }
 
     private companion object {

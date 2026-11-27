@@ -61,9 +61,10 @@ class BackupConverter(
             val content = file.sink().gzip().buffer().use { sink ->
                 val writer = BackupWriter(sink, parser, workingFiles.scratchDirectory)
                 val content = readable {
-                    documents.read(uri).buffer().use { source ->
-                        format.convert(BackupContainer.of(source).protobuf(source), writer::writeEntry)
+                    val open = {
+                        documents.read(uri).buffer().let { source -> BackupContainer.of(source).protobuf(source) }
                     }
+                    format.convert(open, writer::writeEntry)
                 }
                 writer.writeMetadata(content.metadata)
                 content

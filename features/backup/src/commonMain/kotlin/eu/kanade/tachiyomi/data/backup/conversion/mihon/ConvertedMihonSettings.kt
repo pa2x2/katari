@@ -40,10 +40,12 @@ internal fun convertMihonSettings(backedUp: List<BackupPreference>): ConvertedMi
                 carried += Item(Name.Setting(key))
             }
             name in MihonSettings.CARRIED_UNLISTED -> preferences += preference
+            name in MihonSettings.NO_COUNTERPART -> leaveBehind(key, MR.strings.backup_conversion_no_counterpart)
             else -> {
                 val renamed = MihonSettings.renamed(preference)
                 if (renamed == null) {
-                    leaveBehind(key, MR.strings.backup_conversion_no_counterpart)
+                    // A key outside Mihon's own is a fork's setting, which the report names by its key (D048)
+                    leftBehind += Item(Name.Text(key), MR.strings.backup_conversion_app_own_setting)
                 } else {
                     preferences += renamed
                     carried += Item(Name.Setting(key), preference.tabletUiModeNote())

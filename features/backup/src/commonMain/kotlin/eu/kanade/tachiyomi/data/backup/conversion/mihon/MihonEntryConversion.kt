@@ -1,15 +1,19 @@
 package eu.kanade.tachiyomi.data.backup.conversion.mihon
 
 import app.katari.core.common.extensions.JsonObjectEmptyBytes
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.data.MemoColumnAdapter
+import tachiyomi.i18n.*
 
 internal fun MihonManga.toBackupEntry(): BackupEntry = BackupEntry(
     source = source,
     url = url,
     title = title,
+    // D027: the only custom info Katari keeps
+    displayName = customTitle?.takeIf { it.isNotBlank() },
     artist = artist,
     author = author,
     description = description,
@@ -32,6 +36,20 @@ internal fun MihonManga.toBackupEntry(): BackupEntry = BackupEntry(
     nextUpdate = nextUpdate,
     type = EntryType.MANGA,
 )
+
+/** The custom info TachiyomiSY, Komikku, TachiyomiJ2K and Yōkai keep that Katari doesn't (D027), as report notes. */
+internal val MihonManga.customInfoLeftBehind: List<StringResource>
+    get() = listOfNotNull(
+        MR.strings.backup_conversion_custom_author.takeIf { customAuthor != null },
+        MR.strings.backup_conversion_custom_artist.takeIf { customArtist != null },
+        MR.strings.backup_conversion_custom_description.takeIf { customDescription != null },
+        MR.strings.backup_conversion_custom_genres.takeIf { customGenre != null },
+        MR.strings.backup_conversion_custom_status.takeIf { customStatus != null },
+        MR.strings.backup_conversion_custom_cover.takeIf { customThumbnailUrl != null },
+    )
+
+internal val MihonManga.hasSuwayomiMeta: Boolean
+    get() = suwayomiMeta.isNotEmpty() || chapters.any { it.suwayomiMeta.isNotEmpty() }
 
 /** Whether the entry holds reading state worth carrying even outside the library. */
 internal val MihonManga.hasProgress: Boolean

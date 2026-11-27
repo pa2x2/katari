@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.backup.conversion.mihon
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Kind
+import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
 
@@ -10,30 +11,60 @@ import tachiyomi.i18n.*
  * Collects what a Mihon-family backup carries while its entries stream past. An entry the backup holds more than once is
  * counted once: restoring combines its copies (D034).
  */
-internal class MihonConversionReport {
-    private val library = linkedMapOf<Pair<Long, String>, String>()
-    private val progress = linkedMapOf<Pair<Long, String>, String>()
-    private val tracked = linkedMapOf<Pair<Long, String>, String>()
+internal class MihonConversionReport(private val merges: MihonMerges) {
+    private val library = linkedMapOf<EntryKey, String>()
+    private val progress = linkedMapOf<EntryKey, String>()
+    private val tracked = linkedMapOf<EntryKey, String>()
+    private val customTitles = linkedMapOf<EntryKey, String>()
+    private val customInfoLeftBehind = linkedMapOf<EntryKey, List<Item>>()
+    private val searchMetadata = linkedMapOf<EntryKey, String>()
+    private val clientData = linkedMapOf<EntryKey, String>()
     private val entrySources = hashSetOf<Long>()
 
     fun add(manga: MihonManga) {
-        val key = manga.source to manga.url
-        if (manga.favorite) library[key] = manga.title
-        if (manga.hasProgress) progress[key] = manga.title
-        if (manga.tracking.isNotEmpty()) tracked[key] = manga.title
-        entrySources += manga.source
+        val key = EntryKey(manga.source, manga.url)
+        val title = manga.customTitle ?: manga.title
+        // A merge's members are its titles in the library, which the merged entry stands for
+        if (manga.favorite && !merges.isMember(manga)) library[key] = title
+        if (manga.hasProgress) progress[key] = title
+        if (manga.tracking.isNotEmpty()) tracked[key] = title
+        if (manga.customTitle != null) customTitles[key] = title
+        manga.customInfoLeftBehind.takeIf { it.isNotEmpty() }?.let { notes ->
+            customInfoLeftBehind[key] = notes.map { Item(title, it) }
+        }
+        if (manga.flatMetadata != null) searchMetadata[key] = title
+        if (manga.hasSuwayomiMeta) clientData[key] = title
+        if (!merges.isMergedEntry(manga)) entrySources += manga.source
     }
 
-    fun build(backup: MihonBackup, settings: ConvertedMihonSettings): ConversionReport {
+    fun build(
+        backup: MihonBackup,
+        settings: ConvertedMihonSettings,
+        savedSearches: ConvertedSavedSearches,
+    ): ConversionReport {
         val (stores, repos) = backup.extensionSources.partition { it.isStore }
         val sourceNames = backup.sources.associate { it.sourceId to it.name }
         val extensions = backup.sources.filter { it.sourceId in entrySources && it.sourceId != LOCAL_SOURCE_ID }
         return ConversionReport(
             listOfNotNull(
                 row(Kind.LIBRARY, carried = library.values.map { Item(it) }),
-                row(Kind.CATEGORIES, carried = backup.categories.map { Item(it.name) }),
+                row(Kind.CATEGORIES, carried = backup.categories.map { it.reportItem() }),
                 row(Kind.PROGRESS_AND_HISTORY, carried = progress.values.map { Item(it) }),
-                row(Kind.APP_SETTINGS, carried = settings.carried, leftBehind = settings.leftBehind),
+                row(
+                    Kind.MERGED_ENTRIES,
+                    carried = merges.merges.map { Item(it.title) },
+                    leftBehind = merges.merges.flatMap { it.leftBehind() },
+                ),
+                row(
+                    Kind.CUSTOM_INFO,
+                    carried = customTitles.values.map { Item(it) },
+                    leftBehind = customInfoLeftBehind.values.flatten(),
+                ),
+                row(
+                    Kind.APP_SETTINGS,
+                    carried = settings.carried,
+                    leftBehind = settings.leftBehind + backup.suwayomiSettingsLeftBehind(),
+                ),
                 row(
                     Kind.EXTENSION_SETTINGS,
                     carried = backup.sourcePreferences.map { preferences ->
@@ -54,8 +85,26 @@ internal class MihonConversionReport {
                     Kind.TRACKERS,
                     leftBehind = tracked.values.map { Item(it, MR.strings.backup_conversion_no_trackers) },
                 ),
+                row(
+                    Kind.APP_SPECIFIC,
+                    carried = savedSearches.carried,
+                    leftBehind = searchMetadata.values.map { Item(it, MR.strings.backup_conversion_search_metadata) } +
+                        clientData.values.map { Item(it, MR.strings.backup_conversion_client_data) },
+                ),
             ),
         )
+    }
+
+    private fun MihonBackup.suwayomiSettingsLeftBehind(): List<Item> = listOfNotNull(
+        MR.strings.backup_conversion_server_settings
+            .takeIf { suwayomiServerSettings != null || suwayomiUserSettings != null },
+        MR.strings.backup_conversion_client_settings.takeIf { suwayomiMeta.isNotEmpty() },
+    ).map { Item(Name.Part(it), MR.strings.backup_conversion_app_own_setting) }
+
+    private fun MihonMerges.Merge.leftBehind(): List<Item> = buildList {
+        repeat(builtInSourceMembers) { add(Item(title, MR.strings.backup_conversion_merge_builtin_source)) }
+        if (hasChapterSortMode) add(Item(title, MR.strings.backup_conversion_merge_sort_mode))
+        repeat(downloadsOff) { add(Item(title, MR.strings.backup_conversion_merge_download_switch)) }
     }
 
     private fun row(kind: Kind, carried: List<Item> = emptyList(), leftBehind: List<Item> = emptyList()) =

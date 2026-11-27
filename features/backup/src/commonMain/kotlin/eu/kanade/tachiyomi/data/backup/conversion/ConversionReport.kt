@@ -20,6 +20,9 @@ data class ConversionReport(val rows: List<Row>) {
 
         /** A setting by the key the other app keeps it under, which the tool names from its own table. */
         data class Setting(val key: String) : Name
+
+        /** A part of the backup that has no name of its own, such as a server's settings. */
+        data class Part(val label: StringResource) : Name
     }
 
     enum class Kind {
