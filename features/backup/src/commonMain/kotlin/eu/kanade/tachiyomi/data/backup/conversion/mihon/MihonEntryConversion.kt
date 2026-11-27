@@ -1,11 +1,10 @@
 package eu.kanade.tachiyomi.data.backup.conversion.mihon
 
-import app.katari.core.common.extensions.JsonObjectEmptyBytes
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.data.backup.conversion.validMemo
 import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.source.entry.EntryType
-import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.i18n.*
 
 internal fun MihonManga.toBackupEntry(): BackupEntry = BackupEntry(
@@ -68,7 +67,3 @@ private fun MihonChapter.toBackupChapter(): BackupChapter = BackupChapter(
     sourceOrder = sourceOrder,
     memo = memo.validMemo(),
 )
-
-// Restoring decodes the memo as a JSON object, which a fork's empty or malformed memo isn't
-private fun ByteArray.validMemo(): ByteArray =
-    takeIf { runCatching { MemoColumnAdapter.decode(it) }.isSuccess } ?: JsonObjectEmptyBytes

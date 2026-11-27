@@ -5,6 +5,7 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
+import eu.kanade.tachiyomi.data.backup.conversion.withTachiyomiIdentity
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.stream.ProtoInput
@@ -14,7 +15,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import okio.Buffer
 import okio.BufferedSource
-import tachiyomi.domain.source.identity.SourceIdentity
 
 /**
  * Mihon's backups, and those of the apps that keep its fields: TachiyomiSY, Komikku, TachiyomiJ2K, Yōkai, Suwayomi and
@@ -65,10 +65,7 @@ class MihonBackupFormat(
             backupCategories = backup.categories.map { it.toBackupCategory() },
             backupSources = backup.sources
                 .filter { it.sourceId != MihonMerges.MERGED_SOURCE_ID }
-                .map { source ->
-                    val identity = SourceIdentity.ofLegacyKey(source.sourceId)
-                    source.copy(idScheme = identity.scheme.key, externalId = identity.externalId)
-                },
+                .map { it.withTachiyomiIdentity() },
             backupPreferences = settings.preferences + savedSearches.preferences,
             // Extensions define their own settings, which Katari keeps for them as they are
             backupSourcePreferences = backup.sourcePreferences,

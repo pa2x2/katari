@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Kind
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
+import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
 
@@ -47,45 +48,45 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
         val extensions = backup.sources.filter { it.sourceId in entrySources && it.sourceId != LOCAL_SOURCE_ID }
         return ConversionReport(
             listOfNotNull(
-                row(Kind.LIBRARY, carried = library.values.map { Item(it) }),
-                row(Kind.CATEGORIES, carried = backup.categories.map { it.reportItem() }),
-                row(Kind.PROGRESS_AND_HISTORY, carried = progress.values.map { Item(it) }),
-                row(
+                Row.of(Kind.LIBRARY, carried = library.values.map { Item(it) }),
+                Row.of(Kind.CATEGORIES, carried = backup.categories.map { it.reportItem() }),
+                Row.of(Kind.PROGRESS_AND_HISTORY, carried = progress.values.map { Item(it) }),
+                Row.of(
                     Kind.MERGED_ENTRIES,
                     carried = merges.merges.map { Item(it.title) },
                     leftBehind = merges.merges.flatMap { it.leftBehind() },
                 ),
-                row(
+                Row.of(
                     Kind.CUSTOM_INFO,
                     carried = customTitles.values.map { Item(it, MR.strings.backup_conversion_custom_title) },
                     leftBehind = customInfoLeftBehind.values.flatten(),
                 ),
-                row(
+                Row.of(
                     Kind.APP_SETTINGS,
                     carried = settings.carried,
                     leftBehind = settings.leftBehind + backup.suwayomiSettingsLeftBehind(),
                 ),
-                row(
+                Row.of(
                     Kind.EXTENSION_SETTINGS,
                     carried = backup.sourcePreferences.map { preferences ->
                         val sourceId = preferences.sourceKey.removePrefix(SOURCE_KEY_PREFIX).toLongOrNull()
                         Item(sourceNames[sourceId] ?: preferences.sourceKey)
                     },
                 ),
-                row(
+                Row.of(
                     Kind.EXTENSION_STORES,
                     carried = stores.map { Item(it.name) },
                     leftBehind = repos.map { Item(it.url, MR.strings.backup_conversion_old_repo_format) },
                 ),
-                row(
+                Row.of(
                     Kind.INSTALLED_EXTENSIONS,
                     leftBehind = extensions.map { Item(it.name, MR.strings.backup_conversion_install_from_store) },
                 ),
-                row(
+                Row.of(
                     Kind.TRACKERS,
                     leftBehind = tracked.values.map { Item(it, MR.strings.backup_conversion_no_trackers) },
                 ),
-                row(
+                Row.of(
                     Kind.APP_SPECIFIC,
                     carried = savedSearches.carried,
                     leftBehind = searchMetadata.values.map { Item(it, MR.strings.backup_conversion_search_metadata) } +
@@ -106,9 +107,6 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
         if (hasChapterSortMode) add(Item(title, MR.strings.backup_conversion_merge_sort_mode))
         repeat(downloadsOff) { add(Item(title, MR.strings.backup_conversion_merge_download_switch)) }
     }
-
-    private fun row(kind: Kind, carried: List<Item> = emptyList(), leftBehind: List<Item> = emptyList()) =
-        ConversionReport.Row(kind, carried, leftBehind).takeIf { carried.isNotEmpty() || leftBehind.isNotEmpty() }
 }
 
 // Mihon names a source's settings after its id (ConfigurableSource.preferenceKey)

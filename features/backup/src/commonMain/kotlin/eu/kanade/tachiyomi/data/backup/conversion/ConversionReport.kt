@@ -7,7 +7,13 @@ import dev.icerock.moko.resources.StringResource
  * backup holds none of has no row.
  */
 data class ConversionReport(val rows: List<Row>) {
-    data class Row(val kind: Kind, val carried: List<Item>, val leftBehind: List<Item>)
+    data class Row(val kind: Kind, val carried: List<Item>, val leftBehind: List<Item>) {
+        companion object {
+            /** The row, or null when the backup holds none of [kind]. */
+            fun of(kind: Kind, carried: List<Item> = emptyList(), leftBehind: List<Item> = emptyList()): Row? =
+                Row(kind, carried, leftBehind).takeIf { carried.isNotEmpty() || leftBehind.isNotEmpty() }
+        }
+    }
 
     /**
      * An entry, setting, store or other thing the backup held. [note] says what of it came over or was left behind, and

@@ -1,0 +1,118 @@
+package eu.kanade.tachiyomi.data.backup.conversion.aniyomi
+
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoSet
+import dev.zacsweers.metro.Inject
+import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
+import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
+import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
+import eu.kanade.tachiyomi.data.backup.conversion.mihon.toBackupEntry
+import eu.kanade.tachiyomi.data.backup.conversion.mihon.toBackupExtensionStore
+import eu.kanade.tachiyomi.data.backup.models.Backup
+import eu.kanade.tachiyomi.data.backup.models.BackupEntry
+import eu.kanade.tachiyomi.data.backup.stream.ProtoInput
+import eu.kanade.tachiyomi.data.backup.stream.decodeBackup
+import eu.kanade.tachiyomi.data.backup.stream.lengthDelimitedTag
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.protobuf.ProtoBuf
+import okio.Buffer
+import okio.BufferedSource
+
+/** Aniyomi's backups, in the layout of Aniyomi 0.18.1 and later and in the one before it. */
+@Inject
+@ContributesIntoSet(AppScope::class)
+class AniyomiBackupFormat(private val parser: ProtoBuf) : BackupFormat {
+    override val appName = "Aniyomi"
+
+    override val relatedAppNames = emptyList<String>()
+
+    // Manga alone is Mihon's layout, so a backup is Aniyomi's by its anime part
+    override fun recognizes(contents: BackupFileContents): Boolean =
+        contents is BackupFileContents.Protobuf &&
+            contents.fieldNumbers.all { it in FIELD_NUMBERS } &&
+            contents.fieldNumbers.any { it in ANIME_FIELD_NUMBERS }
+
+    override suspend fun convert(
+        open: () -> BufferedSource,
+        writeEntry: (BackupEntry) -> Unit,
+    ): BackupFormat.ConvertedContent {
+        val layout = open().use(AniyomiLayout::of)
+        // Entries name sources and categories that come after them, so everything else is read first
+        val rest = Buffer()
+        val mangaSourceIds = hashSetOf<Long>()
+        val animeSourceIds = linkedSetOf<Long>()
+        open().use { content ->
+            val input = ProtoInput(content)
+            while (!input.exhausted()) {
+                when (val tag = input.readTag()) {
+                    MANGA_TAG -> mangaSourceIds += input.readEntrySource()
+                    layout.animeTag -> animeSourceIds += input.readEntrySource()
+                    // Extension APKs are left behind, and holding them would take the whole of each
+                    layout.extensionApkTag -> input.skipField(tag)
+                    else -> input.copyField(tag, rest)
+                }
+            }
+        }
+        val backup = layout.decode(parser, rest.readByteArray())
+        val mergedCategories = AniyomiCategories(backup.mangaCategories, backup.animeCategories)
+        val animeSourceNames = backup.animeSources.associate { it.sourceId to it.name }
+        val sourceKeys = AniyomiSourceKeys(
+            mangaSources = backup.mangaSources,
+            mangaSourceIds = mangaSourceIds + backup.mangaSources.map { it.sourceId },
+            animeSources = (animeSourceNames.keys + animeSourceIds).associateWith { animeSourceNames[it].orEmpty() },
+        )
+        val report = AniyomiConversionReport()
+        open().use { content ->
+            val input = ProtoInput(content)
+            while (!input.exhausted()) {
+                when (val tag = input.readTag()) {
+                    MANGA_TAG -> {
+                        val manga = input.readEntry(MihonManga.serializer())
+                        report.add(manga)
+                        writeEntry(
+                            manga.toBackupEntry().apply {
+                                categories = mergedCategories.ofManga(manga.categories)
+                            },
+                        )
+                    }
+                    layout.animeTag -> {
+                        val anime = input.readEntry(AniyomiAnime.serializer())
+                        report.add(anime)
+                        writeEntry(
+                            anime.toBackupEntry(
+                                sourceKeys.animeKey(anime.source),
+                                mergedCategories.ofAnime(anime.categories),
+                            ),
+                        )
+                    }
+                    else -> input.skipField(tag)
+                }
+            }
+        }
+        val metadata = Backup(
+            backupCategories = mergedCategories.backupCategories,
+            backupSources = sourceKeys.backupSources,
+            backupExtensionStores = backup.extensionSources.mapNotNull { it.toBackupExtensionStore() },
+        )
+        return BackupFormat.ConvertedContent(metadata, report.build(backup, mergedCategories))
+    }
+
+    private fun ProtoInput.readEntrySource(): Long = readEntry(AniyomiEntrySource.serializer()).source
+
+    private fun <T> ProtoInput.readEntry(deserializer: DeserializationStrategy<T>): T =
+        parser.decodeBackup(deserializer, readByteArray(readLength()))
+
+    private companion object {
+        val MANGA_TAG = lengthDelimitedTag(1)
+
+        /**
+         * Every top-level field either layout writes: manga at 1, 2, 101, 104 and 105 as Mihon has them, the older
+         * layout's anime at 3, 4 and 103 and its 100 and 102 broken sources and 106-109 extensions and buttons, the newer
+         * layout's 106 and 500-506.
+         */
+        val FIELD_NUMBERS = setOf(1, 2, 3, 4, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109) + (500..506)
+
+        /** Fields only the anime part writes, in either layout. */
+        val ANIME_FIELD_NUMBERS = setOf(3, 4, 102, 103, 107, 108, 109) + (500..506)
+    }
+}
