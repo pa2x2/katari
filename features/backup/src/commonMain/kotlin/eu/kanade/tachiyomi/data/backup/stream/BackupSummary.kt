@@ -2,8 +2,6 @@ package eu.kanade.tachiyomi.data.backup.stream
 
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
-import eu.kanade.tachiyomi.data.backup.models.LegacyBackupAnime
-import eu.kanade.tachiyomi.data.backup.models.LegacyBackupManga
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
@@ -55,28 +53,15 @@ internal class BackupSummaryBuilder {
             profileEntryCounts[profileIndex] = (profileEntryCounts[profileIndex] ?: 0) + 1
         }
 
-        val summary = when (entry.format) {
-            BackupEntryFormat.ENTRY -> entry.decode(EntrySummary.serializer()).let {
-                noteTimes(it.dateAdded, it.favoriteModifiedAt, it.lastUpdate, *it.history.lastRead())
-                SourceSummary(it.source, it.favorite, it.mergeTargetSource)
-            }
-            BackupEntryFormat.LEGACY_MANGA -> entry.decode(LegacyMangaSummary.serializer()).let {
-                noteTimes(it.dateAdded, it.favoriteModifiedAt, *it.history.lastRead())
-                SourceSummary(it.source, it.favorite, it.mergeTargetSource)
-            }
-            BackupEntryFormat.LEGACY_ANIME -> entry.decode(LegacyAnimeSummary.serializer()).let {
-                noteTimes(it.dateAdded, it.favoriteModifiedAt, it.lastUpdate, *it.history.lastRead())
-                SourceSummary(it.source, it.favorite, it.mergeTargetSource)
-            }
-        }
-        val (source, favorite, mergeTargetSource) = summary
-        entrySources += source
-        entrySourceKeys += source
-        if (favorite) {
+        val summary = entry.decode(EntrySummary.serializer())
+        noteTimes(summary.dateAdded, summary.favoriteModifiedAt, summary.lastUpdate, *summary.history.lastRead())
+        entrySources += summary.source
+        entrySourceKeys += summary.source
+        if (summary.favorite) {
             val counts = if (profileIndex == null) topLevelLibrarySourceCounts else profileLibrarySourceCounts
-            counts[source] = (counts[source] ?: 0) + 1
+            counts[summary.source] = (counts[summary.source] ?: 0) + 1
         }
-        mergeTargetSource?.let(entrySourceKeys::add)
+        summary.mergeTargetSource?.let(entrySourceKeys::add)
     }
 
     private fun noteTimes(vararg times: Long?) {
@@ -101,13 +86,7 @@ internal class BackupSummaryBuilder {
     )
 }
 
-/* The fields of each entry format the summary reads, with the numbers of the full classes. */
-
-private data class SourceSummary(
-    val source: Long,
-    val favorite: Boolean,
-    val mergeTargetSource: Long?,
-)
+/* The fields of an entry the summary reads, with the numbers of the full classes. */
 
 /** [eu.kanade.tachiyomi.data.backup.models.BackupHistory] */
 @Serializable
@@ -123,31 +102,4 @@ private class EntrySummary(
     @ProtoNumber(20) val favoriteModifiedAt: Long? = null,
     @ProtoNumber(26) val mergeTargetSource: Long? = null,
     @ProtoNumber(33) val lastUpdate: Long = 0,
-)
-
-/** [LegacyBackupManga], whose field 113 is the merge target's source only when field 114 gives its URL. */
-@Serializable
-private class LegacyMangaSummary(
-    @ProtoNumber(1) val source: Long,
-    @ProtoNumber(13) val dateAdded: Long = 0,
-    @ProtoNumber(100) val favorite: Boolean = true,
-    @ProtoNumber(104) val history: List<HistorySummary> = emptyList(),
-    @ProtoNumber(107) val favoriteModifiedAt: Long? = null,
-    @ProtoNumber(113) val mergeTargetSourceOrNextUpdate: Long? = null,
-    @ProtoNumber(114) val mergeTargetUrl: String? = null,
-) {
-    val mergeTargetSource: Long?
-        get() = mergeTargetSourceOrNextUpdate?.takeIf { mergeTargetUrl != null }
-}
-
-/** [LegacyBackupAnime] */
-@Serializable
-private class LegacyAnimeSummary(
-    @ProtoNumber(1) val source: Long,
-    @ProtoNumber(7) val dateAdded: Long = 0,
-    @ProtoNumber(10) val history: List<HistorySummary> = emptyList(),
-    @ProtoNumber(12) val favorite: Boolean = true,
-    @ProtoNumber(14) val lastUpdate: Long = 0,
-    @ProtoNumber(17) val favoriteModifiedAt: Long? = null,
-    @ProtoNumber(33) val mergeTargetSource: Long? = null,
 )

@@ -8,8 +8,6 @@ import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
-import eu.kanade.tachiyomi.data.backup.models.LegacyBackupAnime
-import eu.kanade.tachiyomi.data.backup.models.LegacyBackupManga
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -30,19 +28,15 @@ class BackupStreamTest {
         val read = readBackup(encode(backup))
 
         read.entries.map { it.profileIndex to it.decode().url } shouldContainExactly listOf(
-            null to "/top/manga",
-            0 to "/first/manga",
-            0 to "/first/anime",
             0 to "/first/entry",
             1 to "/second/entry",
-            null to "/top/anime",
             null to "/top/entry",
         )
         encode(read.summary.metadata) shouldBe encode(backup.withoutEntries())
-        read.summary.topLevelEntryCount shouldBe 3
-        read.summary.profileEntryCounts shouldContainExactly listOf(3, 1)
-        read.summary.entrySources shouldBe setOf(1L, 2L, 3L, 4L)
-        read.summary.entrySourceKeys shouldBe setOf(1L, 2L, 3L, 4L, 9L)
+        read.summary.topLevelEntryCount shouldBe 1
+        read.summary.profileEntryCounts shouldContainExactly listOf(1, 1)
+        read.summary.entrySources shouldBe setOf(1L, 2L, 4L)
+        read.summary.entrySourceKeys shouldBe setOf(1L, 2L, 4L, 9L)
     }
 
     @Test
@@ -101,21 +95,11 @@ class BackupStreamTest {
     }
 
     private fun Backup.withoutEntries() = copy(
-        backupManga = emptyList(),
-        backupAnime = emptyList(),
         backupEntries = emptyList(),
-        backupProfiles = backupProfiles.map {
-            it.copy(manga = emptyList(), anime = emptyList(), entries = emptyList())
-        },
+        backupProfiles = backupProfiles.map { it.copy(entries = emptyList()) },
     )
 
     private fun backup() = Backup(
-        backupManga = listOf(
-            LegacyBackupManga(
-                source = 1,
-                url = "/top/manga",
-            ),
-        ),
         backupCategories = listOf(BackupCategory(name = "Reading", order = 0)),
         backupSources = listOf(BackupSource(name = "One", sourceId = 1)),
         backupPreferences = listOf(BackupPreference("key", StringPreferenceValue("value"))),
@@ -123,9 +107,7 @@ class BackupStreamTest {
             ProfileScopedBackup(
                 profile = profileBackup("first"),
                 categories = listOf(BackupCategory(name = "Done", order = 1)),
-                manga = listOf(LegacyBackupManga(source = 2, url = "/first/manga")),
                 preferences = listOf(BackupPreference("profile_key", StringPreferenceValue("value"))),
-                anime = listOf(LegacyBackupAnime(source = 3, url = "/first/anime")),
                 entries = listOf(
                     entry(4, "/first/entry").apply {
                         mergeTargetSource = 9
@@ -135,7 +117,6 @@ class BackupStreamTest {
             profile("second", entries = listOf(entry(1, "/second/entry"))),
         ),
         activeProfileUuid = "first",
-        backupAnime = listOf(LegacyBackupAnime(source = 3, url = "/top/anime")),
         backupEntries = listOf(
             entry(2, "/top/entry").apply {
                 chapters = List(50) { BackupChapter(url = "/chapter/$it", name = "Chapter $it") }

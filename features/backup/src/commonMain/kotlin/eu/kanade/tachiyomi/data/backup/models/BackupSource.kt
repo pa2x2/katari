@@ -10,7 +10,7 @@ data class BackupSource(
     @ProtoNumber(1) var name: String = "",
     /** The local key on the device the backup was made on, which the rest of the backup refers to the source by. */
     @ProtoNumber(2) var sourceId: Long,
-    // Null in backups made before identities were recorded, and in Mihon's
+    // Null in backups made before identities were recorded
     @ProtoNumber(3) var idScheme: String? = null,
     @ProtoNumber(4) var externalId: Long? = null,
     @ProtoNumber(5) var providerKind: String? = null,

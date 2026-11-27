@@ -2,9 +2,6 @@ package eu.kanade.tachiyomi.data.backup.stream
 
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
-import eu.kanade.tachiyomi.data.backup.models.LegacyBackupAnime
-import eu.kanade.tachiyomi.data.backup.models.LegacyBackupManga
-import eu.kanade.tachiyomi.data.backup.models.toBackupEntry
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -17,15 +14,10 @@ import okio.BufferedSource
  */
 internal class EncodedBackupEntry(
     val profileIndex: Int?,
-    val format: BackupEntryFormat,
     private val bytes: ByteArray,
     private val parser: ProtoBuf,
 ) {
-    fun decode(): BackupEntry = when (format) {
-        BackupEntryFormat.ENTRY -> decode(BackupEntry.serializer())
-        BackupEntryFormat.LEGACY_MANGA -> decode(LegacyBackupManga.serializer()).toBackupEntry()
-        BackupEntryFormat.LEGACY_ANIME -> decode(LegacyBackupAnime.serializer()).toBackupEntry()
-    }
+    fun decode(): BackupEntry = decode(BackupEntry.serializer())
 
     /** Decodes the entry as [deserializer], which can declare only the fields it needs so the rest are skipped. */
     fun <T> decode(deserializer: DeserializationStrategy<T>): T = parser.decodeBackup(deserializer, bytes)
@@ -59,9 +51,10 @@ internal class BackupReader(
                 readProfile(profileIndex++, metadata, include, onEntry)
                 continue
             }
-            when (val format = BackupLayout.TOP_LEVEL_ENTRY_TAGS[tag]) {
-                null -> input.copyField(tag, metadata)
-                else -> readEntry(null, format, end = null, include, onEntry)
+            if (tag == BackupLayout.TOP_LEVEL_ENTRY_TAG) {
+                readEntry(null, end = null, include, onEntry)
+            } else {
+                input.copyField(tag, metadata)
             }
         }
         return parser.decodeBackup(Backup.serializer(), metadata.readByteArray())
@@ -77,9 +70,10 @@ internal class BackupReader(
         val profileMetadata = Buffer()
         while (input.position < end) {
             val tag = input.readTag()
-            when (val format = BackupLayout.PROFILE_ENTRY_TAGS[tag]) {
-                null -> input.copyField(tag, profileMetadata)
-                else -> readEntry(profileIndex, format, end, include, onEntry)
+            if (tag == BackupLayout.PROFILE_ENTRY_TAG) {
+                readEntry(profileIndex, end, include, onEntry)
+            } else {
+                input.copyField(tag, profileMetadata)
             }
             if (input.position > end) throw MalformedBackupException("A field runs past the end of its profile")
         }
@@ -91,7 +85,6 @@ internal class BackupReader(
     /** @param end where the message holding the entry ends, or null at the top level. */
     private suspend fun readEntry(
         profileIndex: Int?,
-        format: BackupEntryFormat,
         end: Long?,
         include: (Int?) -> Boolean,
         onEntry: suspend (EncodedBackupEntry) -> Unit,
@@ -101,7 +94,7 @@ internal class BackupReader(
             throw MalformedBackupException("An entry runs past the end of its profile")
         }
         if (include(profileIndex)) {
-            onEntry(EncodedBackupEntry(profileIndex, format, input.readByteArray(length), parser))
+            onEntry(EncodedBackupEntry(profileIndex, input.readByteArray(length), parser))
         } else {
             input.skip(length)
         }
