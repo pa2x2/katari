@@ -29,8 +29,8 @@ internal fun LazyListScope.conversionReportItems(
 ) {
     item(key = "report-header") { RowGroupHeader(stringResource(MR.strings.backup_conversion_what_comes_over)) }
     rowGroupItems(report.rows, key = { it.kind }) { row ->
-        val carried = row.carried.size
-        val total = carried + row.leftBehind.size
+        val carried = row.carried.thingCount()
+        val total = carried + row.leftBehind.thingCount()
         val notedWhole = row.leftBehind.isEmpty() && row.carried.any { it.note != null }
         CoverageRow(
             title = stringResource(row.kind.title),
@@ -69,28 +69,46 @@ private fun CoverageDetails(row: ConversionReport.Row) {
  */
 @Composable
 private fun ItemRows(items: List<ConversionReport.Item>) {
-    items.groupBy { it.name }.forEach { (name, notes) ->
+    items.groupBy { it.name.shown }.values.forEach { notes ->
+        val name = notes.first().name
         val details = listOfNotNull(name.place()) + notes.mapNotNull { it.note }.distinct().map { stringResource(it) }
         SettingsRow(title = name.label(), subtitle = details.joinToString(" · ").ifEmpty { null })
     }
 }
 
+/**
+ * What a name shows as, so items shown alike are listed as one thing with all their notes: an entry with a note for each
+ * tracker, or a choice Katari keeps under two keys, as the chapter sort and its direction, with one title and place.
+ */
+private val ConversionReport.Name.shown: Any
+    get() = when (this) {
+        is ConversionReport.Name.Setting -> katariSettingNames[key]?.let { it.title to it.place } ?: key
+        else -> this
+    }
+
+/** How many things the items are: each setting once, however many keys it's kept under; each other item on its own. */
+private fun List<ConversionReport.Item>.thingCount(): Int {
+    val settings = filter { it.name is ConversionReport.Name.Setting }
+    return size - settings.size + settings.distinctBy { it.name.shown }.size
+}
+
 @Composable
 private fun ConversionReport.Row.amount(): String {
-    val carried = carried.size
+    val carriedCount = carried.thingCount()
+    val leftBehindCount = leftBehind.thingCount()
     return when {
-        leftBehind.isEmpty() -> stringResource(
+        leftBehindCount == 0 -> stringResource(
             MR.strings.backup_conversion_amount_all,
-            pluralStringResource(kind.count, carried, carried),
+            pluralStringResource(kind.count, carriedCount, carriedCount),
         )
-        carried == 0 -> leftBehind.map { it.note }.distinct().singleOrNull()
+        carriedCount == 0 -> leftBehind.map { it.note }.distinct().singleOrNull()
             ?.let { stringResource(MR.strings.backup_conversion_amount_none_because, stringResource(it)) }
             ?: stringResource(MR.strings.backup_conversion_amount_none)
         else -> stringResource(
             MR.strings.backup_conversion_amount_part,
-            carried,
-            carried + leftBehind.size,
-            leftBehind.size,
+            carriedCount,
+            carriedCount + leftBehindCount,
+            leftBehindCount,
         )
     }
 }
