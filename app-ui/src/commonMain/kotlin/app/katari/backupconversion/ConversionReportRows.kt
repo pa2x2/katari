@@ -20,7 +20,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * "What comes over" (D023): one row per kind of data the backup holds, with its amount and bar. A kind that comes over
  * in part opens in place to what is left behind, then what comes over (D053), each thing with where it is and its
- * notes; the others don't open.
+ * notes. A kind that comes over whole opens only when the report has notes on its things (D061), to what comes over.
  */
 internal fun LazyListScope.conversionReportItems(
     report: ConversionReport,
@@ -32,6 +32,7 @@ internal fun LazyListScope.conversionReportItems(
         val carried = row.carried.size
         val total = carried + row.leftBehind.size
         val partial = carried > 0 && row.leftBehind.isNotEmpty()
+        val notedWhole = row.leftBehind.isEmpty() && row.carried.any { it.note != null }
         CoverageRow(
             title = stringResource(row.kind.title),
             amount = row.amount(),
@@ -39,7 +40,7 @@ internal fun LazyListScope.conversionReportItems(
             total = total,
             expanded = row.kind in expanded,
             onClick = { onToggle(row.kind) },
-            details = if (partial) {
+            details = if (partial || notedWhole) {
                 { CoverageDetails(row) }
             } else {
                 null
@@ -52,8 +53,10 @@ internal fun LazyListScope.conversionReportItems(
 @Composable
 private fun CoverageDetails(row: ConversionReport.Row) {
     Column {
-        RowGroupSubheader(stringResource(MR.strings.backup_conversion_left_behind))
-        ItemRows(row.leftBehind)
+        if (row.leftBehind.isNotEmpty()) {
+            RowGroupSubheader(stringResource(MR.strings.backup_conversion_left_behind))
+            ItemRows(row.leftBehind)
+        }
         RowGroupSubheader(stringResource(MR.strings.backup_conversion_comes_over))
         ItemRows(row.carried)
     }
