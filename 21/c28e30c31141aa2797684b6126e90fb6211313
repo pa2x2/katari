@@ -1,0 +1,53 @@
+core/data/src/commonMain/kotlin/app/katari/data/extension/model/lnreader/LnReaderStore.kt
+  s_0e279b045f255e::t_f45d655759f531 12
+core/data/src/commonMain/kotlin/tachiyomi/data/history/activity/LocalDayActivitySegment.kt
+  s_0e279b045f255e::t_3fd169b02ea5cb 10,18
+core/domain/src/commonMain/kotlin/tachiyomi/domain/source/lnreader/LnReaderReleaseTime.kt
+  s_0e279b045f255e::t_048d639c9950d7 1,4-5,24,26-29
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderBackupFormat.kt
+  s_b77ec5099f03b1::t_e0332bbf1f5584 1-119
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderBackupModels.kt
+  s_0e279b045f255e::t_d76d1eea4915a4 1-66
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderCategories.kt
+  s_0e279b045f255e::t_882f931a236873 1-39
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderConversionReport.kt
+  s_b77ec5099f03b1::t_30a46b609f9a73 1-82
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderNovelConversion.kt
+  s_b77ec5099f03b1::t_414473331d0f4a 1-75
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderPlugins.kt
+  s_0e279b045f255e::t_4c23542079f8a7 1-48
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderReading.kt
+  s_0e279b045f255e::t_ab0d03bbef08fe 1-63
+sources/source-compat/src/commonMain/kotlin/eu/kanade/tachiyomi/source/lnreader/entry/LnReaderChapters.kt
+  s_0e279b045f255e::t_30455bd606945f 11
+sources/source-compat/src/commonMain/kotlin/eu/kanade/tachiyomi/source/lnreader/entry/LnReaderNovel.kt
+  s_0e279b045f255e::t_764847e6a8fdde 11,34
+core/domain/src/commonMain/kotlin/tachiyomi/domain/source/lnreader/LnReaderStatus.kt
+  s_b77ec5099f03b1::t_6e49d54c9b6d74 1,3,9-16
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_b77ec5099f03b1::t_f43cc651c8d08e 1855-1861
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "21c28e30c31141aa2797684b6126e90fb6211313",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    },
+    "s_b77ec5099f03b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e1a489e0-5890-4fe5-84a9-04ba2a37f53e",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
