@@ -1,0 +1,51 @@
+.agents/skills/ui-kit/components.md
+  s_0e279b045f255e::t_99dcddc2a21594 60-61
+app-ui/src/commonMain/kotlin/app/katari/profiles/core/ProfileManager.kt
+  s_0e279b045f255e::t_3e20e29322a71a 116,125
+app-ui/src/commonMain/kotlin/app/katari/profiles/core/ProfileNameConflict.kt
+  s_0e279b045f255e::t_22f8c8b162baa6 15-18
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/data/BackupSection.kt
+  s_0e279b045f255e::t_3b69ac5ef85a36 8,10,14,20
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/data/RestoreBackupScreen.kt
+  s_0e279b045f255e::t_9366939e82f64d 36,38,54,69,85,87,138-142,193-206,302,316-317,363-370,384,386-390,398,415,417,430-441,443-448,480-481
+app/src/main/java/eu/kanade/tachiyomi/data/backup/restore/AndroidBackupRestoreRunner.kt
+  s_0e279b045f255e::t_6b5b3221181ee1 27
+app/src/main/java/eu/kanade/tachiyomi/data/backup/restore/BackupRestoreJob.kt
+  s_0e279b045f255e::t_ea5a4e615314c8 41,88
+core/domain/src/commonMain/kotlin/tachiyomi/domain/backup/model/RestoreOptions.kt
+  s_0e279b045f255e::t_2f5b0858a7ae55 6-9,22-26,68-82
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_0e279b045f255e::t_5fe52ff2bb3b7f 1635-1642
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/list/SelectionRows.kt
+  s_0e279b045f255e::t_3c84631c46ef25 111-114,124,133-136
+desktop/src/main/kotlin/app/katari/desktop/backup/BackupRestoreInput.kt
+  s_0e279b045f255e::t_09d880ff644a7e 13,22,31-36
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/BackupFileValidator.kt
+  s_0e279b045f255e::t_f0eadac0cf1c22 62,69,77-78
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/BackupConverter.kt
+  s_0e279b045f255e::t_863e701d481308 69
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/models/Backup.kt
+  s_0e279b045f255e::t_e9e7e26f86d239 33-37
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/restore/BackupRestorer.kt
+  s_0e279b045f255e::t_c2ccad3b8ef8dd 129-131,217,221-222,450,461
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/stream/BackupLayout.kt
+  s_0e279b045f255e::t_00c43ed7675214 38-40,42
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/data/RestoreIntoSection.kt
+  s_0e279b045f255e::t_7349b9a407857f 1-125
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cb9760d82b0ef7d3cd1036a09596311471dfbe02",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
