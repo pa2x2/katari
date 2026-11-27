@@ -47,9 +47,7 @@ class BackupConverter(
         val isKatari = contents is BackupFileContents.Protobuf &&
             contents.fieldNumbers.any { it in BackupLayout.KATARI_FIELD_NUMBERS }
         if (isKatari) return@withContext BackupIdentity.Katari
-        val matches = formats.mapNotNull { format -> format.match(contents)?.let { format to it } }
-        val certain = matches.filter { (_, match) -> match == BackupFormat.Match.CERTAIN }
-        val fitting = certain.ifEmpty { matches }.map { it.first }
+        val fitting = formats.filter { it.recognizes(contents) }
         if (fitting.isEmpty()) BackupIdentity.Unsupported else BackupIdentity.Foreign(fitting)
     }
 

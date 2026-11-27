@@ -17,22 +17,17 @@ interface BackupFormat {
     /** The other apps writing the same format, which the tool lists under [appName]. */
     val relatedAppNames: List<String>
 
-    /** How surely one of this format's apps wrote a file holding [contents]; null when none did. */
-    fun match(contents: BackupFileContents): Match?
+    /**
+     * Whether one of this format's apps could have written a file holding [contents]. A file two formats recognize is
+     * left to the user to say which.
+     */
+    fun recognizes(contents: BackupFileContents): Boolean
 
     /**
      * Converts the backup [content], gunzipped where the file was gzipped, handing each Katari entry to [writeEntry] as
      * soon as it is complete. Throws when the content isn't a backup of this format after all.
      */
     suspend fun convert(content: BufferedSource, writeEntry: (BackupEntry) -> Unit): ConvertedContent
-
-    enum class Match {
-        /** The file has fields only this format's apps write. */
-        CERTAIN,
-
-        /** The file fits this format, but has nothing telling it from another format it fits as well. */
-        POSSIBLE,
-    }
 
     /** [metadata] is everything of the Katari backup but its entries. */
     class ConvertedContent(val metadata: Backup, val report: ConversionReport)

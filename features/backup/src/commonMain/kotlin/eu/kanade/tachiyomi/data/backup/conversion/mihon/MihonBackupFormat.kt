@@ -1,0 +1,65 @@
+package eu.kanade.tachiyomi.data.backup.conversion.mihon
+
+import dev.zacsweers.metro.Inject
+import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
+import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
+import eu.kanade.tachiyomi.data.backup.models.Backup
+import eu.kanade.tachiyomi.data.backup.models.BackupEntry
+import eu.kanade.tachiyomi.data.backup.stream.ProtoInput
+import eu.kanade.tachiyomi.data.backup.stream.decodeBackup
+import eu.kanade.tachiyomi.data.backup.stream.lengthDelimitedTag
+import kotlinx.serialization.protobuf.ProtoBuf
+import okio.Buffer
+import okio.BufferedSource
+import tachiyomi.domain.source.identity.SourceIdentity
+
+/** Mihon's backups, and those of the forks that keep its fields: TachiyomiSY, Komikku, TachiyomiJ2K, Yōkai, Suwayomi. */
+@Inject
+class MihonBackupFormat(private val parser: ProtoBuf) : BackupFormat {
+    override val appName = "Mihon"
+
+    override val relatedAppNames = listOf("TachiyomiSY", "Komikku", "TachiyomiJ2K", "Yōkai", "Suwayomi")
+
+    // A field outside the family's means another app wrote the file, such as Aniyomi's anime at 3 or 500 and up
+    override fun recognizes(contents: BackupFileContents): Boolean =
+        contents is BackupFileContents.Protobuf && contents.fieldNumbers.all { it in FIELD_NUMBERS }
+
+    override suspend fun convert(
+        content: BufferedSource,
+        writeEntry: (BackupEntry) -> Unit,
+    ): BackupFormat.ConvertedContent {
+        val input = ProtoInput(content)
+        val rest = Buffer()
+        val report = MihonConversionReport()
+        while (!input.exhausted()) {
+            val tag = input.readTag()
+            if (tag != ENTRY_TAG) {
+                input.copyField(tag, rest)
+                continue
+            }
+            val manga = parser.decodeBackup(MihonManga.serializer(), input.readByteArray(input.readLength()))
+            report.add(manga)
+            writeEntry(manga.toBackupEntry())
+        }
+        val backup = parser.decodeBackup(MihonBackup.serializer(), rest.readByteArray())
+        val metadata = Backup(
+            backupCategories = backup.categories,
+            backupSources = backup.sources.map { source ->
+                val identity = SourceIdentity.ofLegacyKey(source.sourceId)
+                source.copy(idScheme = identity.scheme.key, externalId = identity.externalId)
+            },
+            backupExtensionStores = backup.extensionSources.mapNotNull { it.toBackupExtensionStore() },
+        )
+        return BackupFormat.ConvertedContent(metadata, report.build(backup))
+    }
+
+    private companion object {
+        val ENTRY_TAG = lengthDelimitedTag(1)
+
+        /**
+         * Every top-level field the family writes: Mihon's 1-106 (100 in old backups), TachiyomiSY's and Komikku's
+         * saved searches and feeds at 600, 601 and 610, and Suwayomi's 9000-9002.
+         */
+        val FIELD_NUMBERS = setOf(1, 2, 100, 101, 104, 105, 106, 600, 601, 610, 9000, 9001, 9002)
+    }
+}
