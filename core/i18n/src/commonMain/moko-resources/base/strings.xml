@@ -750,9 +750,9 @@
     <string name="onboarding_start_new">I\'m new to %1$s</string>
     <string name="onboarding_start_new_summary">Set it up from scratch</string>
     <string name="onboarding_start_backup">I have a backup</string>
-    <string name="onboarding_start_backup_summary">Restore a %1$s or Mihon backup file</string>
+    <string name="onboarding_start_backup_summary">Restore a %1$s backup file</string>
     <string name="onboarding_start_mihon_summary">Bring your library from the Mihon app on this device</string>
-    <string name="onboarding_restore_subtitle">Choose a %1$s or Mihon backup file. It is restored in the background while you finish setting up.</string>
+    <string name="onboarding_restore_subtitle">Choose a %1$s backup file. It is restored in the background while you finish setting up.</string>
     <string name="onboarding_restore_choose">Choose a backup file</string>
     <string name="onboarding_sync_heading">Use %1$s on more devices?</string>
     <string name="onboarding_sync_subtitle">Keep your library, progress and settings the same everywhere, through a sync server you run yourself.</string>
@@ -1613,6 +1613,9 @@
     <string name="backup_conversion_which_app">Which app made this backup?</string>
     <string name="backup_conversion_which_app_text">It reads as a backup of %1$s.</string>
     <string name="backup_conversion_or">%1$s or %2$s</string>
+    <string name="backup_conversion_bring_over_from">Bring over from %1$s</string>
+    <string name="restore_other_app_backup">This is a %1$s backup. Katari restores its own backups: bringing this one over turns it into a Katari backup and shows what comes over first.</string>
+    <string name="restore_unknown_backup">This isn\'t a Katari backup. Bringing it over lets you say which app made it, turns it into a Katari backup and shows what comes over first.</string>
     <string name="backup_conversion_is_katari">This is already a Katari backup, so it restores as it is.</string>
     <string name="backup_conversion_unsupported">No app Katari reads wrote this file. If you know which app did, pick it with Change.</string>
     <string name="backup_conversion_convert">Convert</string>

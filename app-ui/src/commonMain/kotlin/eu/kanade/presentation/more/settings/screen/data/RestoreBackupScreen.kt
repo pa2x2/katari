@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.backupconversion.BringOverScreen
 import app.katari.core.platform.currentPlatformContext
 import app.katari.missingextensions.model.MissingExtension
 import app.katari.missingextensions.restore.BackupMissingExtensions
@@ -54,6 +55,8 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.domain.base.OnboardingPreferences
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
+import eu.kanade.tachiyomi.data.backup.conversion.BackupConverter
+import eu.kanade.tachiyomi.data.backup.conversion.BackupIdentity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -104,13 +107,24 @@ class RestoreBackupScreen(
             },
             bottomBar = {
                 BottomActionBar {
-                    Button(
-                        label = stringResource(MR.strings.action_restore),
-                        onClick = { if (state.options.rollBackAccount) confirmRollBack = true else restore() },
-                        modifier = Modifier.weight(1f),
-                        enabled = state.canRestore && state.options.canRestore() &&
-                            (state.profiles.isEmpty() || state.selectedProfileUuids.isNotEmpty()),
-                    )
+                    val identity = state.identity
+                    if (identity != null && identity != BackupIdentity.Katari) {
+                        Button(
+                            label = (identity as? BackupIdentity.Foreign)?.apps?.singleOrNull()
+                                ?.let { stringResource(MR.strings.backup_conversion_bring_over_from, it.name) }
+                                ?: stringResource(MR.strings.backup_conversion_title),
+                            onClick = { navigator.replace(BringOverScreen(uri)) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    } else {
+                        Button(
+                            label = stringResource(MR.strings.action_restore),
+                            onClick = { if (state.options.rollBackAccount) confirmRollBack = true else restore() },
+                            modifier = Modifier.weight(1f),
+                            enabled = state.canRestore && state.options.canRestore() &&
+                                (state.profiles.isEmpty() || state.selectedProfileUuids.isNotEmpty()),
+                        )
+                    }
                 }
             },
         ) { contentPadding ->
@@ -119,6 +133,18 @@ class RestoreBackupScreen(
                     item {
                         NoticeCard(stringResource(MR.strings.restore_miui_warning), NoticeTone.Warning)
                     }
+                }
+
+                when (val identity = state.identity) {
+                    is BackupIdentity.Foreign -> item {
+                        val apps = identity.apps.map { it.name }
+                            .reduce { a, b -> stringResource(MR.strings.backup_conversion_or, a, b) }
+                        NoticeCard(stringResource(MR.strings.restore_other_app_backup, apps), NoticeTone.Info)
+                    }
+                    BackupIdentity.Unsupported -> item {
+                        NoticeCard(stringResource(MR.strings.restore_unknown_backup), NoticeTone.Info)
+                    }
+                    BackupIdentity.Katari, null -> Unit
                 }
 
                 if (state.canRestore && state.syncLinked) {
@@ -300,6 +326,7 @@ internal class RestoreBackupViewModel(
     @Assisted private val uri: DocumentUri,
     private val backupRestoreRunner: BackupRestoreRunner,
     private val backupFileValidator: BackupFileValidator,
+    private val backupConverter: BackupConverter,
     private val backupMissingExtensions: BackupMissingExtensions,
     private val profileManager: ProfileManager,
     private val onboardingPreferences: OnboardingPreferences,
@@ -409,6 +436,16 @@ internal class RestoreBackupViewModel(
     }
 
     private suspend fun validate(uri: DocumentUri) {
+        val identity = try {
+            backupConverter.identify(uri)
+        } catch (e: Exception) {
+            setError(error = InvalidRestore(uri, e.message.toString()), canRestore = false)
+            return
+        }
+        state.update { it.copy(identity = identity) }
+        // Restore reads Katari backups only; another app's is brought over through the tool (D002)
+        if (identity != BackupIdentity.Katari) return
+
         val results = try {
             backupFileValidator.validate(uri)
         } catch (e: Exception) {
@@ -486,6 +523,8 @@ internal class RestoreBackupViewModel(
         val syncLinked: Boolean = false,
         /** Which profile a converted backup goes into; null for a Katari backup, which lists its own profiles. */
         val into: RestoreInto? = null,
+        /** Which app wrote the file; null until it's read. Only a Katari backup restores here. */
+        val identity: BackupIdentity? = null,
     ) {
         val lockedSelectedProfileNames: List<String>
             get() = profiles
