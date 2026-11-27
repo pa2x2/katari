@@ -199,6 +199,7 @@ interface AppBindings {
             context: Context,
             extensionManager: ExtensionManager,
             sourceRepository: StubSourceRepository,
+            sourceIdentities: SourceIdentityRepository,
             @AppCoroutineScope scope: CoroutineScope,
             downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
             localSourceFileSystem: Lazy<LocalSourceFileSystem>,
@@ -209,6 +210,7 @@ interface AppBindings {
         ): DefaultSourceManager = DefaultSourceManager(
             extensionManager = extensionManager,
             sourceRepository = sourceRepository,
+            sourceIdentities = sourceIdentities,
             scope = scope,
             downloadMaintenance = downloadMaintenance,
             localSource = {

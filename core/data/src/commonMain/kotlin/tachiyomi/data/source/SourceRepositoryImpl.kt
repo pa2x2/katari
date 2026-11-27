@@ -105,7 +105,8 @@ class SourceRepositoryImpl(
         return DomainSource(
             id = source.id,
             lang = description.language,
-            name = source.name,
+            // Not a stub's own name, which is blank when none was recorded
+            name = sourceManager.getDisplayInfo(source.id).name,
             catalogue = description.catalogue,
             supportedEntryTypes = description.supportedEntryTypes,
             isStub = false,

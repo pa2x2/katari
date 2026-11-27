@@ -21,7 +21,6 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
-import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionAvailability
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionGroup
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionMember
@@ -75,9 +74,9 @@ class MigrateEntriesViewModel(
     private val _events: Channel<MigrationEntriesEvent> = Channel()
     val events: Flow<MigrationEntriesEvent> = _events.receiveAsFlow()
 
-    private val source by lazy { sourceManager.getOrStub(sourceId) }
+    private val sourceName by lazy { sourceManager.getDisplayInfo(sourceId).name }
 
-    private val itemOrientation by lazy { catalogue.description(source.id).itemOrientation }
+    private val itemOrientation by lazy { catalogue.description(sourceId).itemOrientation }
 
     private val searchQuery = MutableStateFlow<String?>(null)
 
@@ -118,7 +117,7 @@ class MigrateEntriesViewModel(
         selection,
     ) { groups, searchQuery, selection ->
         State(
-            source = source,
+            sourceName = sourceName,
             itemOrientation = itemOrientation,
             searchQuery = searchQuery,
             selection = selection,
@@ -260,7 +259,7 @@ class MigrateEntriesViewModel(
 
     @Immutable
     data class State(
-        val source: UnifiedSource? = null,
+        val sourceName: String? = null,
         val itemOrientation: EntryItemOrientation = EntryItemOrientation.VERTICAL,
         val searchQuery: String? = null,
         val selection: Set<Long> = emptySet(),
@@ -286,7 +285,7 @@ class MigrateEntriesViewModel(
             get() = visibleGroups.flatMap(MigrationEntrySelectionGroup::eligibleMembers)
 
         val isLoading: Boolean
-            get() = source == null || groupList == null
+            get() = sourceName == null || groupList == null
 
         val isEmpty: Boolean
             get() = items.isEmpty()

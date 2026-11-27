@@ -17,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.domain.entry.service.ChapterListWalkScheduler
+import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.i18n.localized.stringResource
 import tachiyomi.source.local.LocalSource
@@ -38,6 +39,7 @@ interface SourceBindings {
         fun defaultSourceManager(
             extensionManager: ExtensionManager,
             sourceRepository: StubSourceRepository,
+            sourceIdentities: SourceIdentityRepository,
             @AppCoroutineScope scope: CoroutineScope,
             downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
             localSourceFileSystem: Lazy<LocalSourceFileSystem>,
@@ -48,6 +50,7 @@ interface SourceBindings {
         ): DefaultSourceManager = DefaultSourceManager(
             extensionManager = extensionManager,
             sourceRepository = sourceRepository,
+            sourceIdentities = sourceIdentities,
             scope = scope,
             downloadMaintenance = downloadMaintenance,
             localSource = {
