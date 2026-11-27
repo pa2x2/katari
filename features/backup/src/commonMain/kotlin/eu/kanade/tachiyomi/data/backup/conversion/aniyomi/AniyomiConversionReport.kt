@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Kind
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
+import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.hasProgress
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.isStore
@@ -40,7 +41,7 @@ internal class AniyomiConversionReport {
         animeSources += anime.source
     }
 
-    fun build(backup: AniyomiBackup, categories: AniyomiCategories, seasons: AniyomiSeasons): ConversionReport {
+    fun build(backup: AniyomiBackup, categories: ConvertedCategories, seasons: AniyomiSeasons): ConversionReport {
         val (stores, repos) = backup.extensionSources.partition { it.isStore }
         val extensions = backup.mangaSources.filter { it.sourceId in mangaSources } +
             backup.animeSources.filter { it.sourceId in animeSources }

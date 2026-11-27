@@ -40,29 +40,40 @@ class MihonBackupFormat(
     ): BackupFormat.ConvertedContent {
         // Merged entries can come after their members, which are written with their merge
         val merges = open().use { MihonMerges.read(it, parser) }
-        val report = MihonConversionReport(merges)
+        // Categories come after the entries that name them, so everything but the entries is read first
         val rest = Buffer()
         open().use { content ->
             val input = ProtoInput(content)
             while (!input.exhausted()) {
                 val tag = input.readTag()
+                if (tag == ENTRY_TAG) input.skipField(tag) else input.copyField(tag, rest)
+            }
+        }
+        val backup = parser.decodeBackup(MihonBackup.serializer(), rest.readByteArray())
+        val categories = ConvertedCategories(backup.categories)
+        val report = MihonConversionReport(merges)
+        open().use { content ->
+            val input = ProtoInput(content)
+            while (!input.exhausted()) {
+                val tag = input.readTag()
                 if (tag != ENTRY_TAG) {
-                    input.copyField(tag, rest)
+                    input.skipField(tag)
                     continue
                 }
                 val manga = parser.decodeBackup(MihonManga.serializer(), input.readByteArray(input.readLength()))
                 report.add(manga)
                 if (merges.isMergedEntry(manga)) continue
-                writeEntry(manga.toBackupEntry().also(merges::applyTo))
+                val entry = manga.toBackupEntry().also(merges::applyTo)
+                entry.categories = categories.of(CATEGORY_LIST, entry.categories)
+                writeEntry(entry)
             }
         }
-        val backup = parser.decodeBackup(MihonBackup.serializer(), rest.readByteArray())
         val settings = convertMihonSettings(backup.preferences)
         val sourceNames = backup.sources.associate { it.sourceId to it.name }
         val savedSearches =
             convertSavedSearches(backup.savedSearches, backup.syFeeds + backup.komikkuFeeds, sourceNames, json)
         val metadata = Backup(
-            backupCategories = backup.categories.map { it.toBackupCategory() },
+            backupCategories = categories.backupCategories,
             backupSources = backup.sources
                 .filter { it.sourceId != MihonMerges.MERGED_SOURCE_ID }
                 .map { it.withTachiyomiIdentity() },
@@ -71,11 +82,14 @@ class MihonBackupFormat(
             backupSourcePreferences = backup.sourcePreferences,
             backupExtensionStores = backup.extensionSources.mapNotNull { it.toBackupExtensionStore() },
         )
-        return BackupFormat.ConvertedContent(metadata, report.build(backup, settings, savedSearches))
+        return BackupFormat.ConvertedContent(metadata, report.build(backup, categories, settings, savedSearches))
     }
 
     private companion object {
         val ENTRY_TAG = lengthDelimitedTag(1)
+
+        // The family keeps one category list
+        const val CATEGORY_LIST = 0
 
         /**
          * Every top-level field the family writes: Mihon's 1-106 (100 in old backups), TachiyomiSY's and Komikku's

@@ -1692,6 +1692,7 @@
     <string name="backup_conversion_mihon_update_progress_marked_read">Update progress when marked as read</string>
     <string name="backup_conversion_mihon_tracked">Tracked</string>
     <string name="backup_conversion_mihon_tracker_sign_ins">Tracker sign-ins</string>
+    <string name="backup_conversion_category_shared_order">The backup gives it the same place as another category, so it can\'t tell their entries apart: they\'re in both</string>
     <string name="backup_conversion_hidden_category">Hidden in the other app, shown in Katari</string>
     <string name="backup_conversion_manual_category_sort">Sorted by hand in the other app. Katari has no manual sort, so it uses the default</string>
     <string name="backup_conversion_custom_title">Custom title</string>

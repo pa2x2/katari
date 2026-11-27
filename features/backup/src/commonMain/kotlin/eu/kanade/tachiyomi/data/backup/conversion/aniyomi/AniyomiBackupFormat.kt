@@ -5,6 +5,7 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
+import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.toBackupEntry
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.toBackupExtensionStore
@@ -54,7 +55,7 @@ class AniyomiBackupFormat(private val parser: ProtoBuf) : BackupFormat {
             }
         }
         val backup = layout.decode(parser, rest.readByteArray())
-        val mergedCategories = AniyomiCategories(backup.mangaCategories, backup.animeCategories)
+        val mergedCategories = ConvertedCategories(backup.mangaCategories, backup.animeCategories)
         val seasons = AniyomiSeasons(seasonInfos)
         val animeSourceNames = backup.animeSources.associate { it.sourceId to it.name }
         val sourceKeys = AniyomiSourceKeys(
@@ -73,7 +74,7 @@ class AniyomiBackupFormat(private val parser: ProtoBuf) : BackupFormat {
                         report.add(manga)
                         writeEntry(
                             manga.toBackupEntry().apply {
-                                categories = mergedCategories.ofManga(manga.categories)
+                                categories = mergedCategories.of(MANGA_LIST, manga.categories)
                             },
                         )
                     }
@@ -82,7 +83,7 @@ class AniyomiBackupFormat(private val parser: ProtoBuf) : BackupFormat {
                         report.add(anime)
                         val entry = anime.toBackupEntry(
                             source = sourceKeys.animeKey(anime.source),
-                            categories = mergedCategories.ofAnime(seasons.categoriesOf(anime)),
+                            categories = mergedCategories.of(ANIME_LIST, seasons.categoriesOf(anime)),
                         )
                         seasons.applyTo(entry, anime.source, anime.url, sourceKeys::animeKey)
                         writeEntry(entry)
@@ -104,6 +105,10 @@ class AniyomiBackupFormat(private val parser: ProtoBuf) : BackupFormat {
 
     private companion object {
         val MANGA_TAG = lengthDelimitedTag(1)
+
+        // The order of the category lists given to ConvertedCategories
+        const val MANGA_LIST = 0
+        const val ANIME_LIST = 1
 
         /**
          * Every top-level field either layout writes: manga at 1, 2, 101, 104 and 105 as Mihon has them, the older

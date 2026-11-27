@@ -40,6 +40,7 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
 
     fun build(
         backup: MihonBackup,
+        categories: ConvertedCategories,
         settings: ConvertedMihonSettings,
         savedSearches: ConvertedSavedSearches,
     ): ConversionReport {
@@ -49,7 +50,7 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
         return ConversionReport(
             listOfNotNull(
                 Row.of(Kind.LIBRARY, carried = library.values.map { Item(it) }),
-                Row.of(Kind.CATEGORIES, carried = backup.categories.map { it.reportItem() }),
+                Row.of(Kind.CATEGORIES, carried = categories.reportItems),
                 Row.of(Kind.PROGRESS_AND_HISTORY, carried = progress.values.map { Item(it) }),
                 Row.of(
                     Kind.MERGED_ENTRIES,
