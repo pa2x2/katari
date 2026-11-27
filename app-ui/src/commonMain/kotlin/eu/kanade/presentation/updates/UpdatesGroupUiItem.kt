@@ -8,6 +8,7 @@ import app.katari.entry.interactions.download.EntryDownloadState
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.KeyboardArrowDown
 import app.katari.icons.materialsymbols.rounded.KeyboardArrowUp
+import app.katari.presentation.kit.button.DownloadedShare
 import app.katari.presentation.kit.content.InlineIcon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.list.ChapterMarks
@@ -99,12 +100,21 @@ internal fun UpdatesGroupUiItem(
                     modifier = Modifier.padding(start = KatariTheme.spacing.xs),
                     downloadStateProvider = { items.groupDownloadState() },
                     downloadProgressProvider = { items.groupDownloadProgress() },
+                    downloadedShareProvider = {
+                        DownloadedShare(
+                            downloaded = items.count { it.downloadStateProvider() == EntryDownloadState.DOWNLOADED },
+                            total = items.size,
+                        )
+                    },
                     onClick = { action ->
                         val targets = when (action) {
-                            ChapterDownloadAction.START -> items.filter {
+                            ChapterDownloadAction.START, ChapterDownloadAction.START_NOW -> items.filter {
                                 it.downloadStateProvider() != EntryDownloadState.DOWNLOADED
                             }
-                            else -> items
+                            ChapterDownloadAction.DELETE -> items.filter {
+                                it.downloadStateProvider() == EntryDownloadState.DOWNLOADED
+                            }
+                            ChapterDownloadAction.CANCEL -> items
                         }
                         onDownloadChapter(targets, action)
                     },
