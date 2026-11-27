@@ -38,6 +38,7 @@ class BackupRestoreJob(private val context: Context, workerParams: WorkerParamet
                 it,
                 inputData.getNullableStringArray(PROFILES_KEY)?.filterNotNullTo(mutableSetOf()),
                 inputData.getBoolean(ROLL_BACK_ACCOUNT_KEY, false),
+                inputData.keyValueMap[NEW_PROFILE_KEY] as? Long,
             )
         }
 
@@ -84,5 +85,6 @@ class BackupRestoreJob(private val context: Context, workerParams: WorkerParamet
         internal const val OPTIONS_KEY = "options" // BooleanArray
         internal const val PROFILES_KEY = "profiles" // Array<String>, absent to restore every profile
         internal const val ROLL_BACK_ACCOUNT_KEY = "roll_back_account" // Boolean
+        internal const val NEW_PROFILE_KEY = "new_profile" // Long, absent to restore into the active profile
     }
 }

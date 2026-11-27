@@ -57,8 +57,8 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | The base of every row: icon, title, subtitle, trailing control | `SettingsRow` | Use a more specific row below when one fits. `expanded` for a row that opens rows under it in its card, such as the changes behind a setting another device changed; `subtitleTone` for a subtitle that reports a state, such as a warning; `subtitleState` for a short state after the subtitle in its own tone, marked by a dot, such as Live on Sync's status; `iconAlert` for a row that tells of a problem its subtitle explains calmly |
 | Answers to the row above in the same card, such as which side of a conflict to keep | `RowActions` | The last is the proposed one and stands out; they wrap where the card is narrow |
 | An on/off setting | `ToggleRow` | Switch on screens, checkbox in sheets, picked by row density; `leading` for a picture such as a profile's avatar; `onOpen` for a setting with a page of its own, such as a sync area: the text opens the page and only the switch toggles |
-| One of a set where any number can be picked | `CheckRow` | |
-| One of a set where only one can be chosen | `ChoiceRow` | |
+| One of a set where any number can be picked | `CheckRow` | `avatar` for an item with one, such as a profile |
+| One of a set where only one can be chosen | `ChoiceRow` | `avatar` for an option with one, such as a profile |
 | A filter that includes, excludes or ignores | `TriStateRow` | |
 | A sort option | `SortRow` | |
 | A setting on a slider, its value in a pill | `SliderRow` | |

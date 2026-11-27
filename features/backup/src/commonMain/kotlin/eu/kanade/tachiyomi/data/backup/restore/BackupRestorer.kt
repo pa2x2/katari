@@ -126,9 +126,9 @@ class BackupRestorer(
     }
 
     private suspend fun restoreFromFile(uri: DocumentUri, options: RestoreOptions) {
-        // Read once: a backup without profiles restores into the profile that was active when it started, even if
-        // another one is switched to meanwhile.
-        val targetProfileId = profileStore.currentProfileId
+        // Read once: a backup without profiles restores into the profile made for it, or the one that was active when
+        // it started, even if another one is switched to meanwhile.
+        val targetProfileId = options.newProfileId ?: profileStore.currentProfileId
         val summary = backupDecoder.summarize(uri)
         if (options.rollBackAccount) {
             syncedRestore.rollingBackAccount(rolledBackProfiles(summary.metadata, targetProfileId)) {
@@ -214,9 +214,12 @@ class BackupRestorer(
             } else {
                 null
             }
+            options.newProfileId?.let { profileDatabase.getProfileById(it) }?.let { restoredProfileNames += it.name }
             if (options.appSettings) {
                 restoreAppPreferences(
                     targetProfileId,
+                    // A profile made for the backup leaves what every profile shares as it is (D051)
+                    includeShared = options.newProfileId == null,
                     backup.backupPreferences,
                     backup.backupCategories.takeIf { options.categories },
                     categoriesJob,
@@ -444,6 +447,7 @@ class BackupRestorer(
 
     private fun CoroutineScope.restoreAppPreferences(
         profileId: Long,
+        includeShared: Boolean,
         preferences: List<BackupPreference>,
         categories: List<BackupCategory>?,
         categoriesJob: Job?,
@@ -454,7 +458,7 @@ class BackupRestorer(
             profileId = profileId,
             preferences = preferences,
             backupCategories = categories,
-            includeGlobalRestore = true,
+            includeGlobalRestore = includeShared,
             scheduleJobs = true,
         )
 

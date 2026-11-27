@@ -1632,6 +1632,14 @@
     <string name="restore_profile_new">New on this device</string>
     <string name="restore_profile_merge">Merges into this device\'s profile</string>
     <string name="restore_profile_locked">Locked on this device, asks to unlock</string>
+    <string name="restore_into">Restore into</string>
+    <string name="restore_into_profile_in_use">The profile in use</string>
+    <string name="restore_into_new_profile">New profile</string>
+    <string name="restore_into_new_profile_named">New profile “%1$s”</string>
+    <string name="restore_into_named">Named “%1$s”</string>
+    <string name="restore_into_made_on_restore">Made when the restore starts</string>
+    <string name="restore_into_name_title">Name the new profile</string>
+    <string name="restore_into_shared_settings">Downloads, automatic backups and network settings are shared by every profile, so they stay as they are on this device.</string>
     <string name="restore_duration">%1$02d min, %2$02d sec</string>
     <string name="backup_in_progress">Backup is already in progress</string>
     <string name="backup_choice">What do you want to backup?</string>

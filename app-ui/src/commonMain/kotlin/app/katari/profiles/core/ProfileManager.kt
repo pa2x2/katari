@@ -113,7 +113,7 @@ class ProfileManager(
         switchRequests.value = profile.id
     }
 
-    suspend fun createProfile(name: String): Profile {
+    suspend fun createProfile(name: String, colorSeed: Long = Random.nextLong(0x00FFFFFF)): Profile {
         val trimmedName = name.trim()
         require(trimmedName.isNotEmpty())
         validateUniqueProfileName(trimmedName)
@@ -122,7 +122,7 @@ class ProfileManager(
         val id = profileDatabase.insertProfile(
             uuid = newUuid(),
             name = trimmedName,
-            colorSeed = Random.nextLong(0x00FFFFFF),
+            colorSeed = colorSeed,
             position = position,
             requiresAuth = false,
             isArchived = false,

@@ -59,13 +59,14 @@ class BackupFileValidator(
             extensionStores = backup.backupExtensionStores.map { it.toExtensionStore() },
             profiles = backup.backupProfiles.map { it.profile },
             createdAt = summary.createdAt,
+            convertedFrom = backup.convertedFrom,
         )
     }
 
     /** A source the backup's entries come from that isn't installed, and how many of them are in a library. */
     data class MissingSource(val name: String, val identity: SourceIdentity, val libraryEntries: Int)
 
-    /** [profiles] is empty for a backup made before profiles, which restores into the active profile. */
+    /** [profiles] is empty for a converted backup, which restores into one profile the restore screen picks. */
     data class Results(
         val missingSources: List<MissingSource>,
         /** The extension stores the backup restores, which may list what the missing sources need. */
@@ -73,5 +74,7 @@ class BackupFileValidator(
         val profiles: List<ProfileBackup>,
         /** When the backup was made, in epoch milliseconds, as restoring it on a synced device counts it. */
         val createdAt: Long,
+        /** The app a converted backup came from; null for a backup Katari made. */
+        val convertedFrom: String?,
     )
 }

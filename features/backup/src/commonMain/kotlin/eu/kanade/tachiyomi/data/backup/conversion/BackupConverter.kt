@@ -66,7 +66,7 @@ class BackupConverter(
                     }
                     format.convert(open, writer::writeEntry)
                 }
-                writer.writeMetadata(content.metadata)
+                writer.writeMetadata(content.metadata.copy(convertedFrom = format.appName))
                 content
             }
             ConvertedBackup(DocumentUri(file.toURI().toString()), content.report)

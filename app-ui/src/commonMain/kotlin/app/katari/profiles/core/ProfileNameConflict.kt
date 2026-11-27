@@ -12,3 +12,7 @@ internal fun List<Profile>.hasNameConflict(
             profile.name.trim().equals(normalizedName, ignoreCase = true)
     }
 }
+
+/** [name], or the first of "[name] 2", "[name] 3" and on that no profile has. */
+internal fun List<Profile>.unusedName(name: String): String =
+    (sequenceOf(name) + generateSequence(2) { it + 1 }.map { "$name $it" }).first { !hasNameConflict(it) }

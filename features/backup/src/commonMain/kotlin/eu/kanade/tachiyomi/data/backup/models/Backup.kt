@@ -30,4 +30,9 @@ data class Backup(
      * written ([eu.kanade.tachiyomi.data.backup.stream.BackupSummary.createdAt] says what stands in).
      */
     @ProtoNumber(205) var createdAt: Long = 0,
+    /**
+     * The app whose backup this was converted from, by the name the conversion tool shows it under; null for a backup
+     * Katari made. A converted backup has no profiles, and restoring it can make a profile named after the app.
+     */
+    @ProtoNumber(206) var convertedFrom: String? = null,
 )

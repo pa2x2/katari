@@ -33,7 +33,9 @@ import app.katari.presentation.kit.surface.NoticeCard
 import app.katari.presentation.kit.surface.NoticeTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
+import app.katari.profiles.core.Profile
 import app.katari.profiles.core.ProfileManager
+import app.katari.profiles.core.unusedName
 import app.katari.profiles.ui.components.ProfileCheckRow
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.status.SyncStatusState
@@ -49,6 +51,7 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import eu.kanade.domain.base.OnboardingPreferences
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,6 +66,7 @@ import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.random.Random
 
 class RestoreBackupScreen(
     private val uri: DocumentUri,
@@ -78,7 +82,9 @@ class RestoreBackupScreen(
         val scope = rememberCoroutineScope()
         val model = assistedMetroViewModel<RestoreBackupViewModel, RestoreBackupViewModel.Factory> { create(uri) }
         val state by model.state.collectAsState()
+        val deviceProfiles by model.deviceProfiles.collectAsState()
         var confirmRollBack by rememberSaveable { mutableStateOf(false) }
+        var choosingProfile by rememberSaveable { mutableStateOf(false) }
         val restore = {
             scope.launch {
                 if (profileUnlock.unlock(context, state.lockedSelectedProfileNames)) {
@@ -129,6 +135,11 @@ class RestoreBackupScreen(
                     item { RowGroupNote(stringResource(MR.strings.sync_rollback_needs_everything)) }
                 }
 
+                val into = state.into
+                if (state.canRestore && into != null && !state.options.rollBackAccount) {
+                    item { RestoreIntoSection(into, onClick = { choosingProfile = true }) }
+                }
+
                 if (state.canRestore && state.profiles.isNotEmpty() && !state.options.rollBackAccount) {
                     item {
                         BackupSection(
@@ -177,6 +188,20 @@ class RestoreBackupScreen(
                     errorMessageItem(state.error)
                 }
             }
+        }
+
+        val into = state.into
+        if (choosingProfile && into != null) {
+            RestoreIntoDialog(
+                into = into,
+                profiles = deviceProfiles,
+                onPick = {
+                    model.setIntoNewProfile(it)
+                    choosingProfile = false
+                },
+                onRename = model::renameNewProfile,
+                onDismissRequest = { choosingProfile = false },
+            )
         }
 
         if (confirmRollBack) {
@@ -274,6 +299,7 @@ internal class RestoreBackupViewModel(
     private val backupFileValidator: BackupFileValidator,
     private val backupMissingExtensions: BackupMissingExtensions,
     private val profileManager: ProfileManager,
+    private val onboardingPreferences: OnboardingPreferences,
     syncStatus: SyncStatusState,
 ) : ViewModel() {
 
@@ -286,6 +312,8 @@ internal class RestoreBackupViewModel(
 
     val state: StateFlow<RestoreBackupViewModel.State>
         field = MutableStateFlow<RestoreBackupViewModel.State>(State())
+
+    val deviceProfiles: StateFlow<List<Profile>> = profileManager.profiles
 
     init {
         viewModelScope.launchIO {
@@ -332,6 +360,14 @@ internal class RestoreBackupViewModel(
         setError(MissingRestoreComponents(uri, extensions), canRestore = true)
     }
 
+    fun setIntoNewProfile(intoNewProfile: Boolean) {
+        state.update { it.copy(into = it.into?.copy(intoNewProfile = intoNewProfile)) }
+    }
+
+    fun renameNewProfile(name: String) {
+        state.update { it.copy(into = it.into?.copy(newProfileName = name, intoNewProfile = true)) }
+    }
+
     fun toggleProfile(uuid: String, selected: Boolean) {
         state.update {
             it.copy(
@@ -345,8 +381,13 @@ internal class RestoreBackupViewModel(
         }
     }
 
-    fun startRestore() {
+    suspend fun startRestore() {
         val current = state.value
+        // Made only now, so leaving the screen leaves no profile behind (D050)
+        val newProfile = current.into?.takeIf { it.intoNewProfile && !current.options.rollBackAccount }
+            ?.let {
+                profileManager.createProfile(deviceProfiles.value.unusedName(it.newProfileName), it.newProfileColorSeed)
+            }
         backupRestoreRunner.start(
             uri = uri,
             options = if (current.options.rollBackAccount) {
@@ -354,6 +395,7 @@ internal class RestoreBackupViewModel(
             } else {
                 current.options.copy(
                     profileUuids = current.selectedProfileUuids.takeIf { current.profiles.isNotEmpty() },
+                    newProfileId = newProfile?.id,
                 )
             },
         )
@@ -370,9 +412,9 @@ internal class RestoreBackupViewModel(
             return
         }
 
-        val deviceProfiles = profileManager.profiles.value.associateBy { it.uuid }
+        val deviceProfilesByUuid = profileManager.profiles.value.associateBy { it.uuid }
         val profiles = results.profiles.map { backupProfile ->
-            val deviceProfile = deviceProfiles[backupProfile.uuid]
+            val deviceProfile = deviceProfilesByUuid[backupProfile.uuid]
             RestoreProfile(
                 uuid = backupProfile.uuid,
                 name = backupProfile.name,
@@ -385,8 +427,25 @@ internal class RestoreBackupViewModel(
             )
         }
         val allUuids = profiles.mapTo(mutableSetOf(), RestoreProfile::uuid)
+        // On first run the profile in use is the one being set up, so the backup goes into it without asking (D049)
+        val inUse = profileManager.activeProfile.value?.takeIf { onboardingPreferences.shownOnboardingFlow.get() }
+        val into = results.convertedFrom?.let { app ->
+            inUse?.let {
+                RestoreInto(
+                    inUse = it,
+                    intoNewProfile = false,
+                    newProfileName = deviceProfiles.value.unusedName(app),
+                    newProfileColorSeed = Random.nextLong(0x00FFFFFF),
+                )
+            }
+        }
         state.update {
-            it.copy(profiles = profiles, selectedProfileUuids = allUuids, createdAt = results.createdAt)
+            it.copy(
+                profiles = profiles,
+                selectedProfileUuids = allUuids,
+                createdAt = results.createdAt,
+                into = into,
+            )
         }
 
         if (results.missingSources.isNotEmpty()) {
@@ -418,6 +477,8 @@ internal class RestoreBackupViewModel(
         val createdAt: Long = 0,
         /** Whether the device syncs, which offers rolling the account back. */
         val syncLinked: Boolean = false,
+        /** Which profile a converted backup goes into; null for a Katari backup, which lists its own profiles. */
+        val into: RestoreInto? = null,
     ) {
         val lockedSelectedProfileNames: List<String>
             get() = profiles

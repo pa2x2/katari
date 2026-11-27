@@ -35,10 +35,11 @@ internal object BackupLayout {
     val TOP_LEVEL_ENTRY_TAG = lengthDelimitedTag(203)
 
     /**
-     * Top-level fields only Katari writes: profiles, the active profile, entries and when the backup was made. Every
-     * released Katari backup has profiles or entries; no other app's backup has any of these.
+     * Top-level fields only Katari writes: profiles, the active profile, entries, when the backup was made and the app a
+     * converted one came from. Every released Katari backup has profiles or entries, and every converted one says where
+     * it came from; no other app's backup has any of these.
      */
-    val KATARI_FIELD_NUMBERS = setOf(200, 201, 203, 205)
+    val KATARI_FIELD_NUMBERS = setOf(200, 201, 203, 205, 206)
 
     /** [ProfileScopedBackup.entries] */
     val PROFILE_ENTRY_TAG = lengthDelimitedTag(7)
