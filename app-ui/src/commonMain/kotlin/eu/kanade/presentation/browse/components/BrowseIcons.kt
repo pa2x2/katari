@@ -44,7 +44,7 @@ fun SourceIcon(
         when {
             // Its row already says it isn't installed; the letter keeps the rows in a list of them apart
             source.isStub -> LetterTile(
-                name = source.name.ifBlank { source.id.toString() },
+                name = source.name,
                 modifier = Modifier.fillMaxSize(),
             )
             source.id == LOCAL_SOURCE_ID -> Image(
