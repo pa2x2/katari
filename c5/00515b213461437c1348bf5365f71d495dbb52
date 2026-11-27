@@ -1,0 +1,19 @@
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/updates/UpdatesGroupUiItem.kt
+  s_b77ec5099f03b1::t_4a7fc71c4629f9 143-146,149,151-153,156
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c500515b213461437c1348bf5365f71d495dbb52",
+  "prompts": {},
+  "sessions": {
+    "s_b77ec5099f03b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e1a489e0-5890-4fe5-84a9-04ba2a37f53e",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
