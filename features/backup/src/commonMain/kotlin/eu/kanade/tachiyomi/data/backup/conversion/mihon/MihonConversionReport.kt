@@ -27,13 +27,13 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
         val key = EntryKey(manga.source, manga.url)
         val title = manga.customTitle ?: manga.title
         // A merge's members are its titles in the library, which the merged entry stands for
-        if (manga.favorite && !merges.isMember(manga)) library[key] = title
+        if (manga.favorite && !merges.isMember(manga.source, manga.url)) library[key] = title
         if (manga.hasProgress) progress[key] = title
         if (manga.tracking.isNotEmpty()) tracked[key] = title
         customInfo.add(key, title, manga.customInfo)
         if (manga.flatMetadata != null) searchMetadata[key] = title
         if (manga.hasSuwayomiMeta) clientData[key] = title
-        if (!merges.isMergedEntry(manga)) entrySources += manga.source
+        if (!merges.isMergedEntry(manga.source)) entrySources += manga.source
     }
 
     fun build(
@@ -52,8 +52,8 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
                 Row.of(Kind.PROGRESS_AND_HISTORY, carried = progress.values.map { Item(it) }),
                 Row.of(
                     Kind.MERGED_ENTRIES,
-                    carried = merges.merges.map { Item(it.title) },
-                    leftBehind = merges.merges.flatMap { it.leftBehind() },
+                    carried = merges.reportItems,
+                    leftBehind = merges.leftBehind,
                 ),
                 customInfo.row(),
                 Row.of(
@@ -98,12 +98,6 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
             .takeIf { suwayomiServerSettings != null || suwayomiUserSettings != null },
         MR.strings.backup_conversion_client_settings.takeIf { suwayomiMeta.isNotEmpty() },
     ).map { Item(Name.Part(it), MR.strings.backup_conversion_app_own_setting) }
-
-    private fun MihonMerges.Merge.leftBehind(): List<Item> = buildList {
-        repeat(builtInSourceMembers) { add(Item(title, MR.strings.backup_conversion_merge_builtin_source)) }
-        if (hasChapterSortMode) add(Item(title, MR.strings.backup_conversion_merge_sort_mode))
-        repeat(downloadsOff) { add(Item(title, MR.strings.backup_conversion_merge_download_switch)) }
-    }
 }
 
 // Mihon names a source's settings after its id (ConfigurableSource.preferenceKey)

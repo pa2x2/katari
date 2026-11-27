@@ -11,7 +11,7 @@ import eu.kanade.tachiyomi.source.entry.ChapterKind
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.entry.model.Entry
 
-/** The anime as a Katari entry from [source], in the merged list's [categories]. */
+/** The anime as a Katari entry from [source], in [categories] as orders in the anime category list. */
 internal fun AniyomiAnime.toBackupEntry(source: Long, categories: List<Long>): BackupEntry {
     val watchedAt = history.associate { it.url to it.lastRead }
     return BackupEntry(
@@ -79,13 +79,14 @@ private fun AniyomiEpisode.toBackupChapter(): BackupChapter = BackupChapter(
     read = seen,
     bookmark = bookmark,
     dateFetch = dateFetch,
-    dateUpload = dateUpload,
+    // D072
+    dateUpload = dateUploadOverride.takeIf { it > 0 } ?: dateUpload,
     chapterNumber = episodeNumber.toDouble(),
     sourceOrder = sourceOrder,
     memo = memo.validMemo(),
     summary = summary,
     previewUrl = previewUrl,
-    kind = if (fillermark) ChapterKind.FILLER.code else ChapterKind.REGULAR.code,
+    kind = if (fillermark || legacyFillermark) ChapterKind.FILLER.code else ChapterKind.REGULAR.code,
 )
 
 /**

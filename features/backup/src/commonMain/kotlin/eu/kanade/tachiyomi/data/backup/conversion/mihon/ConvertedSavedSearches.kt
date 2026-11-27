@@ -18,20 +18,28 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.intOrNull
 import tachiyomi.i18n.*
 
-/** TachiyomiSY's and Komikku's saved searches and feeds as Katari's, which Katari keeps as two settings (D045, D046). */
+/**
+ * TachiyomiSY's, Komikku's and Anikku's saved searches and feeds as Katari's, which Katari keeps as two settings (D045,
+ * D046, D069).
+ */
 internal class ConvertedSavedSearches(val preferences: List<BackupPreference>, val carried: List<Item>)
 
+/**
+ * [sourceNames] and the searches and feeds name sources by the backup's ids; [sourceKey] gives the key the converted
+ * backup lists a source under.
+ */
 internal fun convertSavedSearches(
     searches: List<MihonSavedSearch>,
     feeds: List<MihonFeed>,
     sourceNames: Map<Long, String>,
     json: Json,
+    sourceKey: (Long) -> Long = { it },
 ): ConvertedSavedSearches {
     // Komikku's feeds hold their saved search, which may be none of the backup's saved searches
     val allSearches = (searches + feeds.mapNotNull { it.savedSearch })
         .distinctBy { Triple(it.source, it.name, it.query) }
     val presets = allSearches.mapIndexed { index, search ->
-        search to search.toPreset("$CONVERTED_PRESET_PREFIX$index", json)
+        search to search.toPreset("$CONVERTED_PRESET_PREFIX$index", sourceKey(search.source), json)
     }
     val presetIds = presets.associate { (search, preset) -> (search.source to search.name) to preset.preset.id }
     val katariFeeds = feeds
@@ -40,7 +48,7 @@ internal fun convertSavedSearches(
             val searchName = feed.savedSearch?.name ?: feed.savedSearchName
             SourceFeed(
                 id = "$CONVERTED_FEED_PREFIX$index",
-                sourceId = feed.source,
+                sourceId = sourceKey(feed.source),
                 // Without a saved search, a feed shows the source's latest titles
                 presetId = searchName?.let { presetIds[feed.source to it] } ?: BUILTIN_LATEST_PRESET_ID,
             )
@@ -67,7 +75,7 @@ internal fun convertSavedSearches(
 
 private class ConvertedPreset(val preset: SourceFeedPreset, val filtersPartly: Boolean)
 
-private fun MihonSavedSearch.toPreset(id: String, json: Json): ConvertedPreset {
+private fun MihonSavedSearch.toPreset(id: String, sourceId: Long, json: Json): ConvertedPreset {
     var partly = false
     val filters = runCatching { json.parseToJsonElement(filterList) }.getOrNull()
         ?.let { (it as? JsonArray)?.toFilterStates { partly = true } }
@@ -75,7 +83,7 @@ private fun MihonSavedSearch.toPreset(id: String, json: Json): ConvertedPreset {
     return ConvertedPreset(
         SourceFeedPreset(
             id = id,
-            sourceId = source,
+            sourceId = sourceId,
             name = name,
             listingMode = FeedListingMode.Search,
             query = query.ifBlank { null },

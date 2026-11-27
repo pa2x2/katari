@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.conversion.mihon
 
+import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.stream.ProtoInput
 import eu.kanade.tachiyomi.data.backup.stream.decodeBackup
@@ -10,17 +11,20 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.protobuf.ProtoNumber
 import okio.BufferedSource
 import tachiyomi.domain.library.update.model.EntryUpdateMode
+import tachiyomi.i18n.*
 
 /**
- * TachiyomiSY's and Komikku's merged entries, read before the entries are converted so each member is written with
- * its merge (D013). A merged entry is a stand-in of the merged source listing its members; in Katari the members
- * themselves form the merge, with the one whose details it shows as its target.
+ * TachiyomiSY's, Komikku's and Anikku's merged entries, read before the entries are converted so each member is written
+ * with its merge (D013, D070). A merged entry is a stand-in of the merged source listing its members; in Katari the
+ * members themselves form the merge, with the one whose details it shows as its target. Keys are the backup's own
+ * source ids.
  */
 internal class MihonMerges private constructor(
     private val members: Map<EntryKey, Member>,
-    val merges: List<Merge>,
+    private val merges: List<Merge>,
+    private val type: EntryType,
 ) {
-    class Merge(
+    private class Merge(
         val title: String,
         /** Members of SY's built-in sources, which stay outside the Katari merge (D047). */
         val builtInSourceMembers: Int,
@@ -38,16 +42,37 @@ internal class MihonMerges private constructor(
         val displayName: String?,
     )
 
-    fun isMergedEntry(manga: MihonManga): Boolean = manga.source == MERGED_SOURCE_ID
+    /** The merges as the report's merged entries row lists them. */
+    val reportItems: List<Item>
+        get() = merges.map { Item(it.title) }
 
-    fun isMember(manga: MihonManga): Boolean = EntryKey(manga.source, manga.url) in members
+    /** What of the merges stays behind, for the merged entries row. */
+    val leftBehind: List<Item>
+        get() = merges.flatMap { merge ->
+            buildList {
+                repeat(merge.builtInSourceMembers) {
+                    add(Item(merge.title, MR.strings.backup_conversion_merge_builtin_source))
+                }
+                if (merge.hasChapterSortMode) add(Item(merge.title, MR.strings.backup_conversion_merge_sort_mode))
+                repeat(merge.downloadsOff) {
+                    add(Item(merge.title, MR.strings.backup_conversion_merge_download_switch))
+                }
+            }
+        }
 
-    /** Makes [entry] a member of its merge, which holds the library state SY kept on the merged entry. */
-    fun applyTo(entry: BackupEntry) {
-        val member = members[EntryKey(entry.source, entry.url)] ?: return
-        entry.mergeTargetSource = member.target.source
+    fun isMergedEntry(source: Long): Boolean = source == MERGED_SOURCE_ID
+
+    fun isMember(source: Long, url: String): Boolean = EntryKey(source, url) in members
+
+    /**
+     * Makes [entry], the backup's entry from [source], a member of its merge, which holds the library state SY kept on
+     * the merged entry. [sourceKey] gives the key the converted backup lists a source under.
+     */
+    fun applyTo(entry: BackupEntry, source: Long = entry.source, sourceKey: (Long) -> Long = { it }) {
+        val member = members[EntryKey(source, entry.url)] ?: return
+        entry.mergeTargetSource = sourceKey(member.target.source)
         entry.mergeTargetUrl = member.target.url
-        entry.mergeTargetType = EntryType.MANGA
+        entry.mergeTargetType = type
         entry.mergePosition = member.position
         entry.favorite = member.favorite
         entry.categories = member.categories
@@ -65,14 +90,20 @@ internal class MihonMerges private constructor(
 
         private val ENTRY_TAG = lengthDelimitedTag(1)
 
-        fun read(content: BufferedSource, parser: ProtoBuf): MihonMerges {
+        /** The merges among the entries of [type] that [content] holds at [entryTag]. */
+        fun read(
+            content: BufferedSource,
+            parser: ProtoBuf,
+            entryTag: Long = ENTRY_TAG,
+            type: EntryType = EntryType.MANGA,
+        ): MihonMerges {
             val members = mutableMapOf<EntryKey, Member>()
             val merges = mutableListOf<Merge>()
             val seen = hashSetOf<String>()
             val input = ProtoInput(content)
             while (!input.exhausted()) {
                 val tag = input.readTag()
-                if (tag != ENTRY_TAG) {
+                if (tag != entryTag) {
                     input.skipField(tag)
                     continue
                 }
@@ -81,7 +112,7 @@ internal class MihonMerges private constructor(
                 if (entry.source != MERGED_SOURCE_ID || !seen.add(entry.url)) continue
                 merges += entry.plan(members)
             }
-            return MihonMerges(members, merges)
+            return MihonMerges(members, merges, type)
         }
 
         private fun MergedEntry.plan(members: MutableMap<EntryKey, Member>): Merge {
@@ -122,7 +153,7 @@ internal class MihonMerges private constructor(
 
 internal data class EntryKey(val source: Long, val url: String)
 
-/** A Mihon-family entry read only for what a merged entry holds, which skips its chapters. */
+/** A Mihon-family or Anikku entry read only for what a merged entry holds, which skips its chapters. */
 @Serializable
 private class MergedEntry(
     @ProtoNumber(1) val source: Long,

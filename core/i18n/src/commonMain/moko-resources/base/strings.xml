@@ -1643,6 +1643,8 @@
     <string name="backup_conversion_seasons">Its seasons, merged into one entry</string>
     <string name="backup_conversion_skip_intro_length">Skip intro length. Katari finds intro times online instead</string>
     <string name="backup_conversion_season_view">How its seasons are filtered, sorted and shown. Katari lists them with the episodes</string>
+    <string name="backup_conversion_audio_original">Set to play in its original language. Katari picks the dub for each show from what its source offers</string>
+    <string name="backup_conversion_audio_language">Set to play in this language. Katari picks the dub for each show from what its source offers</string>
     <string name="backup_conversion_no_counterpart">Katari has no such setting</string>
     <string name="backup_conversion_consent_not_carried">Consent given to another app doesn\'t carry over to Katari</string>
     <string name="backup_conversion_tablet_ui_automatic">Set to Automatic: Katari has no Always or In landscape</string>

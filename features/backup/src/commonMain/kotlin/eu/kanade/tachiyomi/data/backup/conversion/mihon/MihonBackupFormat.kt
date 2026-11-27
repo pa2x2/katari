@@ -62,7 +62,7 @@ class MihonBackupFormat(
                 }
                 val manga = parser.decodeBackup(MihonManga.serializer(), input.readByteArray(input.readLength()))
                 report.add(manga)
-                if (merges.isMergedEntry(manga)) continue
+                if (merges.isMergedEntry(manga.source)) continue
                 val entry = manga.toBackupEntry().also(merges::applyTo)
                 entry.categories = categories.of(CATEGORY_LIST, entry.categories)
                 writeEntry(entry)

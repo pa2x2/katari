@@ -3,6 +3,8 @@ package eu.kanade.tachiyomi.data.backup.conversion.aniyomi
 import app.katari.core.common.extensions.JsonObjectEmptyBytes
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonCategory
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonExtensionSource
+import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonFeed
+import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonSavedSearch
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonTracking
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
@@ -29,6 +31,9 @@ internal class AniyomiBackup(
     /** Manga and anime sources' settings in one list. */
     val sourcePreferences: List<BackupSourcePreferences>,
     val extensionSources: List<MihonExtensionSource>,
+    /** Anikku's, as Komikku keeps them. */
+    val savedSearches: List<MihonSavedSearch>,
+    val feeds: List<MihonFeed>,
 )
 
 /** Aniyomi 0.18.1 and later: anime from field 501 on, marked by `isLegacy` at 500, which these always write as false. */
@@ -44,6 +49,8 @@ internal class AniyomiCurrentBackup(
     @ProtoNumber(503) val animeSources: List<BackupSource> = emptyList(),
     /** Aniyomi 0.18.2 and later write a store, 0.18.1 and Anikku a repo. */
     @ProtoNumber(505) val animeExtensionSources: List<MihonExtensionSource> = emptyList(),
+    @ProtoNumber(600) val savedSearches: List<MihonSavedSearch> = emptyList(),
+    @ProtoNumber(610) val feeds: List<MihonFeed> = emptyList(),
 ) {
     fun toAniyomiBackup() = AniyomiBackup(
         mangaCategories = mangaCategories,
@@ -53,6 +60,8 @@ internal class AniyomiCurrentBackup(
         preferences = preferences,
         sourcePreferences = sourcePreferences,
         extensionSources = mangaExtensionSources + animeExtensionSources,
+        savedSearches = savedSearches,
+        feeds = feeds,
     )
 }
 
@@ -67,6 +76,8 @@ internal class AniyomiLegacyBackup(
     @ProtoNumber(105) val sourcePreferences: List<BackupSourcePreferences> = emptyList(),
     @ProtoNumber(107) val animeExtensionSources: List<MihonExtensionSource> = emptyList(),
     @ProtoNumber(108) val mangaExtensionSources: List<MihonExtensionSource> = emptyList(),
+    @ProtoNumber(600) val savedSearches: List<MihonSavedSearch> = emptyList(),
+    @ProtoNumber(610) val feeds: List<MihonFeed> = emptyList(),
 ) {
     fun toAniyomiBackup() = AniyomiBackup(
         mangaCategories = mangaCategories,
@@ -76,6 +87,8 @@ internal class AniyomiLegacyBackup(
         preferences = preferences,
         sourcePreferences = sourcePreferences,
         extensionSources = mangaExtensionSources + animeExtensionSources,
+        savedSearches = savedSearches,
+        feeds = feeds,
     )
 }
 
@@ -136,6 +149,8 @@ internal class AniyomiAnime(
     @ProtoNumber(802) val customAuthor: String? = null,
     @ProtoNumber(804) val customDescription: String? = null,
     @ProtoNumber(805) val customGenre: List<String>? = null,
+    /** Animetail's audio language for the show: empty for the app's default, "original", or a language tag. */
+    @ProtoNumber(1000) val audioLanguage: String = "",
 )
 
 @Serializable
@@ -152,10 +167,14 @@ internal class AniyomiEpisode(
     @ProtoNumber(9) val episodeNumber: Float = 0F,
     @ProtoNumber(10) val sourceOrder: Long = 0,
     @ProtoNumber(13) val memo: ByteArray = JsonObjectEmptyBytes,
+    /** Anikku's filler mark from before Aniyomi had one at 501. */
+    @ProtoNumber(15) val legacyFillermark: Boolean = false,
     /** The episode's length, in milliseconds despite the name. */
     @ProtoNumber(16) val totalSeconds: Long = 0,
     /** In Aniyomi 0.18.1 and later. */
     @ProtoNumber(501) val fillermark: Boolean = false,
     @ProtoNumber(502) val summary: String? = null,
     @ProtoNumber(503) val previewUrl: String? = null,
+    /** Animetail's upload date the person set by hand, shown in place of [dateUpload]; 0 when none is set. */
+    @ProtoNumber(504) val dateUploadOverride: Long = 0,
 )
