@@ -8,6 +8,7 @@ import app.katari.entry.interactions.download.EntryDownloadState
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.KeyboardArrowDown
 import app.katari.icons.materialsymbols.rounded.KeyboardArrowUp
+import app.katari.presentation.kit.button.DownloadedShare
 import app.katari.presentation.kit.content.InlineIcon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.list.ChapterMarks
@@ -99,12 +100,21 @@ internal fun UpdatesGroupUiItem(
                     modifier = Modifier.padding(start = KatariTheme.spacing.xs),
                     downloadStateProvider = { items.groupDownloadState() },
                     downloadProgressProvider = { items.groupDownloadProgress() },
+                    downloadedShareProvider = {
+                        DownloadedShare(
+                            downloaded = items.count { it.downloadStateProvider() == EntryDownloadState.DOWNLOADED },
+                            total = items.size,
+                        )
+                    },
                     onClick = { action ->
                         val targets = when (action) {
-                            ChapterDownloadAction.START -> items.filter {
+                            ChapterDownloadAction.START, ChapterDownloadAction.START_NOW -> items.filter {
                                 it.downloadStateProvider() != EntryDownloadState.DOWNLOADED
                             }
-                            else -> items
+                            ChapterDownloadAction.DELETE -> items.filter {
+                                it.downloadStateProvider() == EntryDownloadState.DOWNLOADED
+                            }
+                            ChapterDownloadAction.CANCEL -> items
                         }
                         onDownloadChapter(targets, action)
                     },
@@ -130,22 +140,18 @@ private fun List<UpdatesItem>.groupDownloadState(): EntryDownloadState {
 }
 
 /**
- * How far the group's downloads have come, 0–100: downloaded updates count in full and the downloading ones by their
- * own progress, out of every update that is downloaded or waiting to be. Updates left out of the download, or failed,
- * don't count, so the ring fills once over the whole batch and ends full when the queue is done. It is kept while the
- * next chapter waits in the queue, as it does while the downloader fetches that chapter's pages.
+ * How far the group is downloaded, 0–100: downloaded updates count in full and the downloading ones by their own
+ * progress, out of every update of the group. Counting the whole group makes the ring end where the partly downloaded
+ * pieces start, so downloading one chapter of three fills a third of it rather than all of it. It is kept while the next
+ * chapter waits in the queue, as it does while the downloader fetches that chapter's pages.
  */
 private fun List<UpdatesItem>.groupDownloadProgress(): Int {
-    var total = 0
-    var done = 0
-    for (item in this) {
+    val done = sumOf { item ->
         when (item.downloadStateProvider()) {
-            EntryDownloadState.DOWNLOADED -> done += 100
-            EntryDownloadState.DOWNLOADING -> done += item.downloadProgressProvider()
-            EntryDownloadState.QUEUE -> Unit
-            EntryDownloadState.NOT_DOWNLOADED, EntryDownloadState.ERROR -> continue
+            EntryDownloadState.DOWNLOADED -> 100
+            EntryDownloadState.DOWNLOADING -> item.downloadProgressProvider()
+            EntryDownloadState.QUEUE, EntryDownloadState.NOT_DOWNLOADED, EntryDownloadState.ERROR -> 0
         }
-        total += 100
     }
-    return if (total == 0) 0 else done * 100 / total
+    return done / size
 }

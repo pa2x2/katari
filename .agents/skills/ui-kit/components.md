@@ -124,7 +124,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | An item's actions in a row that scrolls or wraps, such as an entry's library and web view actions | `ActionButtonRow`, `ActionButton` | |
 | Equally weighted actions with the icon above the label, such as share and save | `StackedActionButton` | |
 | A borderless button around content other buttons can't hold, such as an icon with a label over video | `ContentButton` | Not for an icon and a label in a row: check `ActionButton` and `StackedActionButton` first |
-| A chapter's download state as a button | `DownloadIndicator` | |
+| A chapter's or group's download state as a button, a partly downloaded group's ring in pieces | `DownloadIndicator` | |
 | Resume an entry from its cover or row, with its progress around the edge | `ResumeButton` | |
 | A screen's refresh | `PullRefresh`, `RefreshButton`, `refreshAppBarAction` | Pull to refresh always comes with a button or app bar action |
 | The ways on from a page that explains something before the person starts, such as setting up a feature | `PageActions` | Under its row group cards and as wide as them: the main one filled, the others outlined below it |

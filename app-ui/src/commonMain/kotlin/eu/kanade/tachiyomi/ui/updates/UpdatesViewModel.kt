@@ -477,19 +477,7 @@ class UpdatesViewModel(
                         )
                     }
                 }
-                ChapterDownloadAction.START_NOW -> {
-                    val chapterUpdate = chapterItems.singleOrNull()
-                        ?.let { it.update as UpdateItem.EntryUpdate }
-                        ?: return@launch
-                    val entry = getEntry.await(chapterUpdate.update.entryId) ?: return@launch
-                    val chapter = entryChapterRepository.getChapterById(chapterUpdate.update.chapterId)
-                        ?: return@launch
-                    entryDownloadActionFeature.download(
-                        entry = entry,
-                        chapters = listOf(chapter),
-                        startNow = true,
-                    )
-                }
+                ChapterDownloadAction.START_NOW -> downloadChapters(chapterItems, startNow = true)
                 ChapterDownloadAction.CANCEL -> {
                     chapterItems.forEach { cancelDownload(it.update as UpdateItem.EntryUpdate) }
                 }
@@ -588,7 +576,7 @@ class UpdatesViewModel(
      * Downloads the given list of chapters with the manager.
      * @param updatesItem the list of chapters to download.
      */
-    private fun downloadChapters(updatesItem: List<UpdatesItem>) {
+    private fun downloadChapters(updatesItem: List<UpdatesItem>, startNow: Boolean = false) {
         viewModelScope.launchNonCancellable {
             val chapterUpdates = updatesItem.mapNotNull { it.update as? UpdateItem.EntryUpdate }
             val groupedUpdates = chapterUpdates.groupBy { it.update.entryId }.values
@@ -599,6 +587,7 @@ class UpdatesViewModel(
                 entryDownloadActionFeature.download(
                     entry = entry,
                     chapters = chapters,
+                    startNow = startNow,
                 )
             }
         }
