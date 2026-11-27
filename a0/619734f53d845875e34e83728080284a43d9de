@@ -1,0 +1,43 @@
+.github/workflows/showcase.yml
+  s_0e279b045f255e::t_863d500d249f2e 115,384-385
+tools/showcase/desktop-capture/src/main/kotlin/app/katari/showcase/desktop/driver/Desktop.kt
+  s_0e279b045f255e::t_b47c054aed9505 123-124,130-159,240-242
+tools/showcase/desktop-capture/src/main/kotlin/app/katari/showcase/desktop/settings/BringOverScenes.kt
+  s_0e279b045f255e::t_95fd52304a3b5e 1-51
+tools/showcase/pipeline/capture.ts
+  s_0e279b045f255e::t_6ddf6cb77bd2da 8-9,52,96,168,189
+tools/showcase/pipeline/desktop/desktop-session.ts
+  s_0e279b045f255e::t_61cb21342d73de 6,8,19-20,40-44,51,70,81
+tools/showcase/pipeline/device/phone-session.ts
+  s_0e279b045f255e::t_73e45fe2d0d006 14,46-47,72-73,91,113,203,215-217,236-237,239,241-243,249,253,256
+tools/showcase/pipeline/scenes.ts
+  s_0e279b045f255e::t_8ed739bd5cc589 47,49
+tools/showcase/seed/backup-messages.ts
+  s_0e279b045f255e::t_da2a0d31bd76b0 173
+tools/showcase/seed/generate.ts
+  s_0e279b045f255e::t_ca23ceff254f88 3-4,13,22,34-37,39,49-53
+tools/showcase/seed/mihon-backup.ts
+  s_0e279b045f255e::t_20655a69717e60 1-103
+tools/showcase/seed/protobuf-writer.ts
+  s_0e279b045f255e::t_9c05773fd43cbe 2-5,30-39
+website/src/pages/docs/coming-from-another-app.astro
+  s_0e279b045f255e::t_728576fab955c3 43,50
+tools/showcase/capture/src/main/kotlin/app/katari/showcase/capture/settings/BringOverScenes.kt
+  s_0e279b045f255e::t_9addbeddd857f8 1-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a0619734f53d845875e34e83728080284a43d9de",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
