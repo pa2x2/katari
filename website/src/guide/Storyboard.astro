@@ -1,0 +1,108 @@
+---
+/*
+ * A walkthrough across several screens, one column per screen (StoryboardScreen): its title, its steps, then its
+ * capture, so each step sits with the screen it happens on. The steps number on from one screen to the next. A switch
+ * picks the Android captures or the Linux window's; the window's wider captures take two columns to a line. On a phone
+ * the columns become cards side by side that scroll sideways, each with its steps and its capture. A click on a capture
+ * opens it large, and the viewer steps through the captures shown.
+ */
+import PlatformSwitch from "../media/PlatformSwitch.astro";
+---
+
+<div class="storyboard" data-platform-switch data-shows="Android" data-zoom-group>
+  <PlatformSwitch labels={{ Android: "Android", Linux: "Linux" }} />
+  <ul class="screens">
+    <slot />
+  </ul>
+  <div class="dots" aria-hidden="true"></div>
+</div>
+
+<script>
+  // The dots under the cards on a phone show which card is in view.
+  for (const storyboard of document.querySelectorAll<HTMLElement>(".storyboard")) {
+    const screens = storyboard.querySelector<HTMLElement>(".screens")!;
+    const cards = [...screens.children] as HTMLElement[];
+    const dots = cards.map(() => storyboard.querySelector(".dots")!.appendChild(document.createElement("i")));
+    const mark = () => {
+      const left = screens.getBoundingClientRect().left;
+      const distances = cards.map((card) => Math.abs(card.getBoundingClientRect().left - left));
+      const current = distances.indexOf(Math.min(...distances));
+      dots.forEach((dot, index) => dot.classList.toggle("current", index === current));
+    };
+    screens.addEventListener("scroll", mark, { passive: true });
+    mark();
+  }
+</script>
+
+<style>
+  .storyboard {
+    container-type: inline-size;
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  .storyboard > :global(.platforms) {
+    margin-bottom: 1.25rem;
+  }
+
+  /* The steps count on across the screens' lists, which guide.css would restart one by one. */
+  .screens {
+    counter-reset: step;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .screens :global(ol) {
+    counter-reset: none;
+  }
+
+  .storyboard[data-shows="Linux"] .screens {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @container (width < 44rem) {
+    .screens {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .dots {
+    display: none;
+  }
+
+  @media (max-width: 44rem) {
+    .screens,
+    .storyboard[data-shows="Linux"] .screens {
+      display: flex;
+      gap: 0.75rem;
+      margin: 0 calc(-1 * var(--gutter));
+      padding: 0 var(--gutter) 0.5rem;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--gutter);
+      scrollbar-width: none;
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.45rem;
+      margin-top: 0.5rem;
+    }
+
+    .dots :global(i) {
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .dots :global(i.current) {
+      background: var(--accent);
+    }
+  }
+</style>
