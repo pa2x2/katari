@@ -10,8 +10,14 @@ import kotlinx.serialization.protobuf.ProtoNumber
  * of its own that names its parent's id; Katari makes the parent the merge's root, first, with its seasons after it in
  * the order the source lists them. Katari moves a root's listed members in and out of the library with it, so the
  * seasons take the parent's library state, and its next refresh locks the members the source still lists.
+ *
+ * Aniyomi's restore sets a season's parent to the id the restored backup gave it, which the new parent row doesn't have,
+ * so a library that went through a restore names parents that aren't there (aniyomiorg/aniyomi 97414446b8a9,
+ * AnimeRestorer.restoreExistingAnime). Such a parent is still merged by its source, with no members yet: its first
+ * refresh lists its seasons and takes in the season entries the backup holds, with their progress.
  */
 internal class AniyomiSeasons(anime: List<AniyomiSeasonInfo>) {
+    private val parentKeys: Set<Key>
     private val members: Map<Key, Member>
 
     /** The parents' titles, one row each in the report. */
@@ -27,8 +33,9 @@ internal class AniyomiSeasons(anime: List<AniyomiSeasonInfo>) {
         val parents = anime.filter { it.fetchType == FETCH_SEASONS && it.id != null }
         val byId = parents.associateBy { it.id }
         val children = anime.filter { it.parentId != null && it.parentId in byId }.groupBy { it.parentId }
+        parentKeys = parents.mapTo(hashSetOf()) { Key(it.source, it.url) }
         members = buildMap {
-            parents.forEach { parent ->
+            parents.filter { it.id in children }.forEach { parent ->
                 val target = Key(parent.source, parent.url)
                 put(target, Member(target, position = 0, parent.favorite, parent.categories, isRoot = true))
                 children[parent.id].orEmpty().sortedBy { it.seasonSourceOrder }.forEachIndexed { index, season ->
@@ -52,7 +59,9 @@ internal class AniyomiSeasons(anime: List<AniyomiSeasonInfo>) {
 
     /** Makes [entry], converted from the anime at [sourceId] and [url], the root or a member of its merge. */
     fun applyTo(entry: BackupEntry, sourceId: Long, url: String, targetSourceKey: (Long) -> Long) {
-        val member = members[Key(sourceId, url)] ?: return
+        val key = Key(sourceId, url)
+        if (key in parentKeys) entry.mergedBySource = true
+        val member = members[key] ?: return
         entry.mergedBySource = member.isRoot
         entry.mergeTargetSource = targetSourceKey(member.target.source)
         entry.mergeTargetUrl = member.target.url
