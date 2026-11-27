@@ -3,6 +3,7 @@ package tachiyomi.domain.source.lnreader
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
+import java.text.ParsePosition
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -10,8 +11,13 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatter.ISO_INSTANT
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME
+import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.TemporalAccessor
+import java.time.temporal.TemporalQueries
 import java.util.Locale
 
 /**
@@ -35,26 +41,32 @@ fun lnReaderReleaseTime(value: JsonElement?, zone: ZoneId = ZoneId.systemDefault
 private fun epoch(value: Long) = LnReaderReleaseTime(if (value < 100_000_000_000L) value * 1000 else value, null)
 
 private fun parse(text: String, zone: ZoneId): Long? {
-    runCatching { return OffsetDateTime.parse(text).toInstant().toEpochMilli() }
-    runCatching { return Instant.parse(text).toEpochMilli() }
-    runCatching { return OffsetDateTime.parse(text, ISO_COMPACT_OFFSET).toInstant().toEpochMilli() }
-    val isoLocal = text.replaceFirst(' ', 'T')
-    runCatching { return LocalDateTime.parse(isoLocal).atZone(zone).toInstant().toEpochMilli() }
-    runCatching { return LocalDate.parse(text).atStartOfDay(zone).toInstant().toEpochMilli() }
+    ISO_OFFSET_DATE_TIME.parseWhole(text)?.let { return OffsetDateTime.from(it).toInstant().toEpochMilli() }
+    ISO_INSTANT.parseWhole(text)?.let { return Instant.from(it).toEpochMilli() }
+    ISO_COMPACT_OFFSET.parseWhole(text)?.let { return OffsetDateTime.from(it).toInstant().toEpochMilli() }
+    ISO_LOCAL_DATE_TIME.parseWhole(text.replaceFirst(' ', 'T'))?.let {
+        return LocalDateTime.from(it).atZone(zone).toInstant().toEpochMilli()
+    }
+    ISO_LOCAL_DATE.parseWhole(text)?.let { return LocalDate.from(it).atStartOfDay(zone).toInstant().toEpochMilli() }
     for (format in ENGLISH_DATES) {
-        val parsed = runCatching { format.parse(text) }.getOrNull() ?: continue
-        return parsed.toEpochMilli(zone)
+        format.parseWhole(text)?.let { return it.toEpochMilli(zone) }
     }
     return null
 }
 
+// parse() throws for every format a text doesn't fit, and a long chapter list tries several per chapter (D112).
+// Resolving still throws where the text's fields disagree, such as a weekday that isn't the date's
+private fun DateTimeFormatter.parseWhole(text: String): TemporalAccessor? {
+    val position = ParsePosition(0)
+    parseUnresolved(text, position) ?: return null
+    if (position.errorIndex >= 0 || position.index != text.length) return null
+    return runCatching { parse(text) }.getOrNull()
+}
+
 private fun TemporalAccessor.toEpochMilli(zone: ZoneId): Long {
     val date = LocalDate.from(this)
-    return runCatching { LocalDateTime.of(date, LocalTime.from(this)) }
-        .getOrElse { date.atStartOfDay() }
-        .atZone(zone)
-        .toInstant()
-        .toEpochMilli()
+    val time = query(TemporalQueries.localTime()) ?: LocalTime.MIDNIGHT
+    return LocalDateTime.of(date, time).atZone(zone).toInstant().toEpochMilli()
 }
 
 // Java's and many APIs' ISO form, whose offset has no colon: 2025-01-29T15:10:03.000+0000
