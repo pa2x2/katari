@@ -1,0 +1,39 @@
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/onboarding/OnboardingScreen.kt
+  s_0e279b045f255e::t_b8e040c427bfc0 20-21,24,28,31,35,38
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/onboarding/OtherAppStep.kt
+  s_0e279b045f255e::t_87dacbdabd3d2c 7,10,16-17,22-23,25,30-31,38,44-45,51
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/onboarding/WelcomeStep.kt
+  s_0e279b045f255e::t_d4576e7fae6918 4,10,12,16,19-20,39-40,58-69
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/data/RestoreBackupScreen.kt
+  s_0e279b045f255e::t_64b44b648abd61 95-97
+app-ui/src/commonMain/kotlin/eu/kanade/tachiyomi/ui/more/OnboardingScreen.kt
+  s_0e279b045f255e::t_38702d36ffc052 43
+core/i18n/src/androidMain/moko-resources/base/strings.xml
+  s_0e279b045f255e::t_ce33e741a35737 78
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_0e279b045f255e::t_26b49a00c21ff9 790-791
+core/platform-presentation/src/androidMain/kotlin/app/katari/platform/presentation/PlatformPresentation.android.kt
+  s_0e279b045f255e::t_62921b2a60696f 73
+core/platform-presentation/src/commonMain/kotlin/app/katari/platform/presentation/PlatformPresentation.kt
+  s_0e279b045f255e::t_6d0cdff140c5b6 114-118
+core/platform-presentation/src/desktopMain/kotlin/app/katari/platform/presentation/PlatformPresentation.desktop.kt
+  s_0e279b045f255e::t_631ccc1fb2f4b5 79
+features/sync/client/src/desktopTest/kotlin/app/katari/sync/client/restore/RestoreStampingTest.kt
+  s_0e279b045f255e::t_ff15f19d1e91bd 71-73,81-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "28200ab1b09330a9074d5e8ddadf1fb9b5aff6ae",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
