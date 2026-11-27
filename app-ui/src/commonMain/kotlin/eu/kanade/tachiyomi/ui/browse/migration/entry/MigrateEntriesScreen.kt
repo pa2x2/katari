@@ -82,7 +82,7 @@ data class MigrateEntriesScreen(
                         AppBarTitle(
                             title = stringResource(MR.strings.migrationEntriesScreen_title),
                             subtitle = buildString {
-                                append(state.source!!.name)
+                                append(state.sourceName!!)
                                 append(" • ")
                                 append(
                                     stringResource(
