@@ -1,7 +1,9 @@
 package eu.kanade.tachiyomi.data.backup.conversion
 
 import app.katari.core.platform.PlatformContext
+import app.katari.domain.extension.model.ExtensionStore
 import dev.zacsweers.metro.Inject
+import eu.kanade.tachiyomi.data.backup.models.toExtensionStore
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocument
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocuments
 import eu.kanade.tachiyomi.data.backup.storage.BackupReadCounter
@@ -95,20 +97,28 @@ class BackupConverter(
             val content = file.sink().buffer().use { sink ->
                 val writer = BackupWriter(sink, parser, workingFiles.scratchDirectory)
                 val counter = BackupReadCounter(documents.describe(uri).size, format.fileReads, onProgress)
-                val content = readable {
-                    val open = {
-                        counter.counted(documents.read(uri)).buffer()
-                            .let { source -> BackupContainer.of(source).protobuf(source) }
-                    }
+                val open = {
+                    counter.counted(documents.read(uri)).buffer()
+                        .let { source -> BackupContainer.of(source).protobuf(source) }
+                }
+                val content = try {
                     format.convert(open) { entry ->
                         writer.writeEntry(entry)
                         counter.countEntry()
                     }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    throw convertingFailure(uri, app, e)
                 }
                 writer.writeMetadata(content.metadata.copy(convertedFrom = app.name))
                 content
             }
-            ConvertedBackup(DocumentUri(file.toURI().toString()), content.report)
+            ConvertedBackup(
+                DocumentUri(file.toURI().toString()),
+                content.report,
+                content.metadata.backupExtensionStores.map { it.toExtensionStore() },
+            )
         } catch (e: Throwable) {
             file.delete()
             throw e
@@ -119,6 +129,19 @@ class BackupConverter(
     suspend fun save(converted: ConvertedBackup, to: DocumentUri) = withContext(Dispatchers.IO) {
         documents.read(converted.uri).buffer().use { source ->
             documents.write(to).gzip().buffer().use { it.writeAll(source) }
+        }
+    }
+
+    // A format fails in whatever way the file gives way under it: a file it doesn't recognize wasn't written by the app
+    // (D110); one it does, or one that can't be read again, is damaged
+    private fun convertingFailure(uri: DocumentUri, app: BackupApp, failure: Exception): Exception {
+        val recognized = runCatching {
+            documents.read(uri).buffer().use(::readBackupFileContents).let(app.format::recognizes)
+        }.getOrNull()
+        return if (recognized == false) {
+            NotAppBackupException(app, failure)
+        } else {
+            IOException(context.stringResource(MR.strings.invalid_backup_file_unknown), failure)
         }
     }
 
@@ -169,5 +192,11 @@ sealed interface BackupIdentity {
     data object Unsupported : BackupIdentity
 }
 
-/** A Katari backup converted from another app's, at [uri] in the app's cache, and what came over into it. */
-class ConvertedBackup(val uri: DocumentUri, val report: ConversionReport)
+/** The file converted as [app]'s isn't a backup that app wrote. */
+class NotAppBackupException(val app: BackupApp, cause: Throwable) : IOException(cause)
+
+/**
+ * A Katari backup converted from another app's, at [uri] in the app's cache, what came over into it, and the
+ * [extensionStores] restoring it adds.
+ */
+class ConvertedBackup(val uri: DocumentUri, val report: ConversionReport, val extensionStores: List<ExtensionStore>)

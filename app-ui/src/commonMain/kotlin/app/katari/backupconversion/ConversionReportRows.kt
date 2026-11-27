@@ -3,6 +3,9 @@ package app.katari.backupconversion
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
+import app.katari.backupconversion.BringOverViewModel.StoreCheck
+import app.katari.missingextensions.model.CantInstall
+import app.katari.presentation.kit.feedback.NoResults
 import app.katari.presentation.kit.list.CoverageRow
 import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.RowGroupHeader
@@ -24,11 +27,15 @@ import tachiyomi.presentation.core.i18n.stringResource
  */
 internal fun LazyListScope.conversionReportItems(
     report: ConversionReport,
+    stores: StoreCheck?,
     expanded: Set<Kind>,
     onToggle: (Kind) -> Unit,
 ) {
     item(key = "report-header") { RowGroupHeader(stringResource(MR.strings.backup_conversion_what_comes_over)) }
-    rowGroupItems(report.rows, key = { it.kind }) { row ->
+    if (report.rows.isEmpty()) {
+        item(key = "report-empty") { NoResults(message = stringResource(MR.strings.backup_conversion_nothing)) }
+    }
+    rowGroupItems(report.rows.map { it.withStores(stores) }, key = { it.kind }) { row ->
         val carried = row.carried.thingCount()
         val total = carried + row.leftBehind.thingCount()
         val notedWhole = row.leftBehind.isEmpty() && row.carried.any { it.note != null }
@@ -61,6 +68,25 @@ private fun CoverageDetails(row: ConversionReport.Row) {
             ItemRows(row.carried)
         }
     }
+}
+
+/** The row with its sources' notes saying what the stores have for them, once they have been asked (D106). */
+private fun ConversionReport.Row.withStores(stores: StoreCheck?): ConversionReport.Row {
+    if (stores == null) return this
+    fun List<ConversionReport.Item>.checked() = map { item ->
+        val source = item.name as? ConversionReport.Name.Source ?: return@map item
+        val note = when (stores) {
+            StoreCheck.Checking -> MR.strings.backup_conversion_checking_stores
+            is StoreCheck.Checked -> when (stores.cantInstall[source.identity]) {
+                null -> item.note
+                CantInstall.NOT_LISTED -> MR.strings.backup_conversion_no_store
+                CantInstall.TORRENT -> MR.strings.backup_conversion_torrent_extension
+                CantInstall.INCOMPATIBLE -> MR.strings.backup_conversion_incompatible_extension
+            }
+        }
+        item.copy(note = note)
+    }
+    return copy(carried = carried.checked(), leftBehind = leftBehind.checked())
 }
 
 /**
@@ -123,6 +149,7 @@ internal fun ConversionReport.Name.label(): String = when (this) {
     is ConversionReport.Name.Setting -> katariSettingNames[key]?.let { stringResource(it.title) } ?: key
     is ConversionReport.Name.OtherAppSetting -> stringResource(label)
     is ConversionReport.Name.Part -> stringResource(label)
+    is ConversionReport.Name.Source -> text
 }
 
 /** Where a setting is: in Katari for one that comes over, in the other app for one left behind (D053). */
@@ -130,7 +157,7 @@ internal fun ConversionReport.Name.label(): String = when (this) {
 private fun ConversionReport.Name.place(): String? = when (this) {
     is ConversionReport.Name.Setting -> katariSettingNames[key]?.place?.map { stringResource(it) }
     is ConversionReport.Name.OtherAppSetting -> listOf(app) + place.map { stringResource(it) }
-    is ConversionReport.Name.Text, is ConversionReport.Name.Part -> null
+    is ConversionReport.Name.Text, is ConversionReport.Name.Part, is ConversionReport.Name.Source -> null
 }?.reduceOrNull { outer, inner -> stringResource(MR.strings.backup_conversion_place, outer, inner) }
 
 private val Kind.title: StringResource

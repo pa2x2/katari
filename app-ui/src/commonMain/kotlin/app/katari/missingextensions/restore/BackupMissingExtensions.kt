@@ -2,6 +2,7 @@ package app.katari.missingextensions.restore
 
 import app.katari.domain.extension.model.ExtensionStore
 import app.katari.domain.extension.repository.ExtensionStoreRepository
+import app.katari.missingextensions.model.CantInstall
 import app.katari.missingextensions.model.MissingExtension
 import app.katari.missingextensions.model.NeededSource
 import app.katari.missingextensions.model.cantInstall
@@ -35,22 +36,38 @@ class BackupMissingExtensions(
     ) {
         /** Grouped by the extension that provides each; [withBackupStores] when the restore adds the backup's stores. */
         fun extensions(withBackupStores: Boolean): List<MissingExtension> {
-            val byIdentity = listings
-                .filter { withBackupStores || it.store.indexUrl in addedStores }
-                .flatMap { listing -> listing.sources.map { SourceIdentity(listing.sourceIdScheme, it.id) to listing } }
-                .groupBy({ it.first }, { it.second })
+            val listingOf = listingFinder(withBackupStores)
             val needed = sources.mapIndexed { index, source ->
-                val candidates = byIdentity[source.identity].orEmpty()
                 NeededSource(
                     key = index.toLong(),
                     name = source.name,
-                    listing =
-                    candidates.firstOrNull { compatibility.cantInstall(it) == null } ?: candidates.firstOrNull(),
+                    listing = listingOf(source.identity),
                     untrusted = null,
                     countsByProfile = mapOf(0L to source.libraryEntries.toLong()),
                 )
             }
             return missingExtensions(needed) { compatibility.cantInstall(it) }
+        }
+
+        /** Why each source's extension can't be installed after restoring, null where it can, by the source. */
+        fun cantInstall(withBackupStores: Boolean): Map<SourceIdentity, CantInstall?> {
+            val listingOf = listingFinder(withBackupStores)
+            return sources.associate { source ->
+                val listing = listingOf(source.identity)
+                source.identity to if (listing == null) CantInstall.NOT_LISTED else compatibility.cantInstall(listing)
+            }
+        }
+
+        // The listing that would install a source: one that can be installed here if any store has one
+        private fun listingFinder(withBackupStores: Boolean): (SourceIdentity) -> Extension.Available? {
+            val byIdentity = listings
+                .filter { withBackupStores || it.store.indexUrl in addedStores }
+                .flatMap { listing -> listing.sources.map { SourceIdentity(listing.sourceIdScheme, it.id) to listing } }
+                .groupBy({ it.first }, { it.second })
+            return { identity ->
+                val candidates = byIdentity[identity].orEmpty()
+                candidates.firstOrNull { compatibility.cantInstall(it) == null } ?: candidates.firstOrNull()
+            }
         }
     }
 }

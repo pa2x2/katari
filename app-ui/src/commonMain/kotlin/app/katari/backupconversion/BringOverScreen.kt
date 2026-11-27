@@ -121,6 +121,8 @@ class BringOverScreen(private val file: DocumentUri? = null) : Screen() {
                             modifier = Modifier.weight(1f),
                         )
                         conversion is Conversion.Done -> {
+                            // Nothing came over: there is nothing to restore or keep (D107)
+                            val anything = conversion.backup.report.rows.isNotEmpty()
                             Button(
                                 label = stringResource(MR.strings.backup_conversion_save),
                                 onClick = {
@@ -129,12 +131,14 @@ class BringOverScreen(private val file: DocumentUri? = null) : Screen() {
                                     }
                                 },
                                 modifier = Modifier.weight(1f),
+                                enabled = anything,
                                 style = ButtonStyle.Outlined,
                             )
                             Button(
                                 label = stringResource(MR.strings.action_restore),
                                 onClick = { restore(conversion.backup.uri) },
                                 modifier = Modifier.weight(1f),
+                                enabled = anything,
                             )
                         }
                         else -> Button(
@@ -160,7 +164,7 @@ class BringOverScreen(private val file: DocumentUri? = null) : Screen() {
                         onPickApp = model::pickApp,
                     )
                     (state.conversion as? Conversion.Done)?.let {
-                        conversionReportItems(it.backup.report, state.expanded, model::toggle)
+                        conversionReportItems(it.backup.report, state.stores, state.expanded, model::toggle)
                     }
                 }
             }
@@ -259,10 +263,17 @@ private fun LazyListScope.fileItems(
             }
         }
     }
-    (state.conversion as? Conversion.Failed)?.let { failed ->
-        item(key = "failed") {
-            NoticeCard(stringResource(MR.strings.backup_conversion_failed, failed.message), NoticeTone.Warning)
+    when (val conversion = state.conversion) {
+        is Conversion.Failed -> item(key = "failed") {
+            NoticeCard(stringResource(MR.strings.backup_conversion_failed, conversion.message), NoticeTone.Warning)
         }
+        is Conversion.NotAppBackup -> item(key = "failed") {
+            NoticeCard(
+                stringResource(MR.strings.backup_conversion_not_app_backup, conversion.app.name),
+                NoticeTone.Warning,
+            )
+        }
+        else -> Unit
     }
 }
 

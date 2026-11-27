@@ -3,6 +3,8 @@ package app.katari.backupconversion
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.missingextensions.model.CantInstall
+import app.katari.missingextensions.restore.BackupMissingExtensions
 import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -10,11 +12,13 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.conversion.BackupApp
 import eu.kanade.tachiyomi.data.backup.conversion.BackupConverter
 import eu.kanade.tachiyomi.data.backup.conversion.BackupIdentity
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport
 import eu.kanade.tachiyomi.data.backup.conversion.ConvertedBackup
+import eu.kanade.tachiyomi.data.backup.conversion.NotAppBackupException
 import eu.kanade.tachiyomi.data.backup.create.BackupFileNames
 import eu.kanade.tachiyomi.data.backup.storage.BackupReadProgress
 import kotlinx.coroutines.CancellationException
@@ -23,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import tachiyomi.domain.source.identity.SourceIdentity
 import tachiyomi.domain.storage.DocumentUri
 
 /**
@@ -34,6 +39,7 @@ internal class BringOverViewModel(
     @Assisted file: DocumentUri?,
     private val converter: BackupConverter,
     private val fileNames: BackupFileNames,
+    private val missingExtensions: BackupMissingExtensions,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -89,6 +95,7 @@ internal class BringOverViewModel(
                 conversion = Conversion.Idle,
                 expanded = emptySet(),
                 progress = null,
+                stores = null,
             )
         }
     }
@@ -97,7 +104,7 @@ internal class BringOverViewModel(
         val current = state.value
         val file = current.file ?: return
         val app = current.app ?: return
-        state.update { it.copy(conversion = Conversion.Running, progress = null) }
+        state.update { it.copy(conversion = Conversion.Running, progress = null, stores = null) }
         step {
             val onProgress = { progress: BackupReadProgress ->
                 state.update { if (it.conversion == Conversion.Running) it.copy(progress = progress) else it }
@@ -106,11 +113,35 @@ internal class BringOverViewModel(
                 Conversion.Done(converter.convert(file.uri, app, onProgress))
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: NotAppBackupException) {
+                Conversion.NotAppBackup(e.app)
             } catch (e: Exception) {
                 Conversion.Failed(e.message.orEmpty())
             }
             state.update { it.copy(conversion = conversion, progress = null) }
+            if (conversion is Conversion.Done) checkStores(conversion.backup)
         }
+    }
+
+    // Which extensions the stores have, as Restore backup finds them (D106); the report shows meanwhile
+    private suspend fun checkStores(backup: ConvertedBackup) {
+        val sources = backup.report.rows
+            .flatMap { it.carried + it.leftBehind }
+            .mapNotNull { it.name as? ConversionReport.Name.Source }
+            .distinctBy { it.identity }
+            .map { BackupFileValidator.MissingSource(it.text, it.identity, libraryEntries = 0) }
+        if (sources.isEmpty()) return
+        state.update { it.copy(stores = StoreCheck.Checking) }
+        val checked = try {
+            val check = missingExtensions.check(sources, backup.extensionStores)
+            StoreCheck.Checked(check.cantInstall(withBackupStores = true))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // The report keeps saying where to install them from, as before the stores were asked
+            null
+        }
+        state.update { it.copy(stores = checked) }
     }
 
     fun toggle(kind: ConversionReport.Kind) {
@@ -152,7 +183,16 @@ internal class BringOverViewModel(
         val expanded: Set<ConversionReport.Kind> = emptySet(),
         /** How far reading or converting the file has got; null before the first count or when it isn't known. */
         val progress: BackupReadProgress? = null,
+        /** What the stores say about the extensions the converted backup needs; null when there is nothing to ask. */
+        val stores: StoreCheck? = null,
     )
+
+    sealed interface StoreCheck {
+        data object Checking : StoreCheck
+
+        /** Why each source's extension can't be installed after restoring, null where it can. */
+        data class Checked(val cantInstall: Map<SourceIdentity, CantInstall?>) : StoreCheck
+    }
 
     /** [name] and [size] (in bytes) are null while they're read or when the file's storage doesn't say. */
     @Immutable
@@ -183,5 +223,8 @@ internal class BringOverViewModel(
         data class Done(val backup: ConvertedBackup) : Conversion
 
         data class Failed(val message: String) : Conversion
+
+        /** The file isn't a backup [app] wrote, so the user may pick another app (D110). */
+        data class NotAppBackup(val app: BackupApp) : Conversion
     }
 }

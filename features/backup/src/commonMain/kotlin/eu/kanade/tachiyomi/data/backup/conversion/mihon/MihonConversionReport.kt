@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
 import eu.kanade.tachiyomi.data.backup.conversion.ConvertedSettings
 import eu.kanade.tachiyomi.data.backup.conversion.CustomInfoReport
+import eu.kanade.tachiyomi.data.backup.conversion.extensionItem
 import eu.kanade.tachiyomi.data.backup.conversion.reportName
 import eu.kanade.tachiyomi.data.backup.sourcekeys.backupSourceKey
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
@@ -76,9 +77,7 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
                 ),
                 Row.of(
                     Kind.INSTALLED_EXTENSIONS,
-                    leftBehind = extensions.map {
-                        Item(it.reportName, MR.strings.backup_conversion_install_from_store)
-                    },
+                    leftBehind = extensions.map { it.extensionItem },
                 ),
                 Row.of(
                     Kind.TRACKERS,

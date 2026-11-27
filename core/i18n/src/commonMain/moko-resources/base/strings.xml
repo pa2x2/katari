@@ -1620,6 +1620,8 @@
     <string name="backup_conversion_converting_amount">%1$s · %2$s</string>
     <string name="backup_conversion_failed">Converting failed: %1$s</string>
     <string name="backup_conversion_what_comes_over">What comes over</string>
+    <string name="backup_conversion_nothing">Nothing in this backup comes over. It holds no library, categories, progress or settings that Katari keeps.</string>
+    <string name="backup_conversion_not_app_backup">This file isn\'t a backup from %1$s. If another app made it, pick that app with Change.</string>
     <string name="backup_conversion_save">Save as Katari backup</string>
     <string name="backup_conversion_saved">Saved the Katari backup</string>
     <string name="backup_conversion_save_failed">Couldn\'t save the Katari backup: %1$s</string>
@@ -1929,6 +1931,10 @@
     <string name="backup_conversion_client_settings">Settings of the server\'s clients</string>
     <string name="backup_conversion_client_data">Settings the server\'s clients kept for it</string>
     <string name="backup_conversion_install_from_store">Install from a store after restoring</string>
+    <string name="backup_conversion_checking_stores">Checking the stores</string>
+    <string name="backup_conversion_no_store">Can\'t install here: no store offers it</string>
+    <string name="backup_conversion_torrent_extension">Can\'t install here: it finds torrents, which Katari can\'t play</string>
+    <string name="backup_conversion_incompatible_extension">Can\'t install here: this version of Katari can\'t run it</string>
     <string name="backup_conversion_extension_files">Extension files saved in the backup</string>
     <string name="backup_conversion_custom_button">A custom player button. Katari\'s player has none</string>
     <string name="backup_conversion_imported_book">An imported book. Import its file in Katari</string>

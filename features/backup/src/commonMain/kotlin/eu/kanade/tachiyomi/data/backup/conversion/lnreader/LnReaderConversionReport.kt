@@ -7,8 +7,8 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Kind
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
 import eu.kanade.tachiyomi.data.backup.conversion.ConvertedSettings
+import eu.kanade.tachiyomi.data.backup.conversion.extensionItem
 import eu.kanade.tachiyomi.data.backup.conversion.lnreader.settings.LnReaderChapterList
-import eu.kanade.tachiyomi.data.backup.conversion.reportName
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import tachiyomi.i18n.*
@@ -56,7 +56,7 @@ internal class LnReaderConversionReport {
             ),
             Row.of(
                 Kind.INSTALLED_EXTENSIONS,
-                leftBehind = sources.map { Item(it.reportName, INSTALL_FROM_STORE) } +
+                leftBehind = sources.map { it.extensionItem } +
                     listOfNotNull(
                         part(MR.strings.backup_conversion_extension_files, INSTALL_FROM_STORE, files.pluginCode),
                     ),

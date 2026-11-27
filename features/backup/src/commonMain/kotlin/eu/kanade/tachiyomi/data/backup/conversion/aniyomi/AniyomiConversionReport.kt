@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
 import eu.kanade.tachiyomi.data.backup.conversion.ConvertedSettings
 import eu.kanade.tachiyomi.data.backup.conversion.CustomInfoReport
+import eu.kanade.tachiyomi.data.backup.conversion.extensionItem
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedSavedSearches
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
@@ -95,7 +96,7 @@ internal class AniyomiConversionReport(private val merges: MihonMerges) {
                     Kind.INSTALLED_EXTENSIONS,
                     leftBehind = extensions
                         .filter { it.sourceId != LOCAL_SOURCE_ID }
-                        .map { Item(it.reportName, MR.strings.backup_conversion_install_from_store) } +
+                        .map { it.extensionItem } +
                         listOfNotNull(
                             Item(
                                 Name.Part(MR.strings.backup_conversion_extension_files),

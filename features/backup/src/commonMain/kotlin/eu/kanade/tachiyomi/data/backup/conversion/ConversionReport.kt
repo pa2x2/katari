@@ -2,6 +2,8 @@ package eu.kanade.tachiyomi.data.backup.conversion
 
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
+import tachiyomi.domain.source.identity.SourceIdentity
+import tachiyomi.i18n.*
 
 /**
  * What a conversion brought into the Katari backup and what it left behind, one row per kind of data. A kind the
@@ -39,6 +41,12 @@ data class ConversionReport(val rows: List<Row>) {
 
         /** A part of the backup that has no name of its own, such as a server's settings. */
         data class Part(val label: StringResource) : Name
+
+        /**
+         * A source the backup's entries come from, by its name or id as [reportName] gives it, and the [identity] a
+         * store lists its extension under, so the tool can look the extension up in the stores (D106).
+         */
+        data class Source(val text: String, val identity: SourceIdentity) : Name
     }
 
     enum class Kind {
@@ -64,3 +72,10 @@ data class ConversionReport(val rows: List<Row>) {
  */
 internal val BackupSource.reportName: String
     get() = name.ifEmpty { sourceId.toString() }
+
+/** A source whose extension isn't carried: the person installs it from a store after restoring. */
+internal val BackupSource.extensionItem: ConversionReport.Item
+    get() = ConversionReport.Item(
+        ConversionReport.Name.Source(reportName, identity),
+        MR.strings.backup_conversion_install_from_store,
+    )
