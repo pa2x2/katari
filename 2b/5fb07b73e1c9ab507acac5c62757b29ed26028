@@ -1,0 +1,37 @@
+app-ui/src/commonMain/kotlin/app/katari/sync/ui/arrival/change/ChangeLookups.kt
+  s_ab557bfd133867::t_b1091453193851 36
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/browse/components/BrowseIcons.kt
+  s_ab557bfd133867::t_fd9a5ebb7eda05 47
+app/src/main/java/app/katari/android/di/AppBindings.kt
+  s_ab557bfd133867::t_4c39adf24605aa 202,213
+core/data/src/commonMain/kotlin/tachiyomi/data/source/identity/SourceIdentityRepositoryImpl.kt
+  s_ab557bfd133867::t_7af5d5e0af1ea4 8,56-59
+core/domain/src/commonMain/kotlin/tachiyomi/domain/source/identity/SourceIdentityRepository.kt
+  s_ab557bfd133867::t_b4e71d87c33091 3-4,21-22
+core/domain/src/commonMain/kotlin/tachiyomi/domain/source/model/SourceDisplayInfo.kt
+  s_ab557bfd133867::t_a02a6a75cb74b9 8-11
+desktop/src/main/kotlin/app/katari/desktop/di/SourceBindings.kt
+  s_ab557bfd133867::t_c233b789576654 20,42,53
+features/backup/src/commonTest/kotlin/eu/kanade/tachiyomi/data/backup/sourcekeys/RestoredSourceKeysTest.kt
+  s_ab557bfd133867::t_cdf571cb72f43b 15,106-107
+sources/extension-runtime/src/commonMain/kotlin/eu/kanade/tachiyomi/source/DefaultSourceManager.kt
+  s_ab557bfd133867::t_0902bbff489fe3 19,32,45-50,71-72,74,90-98,145-146
+core/data/src/commonMain/kotlin/tachiyomi/data/source/SourceRepositoryImpl.kt
+  s_ab557bfd133867::t_3edb765d42a473 108-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2b5fb07b73e1c9ab507acac5c62757b29ed26028",
+  "prompts": {},
+  "sessions": {
+    "s_ab557bfd133867": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5985c677-58cb-41cb-896e-1d6e3f1d832d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
