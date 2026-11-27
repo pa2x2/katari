@@ -2,8 +2,10 @@ package eu.kanade.presentation.more.onboarding
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -20,33 +22,47 @@ import app.katari.presentation.kit.list.ControlRow
 import app.katari.presentation.kit.list.RowGroup
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.status.rememberSyncStatus
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
+import kotlinx.coroutines.delay
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.time.Duration.Companion.seconds
 
 /**
- * The guide's last page: setup is done, with the getting started guide for someone new. A device linked to a sync
- * account whose library needs extensions that aren't installed here is offered those first, as its library arrives.
+ * The guide's last page: setup is done, with the getting started guide for someone new. A library that needs
+ * extensions that aren't installed here, from a sync account or from the backup a guide [startedFromBackup] restored,
+ * is offered those first, as the library arrives (D111).
  */
-internal class FinishStep : OnboardingStep {
+internal class FinishStep(private val startedFromBackup: Boolean) : OnboardingStep {
 
     @Composable
     override fun heading(): GuidePageHeading {
-        val offer = extensionsOffer()
+        val offer = extensionsOffer(startedFromBackup)
         return GuidePageHeading(
             icon = MaterialSymbols.Rounded.RocketLaunch,
             heading = stringResource(MR.strings.onboarding_finish_heading),
-            subtitle = when {
-                offer == null ->
-                    stringResource(MR.strings.onboarding_finish_subtitle, stringResource(MR.strings.app_name))
-                offer.libraryArriving ->
-                    pluralStringResource(MR.plurals.onboarding_finish_arriving_missing, offer.titles, offer.titles)
-                else -> pluralStringResource(MR.plurals.onboarding_finish_account_missing, offer.titles, offer.titles)
+            subtitle = if (offer == null) {
+                stringResource(MR.strings.onboarding_finish_subtitle, stringResource(MR.strings.app_name))
+            } else {
+                val plural = when (offer.from) {
+                    LibraryOrigin.Account -> if (offer.libraryArriving) {
+                        MR.plurals.onboarding_finish_arriving_missing
+                    } else {
+                        MR.plurals.onboarding_finish_account_missing
+                    }
+                    LibraryOrigin.Backup -> if (offer.libraryArriving) {
+                        MR.plurals.onboarding_finish_restoring_missing
+                    } else {
+                        MR.plurals.onboarding_finish_restored_missing
+                    }
+                }
+                pluralStringResource(plural, offer.titles, offer.titles)
             },
         )
     }
@@ -57,7 +73,7 @@ internal class FinishStep : OnboardingStep {
     override fun Content() {
         val handler = LocalUriHandler.current
         val navigator = LocalNavigator.currentOrThrow
-        val offer = extensionsOffer()
+        val offer = extensionsOffer(startedFromBackup)
         var sheetShown by rememberSaveable { mutableStateOf(false) }
         RowGroup {
             row {
@@ -91,20 +107,46 @@ internal class FinishStep : OnboardingStep {
 }
 
 /**
- * [titles] of the account's library need extensions this device can install or trust; [libraryArriving] while a first
- * sync still downloads the library, so the count still climbs.
+ * [titles] of the library [from] an account or a backup need extensions this device can install or trust;
+ * [libraryArriving] while a first sync still downloads the library or the restore still runs, so the count still climbs.
  */
-private class ExtensionsOffer(val titles: Int, val libraryArriving: Boolean)
+private class ExtensionsOffer(val titles: Int, val from: LibraryOrigin, val libraryArriving: Boolean)
 
-/** What the page offers a linked device; null where it isn't linked or its library needs nothing it can install. */
+private enum class LibraryOrigin { Account, Backup }
+
+/**
+ * What the page offers a linked device, or one whose guide started from a backup, Katari's or another app's; null
+ * otherwise or where its library needs nothing it can install.
+ */
 @Composable
-private fun extensionsOffer(): ExtensionsOffer? {
+private fun extensionsOffer(startedFromBackup: Boolean): ExtensionsOffer? {
     val linked = rememberSyncStatus()?.link is SyncStatus.Link.Linked
     val model = metroViewModel<MissingExtensionsNoticeViewModel>()
     val extensions by model.installable.collectAsStateWithLifecycle()
     val arriving by model.libraryArriving.collectAsStateWithLifecycle()
+    val restoring by rememberRestoreRunning(startedFromBackup)
     val titles = extensions.sumOf { it.titleCount }.toInt()
-    return ExtensionsOffer(titles, libraryArriving = arriving == true).takeIf { linked && titles > 0 }
+    return when {
+        titles == 0 -> null
+        linked -> ExtensionsOffer(titles, LibraryOrigin.Account, libraryArriving = arriving == true)
+        startedFromBackup -> ExtensionsOffer(titles, LibraryOrigin.Backup, libraryArriving = restoring)
+        else -> null
+    }
 }
+
+// The restore runs in the background with nothing to observe but whether it still does, so the page asks while it waits
+@Composable
+private fun rememberRestoreRunning(startedFromBackup: Boolean): State<Boolean> {
+    val runner = LocalAppUiGraph.current.backupRestoreRunner
+    return produceState(initialValue = false, runner, startedFromBackup) {
+        while (startedFromBackup) {
+            value = runner.isRunning()
+            if (!value) break
+            delay(RESTORE_CHECK_INTERVAL)
+        }
+    }
+}
+
+private val RESTORE_CHECK_INTERVAL = 1.seconds
 
 const val GETTING_STARTED_URL = "${Constants.URL_DOCS}first-steps/"

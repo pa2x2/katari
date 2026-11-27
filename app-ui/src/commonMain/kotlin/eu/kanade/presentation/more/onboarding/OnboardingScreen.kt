@@ -42,7 +42,7 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                 telemetryIncluded = Telemetry.isIncluded,
             ).takeIf { hasPermissionStep },
             SyncStep(graph.syncStatusState),
-            FinishStep(),
+            FinishStep(startedFromBackup = start != OnboardingStart.New),
         )
     }
     val isLastStep = currentStep == steps.lastIndex

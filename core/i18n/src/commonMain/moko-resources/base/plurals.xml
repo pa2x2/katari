@@ -571,6 +571,14 @@
         <item quantity="one">Your library is downloading. So far, %d title needs an extension that isn\'t installed here.</item>
         <item quantity="other">Your library is downloading. So far, %d titles need extensions that aren\'t installed here.</item>
     </plurals>
+    <plurals name="onboarding_finish_restoring_missing">
+        <item quantity="one">Your library is restoring. So far, %d title you brought over needs an extension that isn\'t installed here.</item>
+        <item quantity="other">Your library is restoring. So far, %d titles you brought over need extensions that aren\'t installed here.</item>
+    </plurals>
+    <plurals name="onboarding_finish_restored_missing">
+        <item quantity="one">%d title you brought over needs an extension that isn\'t installed here.</item>
+        <item quantity="other">%d titles you brought over need extensions that aren\'t installed here.</item>
+    </plurals>
     <plurals name="onboarding_finish_account_missing">
         <item quantity="one">%d title from your account needs an extension that isn\'t installed here.</item>
         <item quantity="other">%d titles from your account need extensions that aren\'t installed here.</item>
