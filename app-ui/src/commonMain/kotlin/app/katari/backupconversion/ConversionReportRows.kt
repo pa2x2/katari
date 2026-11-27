@@ -19,7 +19,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * "What comes over" (D023): one row per kind of data the backup holds, with its amount and bar. A kind that comes over
- * in part opens in place to what comes over and what is left behind, each with its note; the others don't open.
+ * in part opens in place to what is left behind, then what comes over (D053), each thing with where it is and its
+ * notes; the others don't open.
  */
 internal fun LazyListScope.conversionReportItems(
     report: ConversionReport,
@@ -51,21 +52,22 @@ internal fun LazyListScope.conversionReportItems(
 @Composable
 private fun CoverageDetails(row: ConversionReport.Row) {
     Column {
-        RowGroupSubheader(stringResource(MR.strings.backup_conversion_comes_over))
-        ItemRows(row.carried)
         RowGroupSubheader(stringResource(MR.strings.backup_conversion_left_behind))
         ItemRows(row.leftBehind)
+        RowGroupSubheader(stringResource(MR.strings.backup_conversion_comes_over))
+        ItemRows(row.carried)
     }
 }
 
-/** One row per thing, with every note the report has for it, such as an entry's custom fields left behind. */
+/**
+ * One row per thing, under it where it is and every note the report has for it, such as an entry's custom fields left
+ * behind or each tracker's sign-in.
+ */
 @Composable
 private fun ItemRows(items: List<ConversionReport.Item>) {
     items.groupBy { it.name }.forEach { (name, notes) ->
-        SettingsRow(
-            title = name.label(),
-            subtitle = notes.mapNotNull { it.note }.map { stringResource(it) }.joinToString(" · ").ifEmpty { null },
-        )
+        val details = listOfNotNull(name.place()) + notes.mapNotNull { it.note }.distinct().map { stringResource(it) }
+        SettingsRow(title = name.label(), subtitle = details.joinToString(" · ").ifEmpty { null })
     }
 }
 
@@ -89,13 +91,25 @@ private fun ConversionReport.Row.amount(): String {
     }
 }
 
-/** What the report calls a thing: its own name, a setting by the other app's key (D048), or a part the tool names. */
+/**
+ * What the report calls a thing: its own name, a Katari setting by Katari's title (D043), a setting of the other app
+ * by that app's name for it (D055), or a part the tool names. A key the table doesn't name shows as it is.
+ */
 @Composable
 internal fun ConversionReport.Name.label(): String = when (this) {
     is ConversionReport.Name.Text -> text
-    is ConversionReport.Name.Setting -> key
+    is ConversionReport.Name.Setting -> katariSettingNames[key]?.let { stringResource(it.title) } ?: key
+    is ConversionReport.Name.OtherAppSetting -> stringResource(label)
     is ConversionReport.Name.Part -> stringResource(label)
 }
+
+/** Where a setting is: in Katari for one that comes over, in the other app for one left behind (D053). */
+@Composable
+private fun ConversionReport.Name.place(): String? = when (this) {
+    is ConversionReport.Name.Setting -> katariSettingNames[key]?.place?.map { stringResource(it) }
+    is ConversionReport.Name.OtherAppSetting -> listOf(app) + place.map { stringResource(it) }
+    is ConversionReport.Name.Text, is ConversionReport.Name.Part -> null
+}?.reduceOrNull { outer, inner -> stringResource(MR.strings.backup_conversion_place, outer, inner) }
 
 private val Kind.title: StringResource
     get() = when (this) {

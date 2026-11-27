@@ -21,34 +21,36 @@ internal fun convertMihonSettings(backedUp: List<BackupPreference>): ConvertedMi
     val preferences = mutableListOf<BackupPreference>()
     val carried = mutableListOf<Item>()
     val leftBehind = mutableListOf<Item>()
-    fun leaveBehind(key: String, reason: StringResource) {
-        leftBehind += Item(Name.Setting(key), reason)
+    fun leaveBehind(name: Name, reason: StringResource) {
+        leftBehind += Item(name, reason)
     }
 
     backedUp.forEach { preference ->
         val key = preference.key
         // A private setting has the same meaning as the one of the same name
         val name = Preference.stripPrivateKey(key)
+        val tracker = MihonSettings.trackerSetting(key, name)
         when {
             Preference.isAppState(key) || key in MihonSettings.IGNORED -> Unit
-            key in MihonSettings.CONSENT -> leaveBehind(key, MR.strings.backup_conversion_consent_not_carried)
-            name in MihonSettings.TRACKER_KEYS || MihonSettings.TRACKER_KEY_PREFIXES.any(key::startsWith) -> {
-                leaveBehind(key, MR.strings.backup_conversion_no_trackers)
-            }
+            key in MihonSettings.CONSENT ->
+                leaveBehind(MihonSettings.CONSENT.getValue(key), MR.strings.backup_conversion_consent_not_carried)
+            tracker != null -> leaveBehind(tracker, MR.strings.backup_conversion_no_trackers)
             name in MihonSettings.CARRIED -> {
                 preferences += preference
-                carried += Item(Name.Setting(key))
+                carried += Item(Name.Setting(name))
             }
             name in MihonSettings.CARRIED_UNLISTED -> preferences += preference
-            name in MihonSettings.NO_COUNTERPART -> leaveBehind(key, MR.strings.backup_conversion_no_counterpart)
+            name in MihonSettings.NO_COUNTERPART ->
+                leaveBehind(MihonSettings.NO_COUNTERPART.getValue(name), MR.strings.backup_conversion_no_counterpart)
             else -> {
                 val renamed = MihonSettings.renamed(preference)
                 if (renamed == null) {
                     // A key outside Mihon's own is a fork's setting, which the report names by its key (D048)
-                    leftBehind += Item(Name.Text(key), MR.strings.backup_conversion_app_own_setting)
+                    leaveBehind(Name.Text(key), MR.strings.backup_conversion_app_own_setting)
                 } else {
                     preferences += renamed
-                    carried += Item(Name.Setting(key), preference.tabletUiModeNote())
+                    val note = preference.tabletUiModeNote()
+                    carried += renamed.map { Item(Name.Setting(it.key), note) }
                 }
             }
         }

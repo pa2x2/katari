@@ -2,12 +2,15 @@ package eu.kanade.tachiyomi.data.backup.conversion.mihon
 
 import app.katari.entry.interactions.reader.settings.ChapterTransitionMode
 import app.katari.entry.interactions.reader.settings.MangaReaderSettings
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.model.TabletUiMode
+import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BooleanPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import tachiyomi.core.common.preference.TriState
+import tachiyomi.i18n.*
 
 /**
  * What becomes of each app setting a Mihon backup holds (D026, D040-D042), from the table of every key Mihon's
@@ -174,50 +177,75 @@ internal object MihonSettings {
         "pref_hardware_bitmap_threshold",
     )
 
-    /** Mihon settings Katari has nothing for: its WebGPU reader options and a few others. */
-    val NO_COUNTERPART = setOf(
-        "pref_high_quality_renderer_key",
-        "pref_dual_page_view",
-        "webgpu_transition_animation",
-        "webgpu_dual_transition_animation",
-        "webgpu_cutout_mode",
-        "webgpu_dual_cutout_mode",
-        "webgpu_continuous_minwidth",
-        "webgpu_continuous_gap",
-        "webgpu_fast_rendering_only",
-        "webgpu_hold_until_final",
-        "webgpu_crop_instead_of_zoom",
-        "webgpu_disable_double_tap_gestures",
-        "webgpu_image_filters",
-        "webgpu_tile_filters",
-        "webgpu_upscaler",
-        "webgpu_downscaler",
-        "pref_filter_updates_hide_excluded_scanlators",
-        "pref_library_columns_landscape_key",
-        "pref_webtoon_vertical_navigator",
-        "pref_webtoon_vertical_navigator_on_left",
+    /** Mihon settings Katari has nothing for, by key: its WebGPU reader options and a few others (D055). */
+    val NO_COUNTERPART: Map<String, Name> = mapOf(
+        "pref_high_quality_renderer_key" to
+            mihon(MR.strings.backup_conversion_mihon_high_quality_renderer, MR.strings.pref_category_advanced),
+        "pref_dual_page_view" to renderer(MR.strings.backup_conversion_mihon_dual_page_view),
+        "webgpu_transition_animation" to renderer(MR.strings.backup_conversion_mihon_transition_animation),
+        "webgpu_dual_transition_animation" to renderer(MR.strings.backup_conversion_mihon_transition_animation_dual),
+        "webgpu_cutout_mode" to renderer(MR.strings.backup_conversion_mihon_cutout_mode),
+        "webgpu_dual_cutout_mode" to renderer(MR.strings.backup_conversion_mihon_cutout_mode_dual),
+        "webgpu_continuous_minwidth" to
+            renderer(MR.strings.backup_conversion_mihon_minimum_width, MR.strings.webtoon_viewer),
+        "webgpu_continuous_gap" to renderer(MR.strings.backup_conversion_mihon_gap, MR.strings.webtoon_viewer),
+        "webgpu_fast_rendering_only" to renderer(MR.strings.backup_conversion_mihon_disable_tiles),
+        "webgpu_hold_until_final" to renderer(MR.strings.backup_conversion_mihon_all_tiles_together),
+        "webgpu_crop_instead_of_zoom" to renderer(MR.strings.backup_conversion_mihon_crop_instead_of_zoom),
+        "webgpu_disable_double_tap_gestures" to renderer(MR.strings.backup_conversion_mihon_zoom_gestures_off),
+        "webgpu_image_filters" to renderer(MR.strings.backup_conversion_mihon_image_filters),
+        "webgpu_tile_filters" to renderer(MR.strings.backup_conversion_mihon_tile_filters),
+        "webgpu_upscaler" to renderer(MR.strings.backup_conversion_mihon_upscaler),
+        "webgpu_downscaler" to renderer(MR.strings.backup_conversion_mihon_downscaler),
+        "pref_filter_updates_hide_excluded_scanlators" to mihon(
+            MR.strings.backup_conversion_mihon_hide_excluded_scanlators,
+            MR.strings.label_recent_updates,
+            MR.strings.action_filter,
+        ),
+        "pref_library_columns_landscape_key" to
+            mihon(MR.strings.backup_conversion_mihon_landscape_columns, MR.strings.pref_category_library),
+        // Mihon's older keys, from before its vertical navigator served every reading mode
+        "pref_webtoon_vertical_navigator" to
+            mihon(MR.strings.backup_conversion_mihon_long_strip_navigator, MR.strings.pref_category_reader),
+        "pref_webtoon_vertical_navigator_on_left" to
+            mihon(MR.strings.backup_conversion_mihon_long_strip_navigator_left, MR.strings.pref_category_reader),
     )
 
     /** Consent given to Mihon, which isn't consent to Katari (D040). */
-    val CONSENT = setOf("analytics", "crashlytics")
+    val CONSENT: Map<String, Name> = mapOf(
+        "analytics" to mihon(MR.strings.backup_conversion_mihon_analytics, MR.strings.backup_conversion_mihon_privacy),
+        "crashlytics" to
+            mihon(MR.strings.backup_conversion_mihon_crash_logs, MR.strings.backup_conversion_mihon_privacy),
+    )
 
-    /** Keys of trackers' settings, some followed by the tracker's id; Katari has no trackers. */
-    val TRACKER_KEYS = setOf("anilist_score_type", "kitsu_score_type", "mangabaka_score_type")
-    val TRACKER_KEY_PREFIXES = listOf(
-        "pref_auto_update_manga_sync_key",
-        "pref_auto_update_manga_on_mark_read",
-        "pref_filter_library_tracked_",
-        "__PRIVATE_pref_mangasync_",
-        "__PRIVATE_pref_tracker_auth_expired_",
-        "__PRIVATE_track_token_",
+    /** Trackers' settings, which Katari has no trackers for, by [key] and the [name] it has without its private mark. */
+    fun trackerSetting(key: String, name: String): Name? =
+        TRACKER_KEYS[name] ?: TRACKER_KEY_PREFIXES.firstOrNull { (prefix) -> key.startsWith(prefix) }?.second
+
+    private val TRACKER_KEYS = mapOf(
+        "anilist_score_type" to tracking(MR.strings.backup_conversion_mihon_anilist_score),
+        "kitsu_score_type" to tracking(MR.strings.backup_conversion_mihon_kitsu_score),
+        "mangabaka_score_type" to tracking(MR.strings.backup_conversion_mihon_mangabaka_score),
+    )
+
+    /** Keys some followed by a tracker's id, so each tracker's sign-in is one row with the others' (D055). */
+    private val TRACKER_KEY_PREFIXES = listOf(
+        "pref_auto_update_manga_sync_key" to tracking(MR.strings.backup_conversion_mihon_update_progress_after_reading),
+        "pref_auto_update_manga_on_mark_read" to
+            tracking(MR.strings.backup_conversion_mihon_update_progress_marked_read),
+        "pref_filter_library_tracked_" to
+            mihon(MR.strings.backup_conversion_mihon_tracked, MR.strings.label_library, MR.strings.action_filter),
+        "__PRIVATE_pref_mangasync_" to tracking(MR.strings.backup_conversion_mihon_tracker_sign_ins),
+        "__PRIVATE_pref_tracker_auth_expired_" to tracking(MR.strings.backup_conversion_mihon_tracker_sign_ins),
+        "__PRIVATE_track_token_" to tracking(MR.strings.backup_conversion_mihon_tracker_sign_ins),
     )
 
     /** Mihon's older key for its extension repos, which travel as stores instead. */
     val IGNORED = setOf("extension_repos")
 
     /**
-     * The Katari settings [preference] becomes when Katari keeps it under another key or shape, empty where it becomes
-     * none; null for a setting Katari doesn't rename.
+     * The Katari settings [preference] becomes when Katari keeps it under another key or shape, empty for a value Katari
+     * can't read; null for a setting Katari doesn't rename.
      */
     fun renamed(preference: BackupPreference): List<BackupPreference>? {
         val (key, value) = preference
@@ -228,17 +256,13 @@ internal object MihonSettings {
             SourcePreferences.MANGA_PINNED_SOURCES_KEY -> {
                 listOf(BackupPreference(SourcePreferences.PINNED_SOURCES_KEY, value))
             }
-            // Mihon's fullscreen hid both bars; Katari has a switch for each, which hide the bars unless turned on
-            "fullscreen" -> if ((value as? BooleanPreferenceValue)?.value == false) {
+            // Mihon's fullscreen hid both bars; Katari has a switch for each
+            "fullscreen" -> {
+                val show = BooleanPreferenceValue(!((value as? BooleanPreferenceValue)?.value ?: return emptyList()))
                 listOf(
-                    BackupPreference(MangaReaderSettings.SHOW_STATUS_BAR_PREFERENCE_KEY, BooleanPreferenceValue(true)),
-                    BackupPreference(
-                        MangaReaderSettings.SHOW_NAVIGATION_BAR_PREFERENCE_KEY,
-                        BooleanPreferenceValue(true),
-                    ),
+                    BackupPreference(MangaReaderSettings.SHOW_STATUS_BAR_PREFERENCE_KEY, show),
+                    BackupPreference(MangaReaderSettings.SHOW_NAVIGATION_BAR_PREFERENCE_KEY, show),
                 )
-            } else {
-                emptyList()
             }
             "always_show_chapter_transition" -> {
                 val always = (value as? BooleanPreferenceValue)?.value ?: return emptyList()
@@ -271,4 +295,14 @@ internal object MihonSettings {
     }
 
     const val TABLET_UI_MODE_KEY = "tablet_ui_mode"
+
+    private const val APP = "Mihon"
+
+    private fun mihon(label: StringResource, vararg place: StringResource) =
+        Name.OtherAppSetting(APP, place.toList(), label)
+
+    private fun renderer(label: StringResource, vararg place: StringResource) =
+        mihon(label, MR.strings.backup_conversion_mihon_high_quality_renderer_group, *place)
+
+    private fun tracking(label: StringResource) = mihon(label, MR.strings.backup_conversion_mihon_tracking)
 }

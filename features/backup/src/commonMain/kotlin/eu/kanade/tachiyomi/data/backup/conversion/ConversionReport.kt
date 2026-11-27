@@ -9,7 +9,10 @@ import dev.icerock.moko.resources.StringResource
 data class ConversionReport(val rows: List<Row>) {
     data class Row(val kind: Kind, val carried: List<Item>, val leftBehind: List<Item>)
 
-    /** An entry, setting, store or other thing the backup held. [note] says what of it came over or was left behind, and why, or how it changed. */
+    /**
+     * An entry, setting, store or other thing the backup held. [note] says what of it came over or was left behind, and
+     * why, or how it changed.
+     */
     data class Item(val name: Name, val note: StringResource? = null) {
         constructor(text: String, note: StringResource? = null) : this(Name.Text(text), note)
     }
@@ -18,8 +21,14 @@ data class ConversionReport(val rows: List<Row>) {
         /** As the backup has it: a title, a store's name, an address. */
         data class Text(val text: String) : Name
 
-        /** A setting by the key the other app keeps it under, which the tool names from its own table. */
+        /** A Katari setting by its key, which the report names with Katari's title and where it is (D043, D053). */
         data class Setting(val key: String) : Name
+
+        /**
+         * A setting of the [app] the backup came from that Katari has nothing for: its [label] in that app and the
+         * [place] it is kept there, such as Mihon's Privacy settings (D053, D055).
+         */
+        data class OtherAppSetting(val app: String, val place: List<StringResource>, val label: StringResource) : Name
 
         /** A part of the backup that has no name of its own, such as a server's settings. */
         data class Part(val label: StringResource) : Name
