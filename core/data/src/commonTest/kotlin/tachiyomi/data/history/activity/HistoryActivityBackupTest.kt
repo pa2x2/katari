@@ -26,39 +26,6 @@ class HistoryActivityBackupTest {
     @Test
     fun `restoring activity repeatedly preserves one unattributed segment and the earliest epoch`() = runTest {
         withRepository { repository ->
-            val snapshot = HistoryActivitySnapshot(
-                sessions = listOf(
-                    HistoryActivitySessionSnapshot(
-                        sessionId = "stable-session",
-                        startedAtEpochMillis = 1_000L,
-                        endedAtEpochMillis = 2_000L,
-                        durationMillis = 1_000L,
-                        lastSequence = 3L,
-                        segments = listOf(
-                            HistoryActivitySegmentSnapshot(
-                                chapterId = null,
-                                localDate = "2026-08-23",
-                                timeZoneId = "UTC",
-                                startedAtEpochMillis = 1_000L,
-                                endedAtEpochMillis = 2_000L,
-                                durationMillis = 1_000L,
-                            ),
-                        ),
-                    ),
-                ),
-                completions = listOf(
-                    HistoryCompletionSnapshot(
-                        eventId = "stable-completion",
-                        chapterId = null,
-                        sessionId = "stable-session",
-                        occurredAtEpochMillis = 2_000L,
-                        localDate = "2026-08-23",
-                        timeZoneId = "UTC",
-                        cause = HistoryCompletionCause.CONSUMPTION,
-                    ),
-                ),
-            )
-
             repository.restoreActivity(1L, snapshot)
             repository.restoreActivity(1L, snapshot)
             repository.restoreStatisticsEpoch(1L, 2_000L)
@@ -74,6 +41,57 @@ class HistoryActivityBackupTest {
         }
     }
 
+    @Test
+    fun `one backup restored into two profiles gives each its activity once`() = runTest {
+        withRepository { repository ->
+            repository.restoreActivity(1L, snapshot)
+            repository.restoreActivity(2L, snapshot)
+            repository.restoreActivity(2L, snapshot)
+
+            val restored = repository.getActivityByEntryIds(listOf(1L, 2L))
+            listOf(1L, 2L).forEach { entryId ->
+                val activity = restored.getValue(entryId)
+                val session = activity.sessions.single()
+                session.durationMillis shouldBe 1_000L
+                session.segments.single().durationMillis shouldBe 1_000L
+                activity.completions.single().sessionId shouldBe session.sessionId
+            }
+        }
+    }
+
+    private val snapshot = HistoryActivitySnapshot(
+        sessions = listOf(
+            HistoryActivitySessionSnapshot(
+                sessionId = "stable-session",
+                startedAtEpochMillis = 1_000L,
+                endedAtEpochMillis = 2_000L,
+                durationMillis = 1_000L,
+                lastSequence = 3L,
+                segments = listOf(
+                    HistoryActivitySegmentSnapshot(
+                        chapterId = null,
+                        localDate = "2026-08-23",
+                        timeZoneId = "UTC",
+                        startedAtEpochMillis = 1_000L,
+                        endedAtEpochMillis = 2_000L,
+                        durationMillis = 1_000L,
+                    ),
+                ),
+            ),
+        ),
+        completions = listOf(
+            HistoryCompletionSnapshot(
+                eventId = "stable-completion",
+                chapterId = null,
+                sessionId = "stable-session",
+                occurredAtEpochMillis = 2_000L,
+                localDate = "2026-08-23",
+                timeZoneId = "UTC",
+                cause = HistoryCompletionCause.CONSUMPTION,
+            ),
+        ),
+    )
+
     private suspend fun withRepository(block: suspend (HistoryActivityBackupRepositoryImpl) -> Unit) {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {
@@ -83,6 +101,17 @@ class HistoryActivityBackupTest {
                 null,
                 "INSERT INTO entries(_id, profile_id, source, url, title, type) " +
                     "VALUES (1, 1, 1, '/entry', 'Entry', 'manga')",
+                0,
+            )
+            driver.await(
+                null,
+                "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'second', 'Second', 0, 1)",
+                0,
+            )
+            driver.await(
+                null,
+                "INSERT INTO entries(_id, profile_id, source, url, title, type) " +
+                    "VALUES (2, 2, 1, '/entry', 'Entry', 'manga')",
                 0,
             )
             val database = Database(
