@@ -25,7 +25,8 @@ internal object YotsubaColorScheme : BaseColorScheme() {
         inversePrimary = Color(0xFFAE3200),
         secondary = Color(0xFFFFB59D), // Unread badge
         onSecondary = Color(0xFF5F1600), // Unread badge text
-        secondaryContainer = Color(0xFF862200), // Navigation bar selector pill & progress indicator (remaining)
+        // The builder's #862200 outweighed the filled button: same hue and tone at chroma 16
+        secondaryContainer = Color(0xFF5D3F37),
         onSecondaryContainer = Color(0xFFFFDBCF), // Navigation bar selector icon
         tertiary = Color(0xFFD7C68D), // Downloaded badge
         onTertiary = Color(0xFF3A2F05), // Downloaded badge text

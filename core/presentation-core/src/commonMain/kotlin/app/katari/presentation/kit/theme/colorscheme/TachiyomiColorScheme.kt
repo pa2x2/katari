@@ -24,7 +24,8 @@ internal object TachiyomiColorScheme : BaseColorScheme() {
         inversePrimary = Color(0xFF0058CA),
         secondary = Color(0xFFB0C6FF), // Unread badge
         onSecondary = Color(0xFF002D6E), // Unread badge text
-        secondaryContainer = Color(0xFF00429B), // Navigation bar selector pill & pro
+        // The builder's #00429B outweighed the filled button: same hue and tone at chroma 32
+        secondaryContainer = Color(0xFF334671),
         onSecondaryContainer = Color(0xFFD9E2FF), // Navigation bar selector icon
         tertiary = Color(0xFF7ADC77), // Downloaded badge
         onTertiary = Color(0xFF003909), // Downloaded badge text
