@@ -59,7 +59,7 @@ class BackupConverter(
 
     /**
      * Which app wrote the backup at [uri], telling [onProgress] how far reading it has got. Another app's backup is read
-     * to its end, and throws when it is damaged or old JSON. A Katari backup is told from its first field, as Katari
+     * to its end, and throws when it is damaged or old JSON; an empty file throws as empty. A Katari backup is told from its first field, as Katari
      * writes a backup's profiles or entries before anything else; restoring it reads it to its end, which finds any
      * damage after that.
      */
@@ -67,6 +67,9 @@ class BackupConverter(
         uri: DocumentUri,
         onProgress: (BackupReadProgress) -> Unit,
     ): BackupIdentity = withContext(Dispatchers.IO) {
+        if (readable { documents.read(uri).buffer().use { it.exhausted() } }) {
+            throw IOException(context.stringResource(MR.strings.invalid_backup_file_empty))
+        }
         if (readable { startsAsKatari(uri) }) return@withContext BackupIdentity.Katari
         val counter = BackupReadCounter(documents.describe(uri).size, reads = 1, onProgress)
         val contents = readable { counter.counted(documents.read(uri)).buffer().use(::readBackupFileContents) }
