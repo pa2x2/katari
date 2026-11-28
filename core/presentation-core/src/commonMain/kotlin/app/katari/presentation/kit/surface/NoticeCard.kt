@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.CheckCircle
 import app.katari.icons.materialsymbols.rounded.Info
 import app.katari.icons.materialsymbols.rounded.Warning
 import app.katari.presentation.kit.button.Button
@@ -17,18 +18,20 @@ import app.katari.presentation.kit.button.ButtonSize
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.progress.LinearProgressIndicator
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 
-/** What a [NoticeCard] tells: something worth knowing, or something that may go wrong. */
-enum class NoticeTone { Info, Warning }
+/** What a [NoticeCard] tells: something worth knowing, something that may go wrong, or work that finished well. */
+enum class NoticeTone { Info, Warning, Success }
 
 /**
  * A notice that sits among a screen's or sheet's cards, inset like them, such as an extension no store updates any
  * more or a source paused for library updates. [icon] replaces the tone's own icon. [onClick] makes the whole card the
  * way to resolve it, such as granting a permission; [actionLabel] instead puts one action at its end, such as Resume.
  * [dismissLabel] puts a way to put the notice off before that action, such as Not now on the Library's suggestion to
- * install missing extensions.
+ * install missing extensions. [progress] (0..1) adds a bar under the text for work the notice follows, such as the
+ * restore setup started.
  */
 @Composable
 fun NoticeCard(
@@ -41,6 +44,7 @@ fun NoticeCard(
     onAction: () -> Unit = {},
     dismissLabel: String? = null,
     onDismiss: () -> Unit = {},
+    progress: (() -> Float)? = null,
 ) {
     val spacing = KatariTheme.spacing
     val content: @Composable () -> Unit = {
@@ -55,6 +59,13 @@ fun NoticeCard(
                 Icon(icon ?: tone.icon, contentDescription = null)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = text, modifier = Modifier.padding(end = spacing.m), role = TextRole.Body)
+                    if (progress != null) {
+                        LinearProgressIndicator(
+                            Modifier.fillMaxWidth().padding(top = spacing.s, end = spacing.m),
+                            progress = progress,
+                            onContainer = true,
+                        )
+                    }
                     Row(modifier = Modifier.align(Alignment.End)) {
                         Button(
                             label = dismissLabel,
@@ -87,7 +98,12 @@ fun NoticeCard(
                 verticalAlignment = if (actionLabel != null) Alignment.CenterVertically else Alignment.Top,
             ) {
                 Icon(icon ?: tone.icon, contentDescription = null)
-                Text(text = text, modifier = Modifier.weight(1f), role = TextRole.Body)
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.s)) {
+                    Text(text = text, role = TextRole.Body)
+                    if (progress != null) {
+                        LinearProgressIndicator(Modifier.fillMaxWidth(), progress = progress, onContainer = true)
+                    }
+                }
                 if (actionLabel != null) {
                     Button(label = actionLabel, onClick = onAction, style = ButtonStyle.Text, size = ButtonSize.Small)
                 }
@@ -98,6 +114,7 @@ fun NoticeCard(
     val container = when (tone) {
         NoticeTone.Info -> SurfaceContainer.SecondaryContainer
         NoticeTone.Warning -> SurfaceContainer.WarningContainer
+        NoticeTone.Success -> SurfaceContainer.SuccessContainer
     }
     if (onClick != null) {
         Surface(
@@ -116,4 +133,5 @@ private val NoticeTone.icon: ImageVector
     get() = when (this) {
         NoticeTone.Info -> MaterialSymbols.Rounded.Info
         NoticeTone.Warning -> MaterialSymbols.Rounded.Warning
+        NoticeTone.Success -> MaterialSymbols.Rounded.CheckCircle
     }
