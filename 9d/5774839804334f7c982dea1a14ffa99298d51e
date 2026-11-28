@@ -1,0 +1,41 @@
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_6fe593bebbf462::t_be662d56c8fa08 1965-1966
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/NonLibraryEntries.kt
+  s_6fe593bebbf462::t_2623fc297f3f68 1-11
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiBackupFormat.kt
+  s_6fe593bebbf462::t_1c27180f08d764 8,125-129,131-132,136-139,147-151
+  s_6fe593bebbf462::t_e612f71e083710 15
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiConversionReport.kt
+  s_6fe593bebbf462::t_aee0884d3c716e 31,43,54,62-81,100-104
+  s_6fe593bebbf462::t_b5da83c3a8ac49 15
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiEntryConversion.kt
+  s_6fe593bebbf462::t_d9e2d2f956d62b 74-77,79-86
+  s_6fe593bebbf462::t_08776d17cf7186 57,65-71
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderBackupFormat.kt
+  s_6fe593bebbf462::t_92bfe3766780f2 74-75
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonBackupFormat.kt
+  s_6fe593bebbf462::t_4898f5d30d8263 8,76-79,81-85
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonConversionReport.kt
+  s_6fe593bebbf462::t_5014f986d13ec9 23,36,44-50,64-70
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonEntryConversion.kt
+  s_6fe593bebbf462::t_045d2b5a04c542 59-62,64-65,67-71
+  s_6fe593bebbf462::t_dd8fec32257720 38,47-53
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/CustomInfo.kt
+  s_6fe593bebbf462::t_1da1ee52457494 12-14,16,37-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9d5774839804334f7c982dea1a14ffa99298d51e",
+  "prompts": {},
+  "sessions": {
+    "s_6fe593bebbf462": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "969d43c3-b240-4424-b2ba-ca94e31a35f7",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
