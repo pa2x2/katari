@@ -4,6 +4,7 @@ import app.katari.domain.extension.model.ExtensionStore
 import app.katari.profiles.core.ProfileBackup
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.toExtensionStore
+import eu.kanade.tachiyomi.data.backup.storage.BackupReadProgress
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.CancellationException
 import tachiyomi.domain.source.identity.SourceIdentity
@@ -20,10 +21,13 @@ class BackupFileValidator(
     private val sourceIdentities: SourceIdentityRepository,
 ) {
 
-    /** Checks for critical backup file data, such as the sources its entries need that aren't installed. */
-    suspend fun validate(uri: DocumentUri): Results {
+    /**
+     * Checks for critical backup file data, such as the sources its entries need that aren't installed, telling
+     * [onProgress] how far reading the file has got.
+     */
+    suspend fun validate(uri: DocumentUri, onProgress: (BackupReadProgress) -> Unit = {}): Results {
         val summary = try {
-            backupDecoder.summarize(uri)
+            backupDecoder.summarize(uri, onProgress)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -43,29 +47,32 @@ class BackupFileValidator(
                 // A source never seen here yet would get its own ID as the key in the schemes that keep it
                 val localKey =
                     localKeys[identity] ?: identity.externalId.takeIf { identity.scheme.externalIdIsLocalKey }
-                val name = when {
-                    localKey != null && sourceManager.get(localKey) != null -> return@mapNotNull null
-                    StubSource.isKnownName(source.name) -> source.name
-                    localKey != null -> sourceManager.getDisplayInfo(localKey).visualName()
-                    else -> identity.externalId.toString()
-                }
+                if (localKey != null && sourceManager.get(localKey) != null) return@mapNotNull null
+                // The name Katari has seen, with its language, before the backup's own (D114)
+                val name = localKey?.let(sourceManager::getDisplayInfo)?.takeIf { it.hasKnownName }?.visualName()
+                    ?: source.name.takeIf(StubSource::isKnownName)
                 MissingSource(name, identity, summary.librarySourceCounts[source.sourceId] ?: 0)
             }
             .distinctBy { it.identity }
-            .sortedBy { it.name }
+            .sortedWith(compareBy(nullsLast()) { it.name })
 
         return Results(
             missingSources = missingSources,
             extensionStores = backup.backupExtensionStores.map { it.toExtensionStore() },
             profiles = backup.backupProfiles.map { it.profile },
             createdAt = summary.createdAt,
+            convertedFrom = backup.convertedFrom,
         )
     }
 
-    /** A source the backup's entries come from that isn't installed, and how many of them are in a library. */
-    data class MissingSource(val name: String, val identity: SourceIdentity, val libraryEntries: Int)
+    /**
+     * A source the backup's entries come from that isn't installed, and how many of them are in a library. [name] is
+     * the name Katari has seen for it, or the backup's; null when neither names it, as TachiyomiSY and Aniyomi write a
+     * source whose extension wasn't installed.
+     */
+    data class MissingSource(val name: String?, val identity: SourceIdentity, val libraryEntries: Int)
 
-    /** [profiles] is empty for a backup made before profiles, which restores into the active profile. */
+    /** [profiles] is empty for a converted backup, which restores into one profile the restore screen picks. */
     data class Results(
         val missingSources: List<MissingSource>,
         /** The extension stores the backup restores, which may list what the missing sources need. */
@@ -73,5 +80,7 @@ class BackupFileValidator(
         val profiles: List<ProfileBackup>,
         /** When the backup was made, in epoch milliseconds, as restoring it on a synced device counts it. */
         val createdAt: Long,
+        /** The app a converted backup came from; null for a backup Katari made. */
+        val convertedFrom: String?,
     )
 }

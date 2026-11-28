@@ -24,6 +24,7 @@ class AndroidBackupRestoreRunner(private val application: Application) : BackupR
             BackupRestoreJob.OPTIONS_KEY to options.asBooleanArray(),
             BackupRestoreJob.PROFILES_KEY to options.profileUuids?.toTypedArray(),
             BackupRestoreJob.ROLL_BACK_ACCOUNT_KEY to options.rollBackAccount,
+            BackupRestoreJob.NEW_PROFILE_KEY to options.newProfileId,
         )
         val request = OneTimeWorkRequestBuilder<BackupRestoreJob>()
             .addTag(TAG)

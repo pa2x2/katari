@@ -1,5 +1,6 @@
 package app.katari.missingextensions.suggestion
 
+import app.katari.missingextensions.model.CantInstall
 import app.katari.missingextensions.model.MissingExtension
 import app.katari.missingextensions.model.MissingExtensions
 import app.katari.sync.client.connection.SyncConnection
@@ -33,6 +34,17 @@ class MissingExtensionSuggestion(
         missing.all.map { all -> all.orEmpty().filter { it.cantInstall == null } }
     } else {
         flowOf(emptyList())
+    }
+
+    /** What a store that couldn't be read may list, so it isn't known whether it can be installed (D113). */
+    val unchecked: Flow<List<MissingExtension>> = if (missing.isInstallOffered) {
+        missing.all.map { all -> all.orEmpty().filter { it.cantInstall == CantInstall.STORES_UNREADABLE } }
+    } else {
+        flowOf(emptyList())
+    }
+
+    suspend fun readStoresAgain() {
+        missing.readStoresAgain()
     }
 
     /** Whether a first sync is downloading the library ([SyncStage.isFirstDownload]). */

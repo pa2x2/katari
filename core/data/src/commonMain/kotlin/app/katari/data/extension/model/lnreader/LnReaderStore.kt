@@ -6,14 +6,14 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 
 /**
  * The store of an LNReader index at [indexUrl]. The index is a bare array with no name or contact, and LNReader indexes
- * live on GitHub, so the store is named after the repository's owner and links to the repository; an index elsewhere
- * is named after its host.
+ * live on GitHub, so the store is named after the repository, as `lnreader-plugins` (D115), and links to it; an index
+ * elsewhere is named after its host.
  */
-internal fun lnReaderStore(indexUrl: String): ExtensionStore {
+fun lnReaderStore(indexUrl: String): ExtensionStore {
     val url = indexUrl.toHttpUrl()
     val segments = url.pathSegments.filter { it.isNotEmpty() }
     val repository = segments.takeIf { url.host in GITHUB_HOSTS && it.size >= 2 }?.take(2)
-    val name = repository?.first() ?: url.host
+    val name = repository?.last() ?: url.host
     return ExtensionStore(
         indexUrl = indexUrl,
         name = name,

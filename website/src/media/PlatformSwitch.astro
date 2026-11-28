@@ -1,0 +1,74 @@
+---
+/*
+ * Two buttons that pick which app's screenshots the enclosing [data-platform-switch] shows. They set its data-shows to
+ * the platform picked, which its own styles read; it starts on Linux for a visitor on a Linux computer, and on Android
+ * otherwise, as the markup should set it for visitors without scripts.
+ */
+import type { Platform } from "../guide/platforms.ts";
+
+interface Props {
+  /** What each button says, such as "Phone" where the page doesn't name the platforms. */
+  labels: Record<Platform, string>;
+}
+
+const { labels } = Astro.props;
+const platforms: Platform[] = ["Android", "Linux"];
+---
+
+<div class="platforms" role="group" aria-label="Device" data-pagefind-ignore>
+  {
+    platforms.map((platform) => (
+      <button type="button" value={platform} aria-pressed={String(platform === "Android")}>
+        {labels[platform]}
+      </button>
+    ))
+  }
+</div>
+
+<script>
+  import { visitorPlatform } from "../site/visitor-platform.ts";
+
+  for (const root of document.querySelectorAll<HTMLElement>("[data-platform-switch]")) {
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>(".platforms button")];
+    const show = (platform: string) => {
+      root.dataset.shows = platform;
+      for (const button of buttons) button.setAttribute("aria-pressed", String(button.value === platform));
+    };
+    for (const button of buttons) button.addEventListener("click", () => show(button.value));
+    if (visitorPlatform() === "Linux") show("Linux");
+  }
+</script>
+
+<style>
+  .platforms {
+    display: flex;
+    gap: 0.15rem;
+    width: fit-content;
+    padding: 0.2rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  button {
+    padding: 0.35rem 1.1rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  button[aria-pressed="true"] {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border);
+    color: var(--text-strong);
+  }
+</style>

@@ -1,0 +1,67 @@
+package eu.kanade.tachiyomi.data.backup.conversion.mihon
+
+import eu.kanade.tachiyomi.data.backup.conversion.CustomInfo
+import eu.kanade.tachiyomi.data.backup.conversion.validMemo
+import eu.kanade.tachiyomi.data.backup.models.BackupChapter
+import eu.kanade.tachiyomi.data.backup.models.BackupEntry
+import eu.kanade.tachiyomi.source.entry.EntryType
+
+internal fun MihonManga.toBackupEntry(): BackupEntry = BackupEntry(
+    source = source,
+    url = url,
+    title = title,
+    displayName = customInfo.displayName,
+    artist = artist,
+    author = author,
+    description = description,
+    genre = genre,
+    status = status,
+    thumbnailUrl = thumbnailUrl,
+    dateAdded = dateAdded,
+    chapters = chapters.map { it.toBackupChapter() },
+    categories = categories,
+    favorite = favorite,
+    chapterFlags = chapterFlags.toLong(),
+    viewerFlags = (viewerFlags ?: viewer).toLong(),
+    history = history,
+    updateStrategy = updateStrategy,
+    favoriteModifiedAt = favoriteModifiedAt,
+    excludedScanlators = excludedScanlators,
+    notes = notes,
+    initialized = initialized,
+    memo = memo.validMemo(),
+    nextUpdate = nextUpdate,
+    type = EntryType.MANGA,
+)
+
+internal val MihonManga.customInfo: CustomInfo
+    get() = CustomInfo(
+        title = customTitle,
+        artist = customArtist,
+        author = customAuthor,
+        description = customDescription,
+        genre = customGenre,
+        status = customStatus,
+        cover = customThumbnailUrl,
+    )
+
+internal val MihonManga.hasSuwayomiMeta: Boolean
+    get() = suwayomiMeta.isNotEmpty() || chapters.any { it.suwayomiMeta.isNotEmpty() }
+
+/** Whether the entry holds reading state worth carrying even outside the library. */
+internal val MihonManga.hasProgress: Boolean
+    get() = history.isNotEmpty() || chapters.any { it.read || it.bookmark || it.lastPageRead > 0 }
+
+private fun MihonChapter.toBackupChapter(): BackupChapter = BackupChapter(
+    url = url,
+    name = name,
+    scanlator = scanlator,
+    read = read,
+    bookmark = bookmark,
+    lastPageRead = lastPageRead,
+    dateFetch = dateFetch,
+    dateUpload = dateUpload,
+    chapterNumber = chapterNumber.toDouble(),
+    sourceOrder = sourceOrder,
+    memo = memo.validMemo(),
+)

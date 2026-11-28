@@ -30,7 +30,7 @@ class AnimePlayerDevicePreferences(
     companion object {
         // Below every level, extra dim's negative ones included
         const val UNSET_BRIGHTNESS_LEVEL = Int.MIN_VALUE
-        private const val REMEMBER_BRIGHTNESS_KEY = "anime_player_remember_brightness"
+        const val REMEMBER_BRIGHTNESS_KEY = "anime_player_remember_brightness"
         private const val BRIGHTNESS_LEVEL_KEY = "anime_player_brightness_level"
         private const val VOLUME_PERCENT_KEY = "anime_player_volume_percent"
     }

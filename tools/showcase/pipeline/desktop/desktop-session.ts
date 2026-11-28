@@ -3,8 +3,9 @@
  * sync sets the app up through its first-run guide with the seed (the SeedRestore scene); a syncing group's first
  * desktop scene goes through the guide itself, joining the phone's account.
  */
-import { rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { MIHON_BACKUP_NAME } from "../../seed/mihon-backup.ts";
 import { timed } from "../timed.ts";
 import { DesktopApp } from "./desktop-app.ts";
 import { type Display, startDisplay } from "./display.ts";
@@ -15,6 +16,8 @@ export interface DesktopOptions {
   agentJar: string;
   extensionApk: string;
   seed: string;
+  /** The Mihon backup the bring-over scenes open (seed/mihon-backup.ts). */
+  mihonBackup: string;
   faketime: string;
   keyring: string;
   /** A folder of the session's own for the app's profile and the display's state; it is emptied first. */
@@ -34,12 +37,18 @@ export class DesktopSession {
     this.workDir = workDir;
   }
 
+  /** Where the scenes open the Mihon backup; every scene gets it as its `mihonBackup` argument. */
+  private get mihonBackup(): string {
+    return join(this.workDir, MIHON_BACKUP_NAME);
+  }
+
   static async open(options: DesktopOptions, seeded: boolean): Promise<DesktopSession> {
     const display = await startDisplay(join(options.workDir, "display"));
     const app = new DesktopApp({ ...options, workDir: join(options.workDir, "app"), display });
     const session = new DesktopSession(app, display, options.workDir);
     try {
       app.prepare();
+      copyFileSync(options.mihonBackup, session.mihonBackup);
       if (seeded) {
         await timed("restoring the seed on the desktop", () =>
           app.runScene("SeedRestore", { seed: options.seed, storage: app.storageFolder }),
@@ -58,7 +67,7 @@ export class DesktopSession {
   }
 
   run(scene: string, args: Record<string, string> = {}): Promise<void> {
-    return this.app.runScene(scene, args);
+    return this.app.runScene(scene, { mihonBackup: this.mihonBackup, ...args });
   }
 
   /**
@@ -69,7 +78,7 @@ export class DesktopSession {
     const release = join(this.workDir, "release");
     rmSync(release, { force: true });
     void ended.then(() => writeFileSync(release, ""));
-    await this.app.runScene(scene, { ...args, release }, startsAt);
+    await this.app.runScene(scene, { mihonBackup: this.mihonBackup, ...args, release }, startsAt);
   }
 
   close(): void {

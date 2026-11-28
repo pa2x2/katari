@@ -3,7 +3,10 @@ package eu.kanade.tachiyomi.source
 import eu.kanade.domain.source.service.SourcePreferences
 import tachiyomi.domain.source.model.SourceDisplayInfo
 
-fun SourceDisplayInfo.visualName(): String =
+fun SourceDisplayInfo.visualName(): String = sourceVisualName(name, lang)
+
+/** A source's [name] with its [lang] where it has one, as Katari names sources: "MangaDex (ES-419)". */
+fun sourceVisualName(name: String, lang: String): String =
     if (lang.isNotBlank()) "$name (${lang.uppercase()})" else name
 
 fun SourceDisplayInfo.sourceNotInstalledName(): String =

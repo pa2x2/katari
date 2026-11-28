@@ -1,7 +1,7 @@
 package app.katari.domain.extension.repository
 
 import app.katari.domain.extension.model.ExtensionStore
-import eu.kanade.tachiyomi.extension.model.Extension
+import app.katari.domain.extension.model.StoreListings
 import kotlinx.coroutines.flow.Flow
 
 interface ExtensionStoreRepository {
@@ -14,10 +14,10 @@ interface ExtensionStoreRepository {
 
     suspend fun refreshAll()
 
-    suspend fun fetchExtensions(): List<Extension.Available>
+    suspend fun fetchExtensions(): StoreListings
 
-    /** What [stores] list, whether or not they're added; a store that can't be read lists nothing. */
-    suspend fun fetchExtensions(stores: List<ExtensionStore>): List<Extension.Available>
+    /** What [stores] list, whether or not they're added. */
+    suspend fun fetchExtensions(stores: List<ExtensionStore>): StoreListings
 
     suspend fun getAll(): List<ExtensionStore>
 

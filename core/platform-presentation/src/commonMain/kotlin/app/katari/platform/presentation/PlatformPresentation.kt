@@ -111,6 +111,11 @@ data class PlatformPresentation(
      * touches, as Android does, and the app has none.
      */
     val touchpadSettings: SettingsEntryPresentation?,
+    /**
+     * What becomes of the other app's extensions when its backup is brought over in the first-run guide; null where
+     * apps keep their extensions apart, as on desktop.
+     */
+    val otherAppExtensionsNote: StringResource?,
 )
 
 /** How a Settings entry for a page of its own shows in the list of settings. */

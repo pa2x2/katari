@@ -64,6 +64,17 @@ internal class ProtoInput(private val source: BufferedSource) {
         }
     }
 
+    /** Skips the value of the field [tag] starts. */
+    fun skipField(tag: Long) {
+        when (val wireType = (tag and 0x7).toInt()) {
+            WIRE_TYPE_VARINT -> readVarint()
+            WIRE_TYPE_FIXED64 -> skip(8)
+            WIRE_TYPE_LENGTH_DELIMITED -> skip(readLength())
+            WIRE_TYPE_FIXED32 -> skip(4)
+            else -> throw MalformedBackupException("Unsupported wire type $wireType")
+        }
+    }
+
     private fun copy(sink: Buffer, length: Long) {
         reading { sink.write(source, length) }
         position += length

@@ -571,6 +571,22 @@
         <item quantity="one">Your library is downloading. So far, %d title needs an extension that isn\'t installed here.</item>
         <item quantity="other">Your library is downloading. So far, %d titles need extensions that aren\'t installed here.</item>
     </plurals>
+    <plurals name="onboarding_finish_restoring_missing">
+        <item quantity="one">Your library is restoring. So far, %d title you brought over needs an extension that isn\'t installed here.</item>
+        <item quantity="other">Your library is restoring. So far, %d titles you brought over need extensions that aren\'t installed here.</item>
+    </plurals>
+    <plurals name="onboarding_finish_restored_missing">
+        <item quantity="one">%d title you brought over needs an extension that isn\'t installed here.</item>
+        <item quantity="other">%d titles you brought over need extensions that aren\'t installed here.</item>
+    </plurals>
+    <plurals name="onboarding_restore_done_errors">
+        <item quantity="one">Your library is restored, with %d error</item>
+        <item quantity="other">Your library is restored, with %d errors</item>
+    </plurals>
+    <plurals name="onboarding_finish_stores_unreadable">
+        <item quantity="one">Couldn\'t check the stores for the extension %d title needs.</item>
+        <item quantity="other">Couldn\'t check the stores for the extensions %d titles need.</item>
+    </plurals>
     <plurals name="onboarding_finish_account_missing">
         <item quantity="one">%d title from your account needs an extension that isn\'t installed here.</item>
         <item quantity="other">%d titles from your account need extensions that aren\'t installed here.</item>
@@ -590,5 +606,41 @@
     <plurals name="other_device_extensions_card_uninstalled">
         <item quantity="one">%1$s uninstalled %2$d extension this device still has. Uninstall it here too?</item>
         <item quantity="other">%1$s uninstalled %2$d extensions this device still has. Uninstall them here too?</item>
+    </plurals>
+    <plurals name="backup_conversion_entries_so_far">
+        <item quantity="one">%d entry so far</item>
+        <item quantity="other">%d entries so far</item>
+    </plurals>
+    <plurals name="backup_conversion_entry_summary">
+        <item quantity="one">Backups of %1$s and the apps built on it</item>
+        <item quantity="other">Backups of %1$s and the apps built on them</item>
+    </plurals>
+    <plurals name="backup_conversion_count_entries">
+        <item quantity="one">%d entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+    <plurals name="backup_conversion_count_categories">
+        <item quantity="one">%d category</item>
+        <item quantity="other">%d categories</item>
+    </plurals>
+    <plurals name="backup_conversion_count_settings">
+        <item quantity="one">%d setting</item>
+        <item quantity="other">%d settings</item>
+    </plurals>
+    <plurals name="backup_conversion_count_sources">
+        <item quantity="one">%d source</item>
+        <item quantity="other">%d sources</item>
+    </plurals>
+    <plurals name="backup_conversion_count_stores">
+        <item quantity="one">%d store</item>
+        <item quantity="other">%d stores</item>
+    </plurals>
+    <plurals name="backup_conversion_count_extensions">
+        <item quantity="one">%d extension</item>
+        <item quantity="other">%d extensions</item>
+    </plurals>
+    <plurals name="backup_conversion_count_items">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
     </plurals>
 </resources>

@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { CONTENT_SERVER_PORT } from "../../content/content-server.ts";
 import { profiles } from "../../seed/library-plan.ts";
+import { MIHON_BACKUP_NAME } from "../../seed/mihon-backup.ts";
 import { LIBRARY_UPDATED_AT, SHOWCASE_NOW, YEAR_RECAP_EDITION } from "../../seed/showcase-clock.ts";
 import { SYNC_SERVER_PORT } from "../sync/sync-server.ts";
 import { timed } from "../timed.ts";
@@ -31,7 +32,6 @@ const APP_DATABASE = "tachiyomi.db";
 const LIBRARY_UPDATE_DURATION_MS = 40_000;
 const RECAP_SHARE_IMAGE = `/data/data/${APP_ID}/cache/shared_image/statistics_recap.png`;
 const SEED_NAME = "showcase.tachibk";
-const SEED_ON_DEVICE = `/sdcard/Download/${SEED_NAME}`;
 // App state is kept per profile; the restore creates the seed's profiles with ids from 1 in plan order.
 const PERSONAL_PROFILE_ID = profiles.findIndex((profile) => profile.name === "Personal") + 1;
 /** What the sync shots and the docs call the phone; the app names the device after the system's device name. */
@@ -43,6 +43,8 @@ export interface PhoneOptions {
   extensionApk: string;
   captureApk: string;
   seed: string;
+  /** The Mihon backup the bring-over scenes open (seed/mihon-backup.ts). */
+  mihonBackup: string;
   /** Where the scenes' stills and clips go. */
   out: string;
   /** Uses the emulator a run with keep left, already set up, rather than a fresh one. */
@@ -67,6 +69,8 @@ export class PhoneSession {
   private readonly ran: string[] = [];
   /** When, in real time, the running scene set the clock to the showcase moment. */
   private clockPinnedAt = 0;
+  /** Where the scenes open the Mihon backup, as a content uri; every scene gets it as its `mihonBackup` argument. */
+  private mihonBackupUri = "";
 
   private constructor(device: Device, options: PhoneOptions, scenes: PhoneScenes) {
     this.device = device;
@@ -84,6 +88,7 @@ export class PhoneSession {
       device.reversePort(CONTENT_SERVER_PORT);
       device.reversePort(SYNC_SERVER_PORT);
       if (!options.reuse) await session.prepare();
+      session.mihonBackupUri = await session.pushShared(options.mihonBackup, MIHON_BACKUP_NAME);
       device.shell(`rm -rf ${CAPTURE_DIRECTORY} ${FAILURE_DIRECTORY}`);
       await timed("waiting for the device to settle", () => awaitIdle(device));
     } catch (error) {
@@ -105,7 +110,7 @@ export class PhoneSession {
         this.scenes.yearRecapOpened.includes(scene) ? YEAR_RECAP_EDITION : "",
     });
     await restoreStatusBar(this.device, `before ${scene}`);
-    await runInstrumentation(this.device, APP_ID, scene, args);
+    await runInstrumentation(this.device, APP_ID, scene, { mihonBackup: this.mihonBackupUri, ...args });
     checkStatusBar(this.device, `after ${scene}, so its stills show it`);
     this.ran.push(scene);
   }
@@ -195,7 +200,7 @@ export class PhoneSession {
 
     // The apps just installed keep the system busy for minutes, which slows the screens the seed restore taps through.
     await timed("waiting for the device to settle", () => awaitIdle(device));
-    const seedUri = await this.pushSeed();
+    const seedUri = await this.pushShared(this.options.seed, SEED_NAME);
     await timed("restoring the seed", () => runInstrumentation(device, APP_ID, "SeedRestore", { seedUri }));
     if (this.scenes.translates) {
       // Text recognition is the slowest work a scene waits for, and the restore may have set the system to work again.
@@ -207,6 +212,9 @@ export class PhoneSession {
     writePreferences(device, APP_ID, APP_PREFERENCES, {
       // Translation setup reads in incognito, which shows a banner over every screen.
       __APP_STATE_incognito_mode: false,
+      // The benchmark build leaves the first-run guide out without finishing it, so screens that tell a first run from
+      // an app set up, such as Restore backup offering Restore into, would take the phone for one still being set up.
+      __APP_STATE_onboarding_complete: true,
     });
     editDatabase(device, APP_ID, APP_DATABASE, (database) => {
       // Every profile's library was last updated in full by the automatic update, which found what the seed holds.
@@ -225,26 +233,27 @@ export class PhoneSession {
   }
 
   /**
-   * Puts the seed where the app's restore screen can open it: in shared storage, indexed by the media provider and
-   * owned by the app, which may then read it without a storage permission.
+   * Puts a backup where the app's restore screen can open it: in shared storage as [name], indexed by the media provider
+   * and owned by the app, which may then read it without a storage permission.
    */
-  private async pushSeed(): Promise<string> {
+  private async pushShared(file: string, name: string): Promise<string> {
     const device = this.device;
-    device.push(this.options.seed, SEED_ON_DEVICE);
-    device.shell(`content call --method scan_file --uri content://media/external/file --arg ${SEED_ON_DEVICE}`);
+    const onDevice = `/sdcard/Download/${name}`;
+    device.push(file, onDevice);
+    device.shell(`content call --method scan_file --uri content://media/external/file --arg ${onDevice}`);
     // The provider indexes the file in the background, under its canonical path rather than /sdcard.
     let id: string | undefined;
     for (let attempt = 0; id === undefined && attempt < 40; attempt++) {
       if (attempt > 0) await sleep(250);
       const rows = device.shell(
-        `content query --uri content://media/external/file --projection _id --where "_display_name='${SEED_NAME}'"`,
+        `content query --uri content://media/external/file --projection _id --where "_display_name='${name}'"`,
       );
       id = rows.match(/_id=(\d+)/)?.[1];
     }
-    if (id === undefined) throw new Error(`The media provider did not index ${SEED_ON_DEVICE}`);
+    if (id === undefined) throw new Error(`The media provider did not index ${onDevice}`);
     device.shell(`content update --uri content://media/external/file/${id} --bind owner_package_name:s:${APP_ID}`);
     // The fragment names the file, which the restore screen shows and checks the extension of.
-    return `content://media/external/file/${id}#${SEED_NAME}`;
+    return `content://media/external/file/${id}#${name}`;
   }
 }
 

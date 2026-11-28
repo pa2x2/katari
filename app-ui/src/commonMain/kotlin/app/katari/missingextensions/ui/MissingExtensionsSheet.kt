@@ -247,6 +247,7 @@ private fun UnavailableRow(
 ) {
     val reason = when (extension.cantInstall) {
         CantInstall.NOT_LISTED, null -> MR.strings.missing_extensions_not_listed
+        CantInstall.STORES_UNREADABLE -> MR.strings.missing_extensions_stores_unreadable
         CantInstall.TORRENT -> MR.strings.missing_extensions_torrent
         CantInstall.INCOMPATIBLE -> MR.strings.missing_extensions_incompatible
     }

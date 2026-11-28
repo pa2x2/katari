@@ -2,6 +2,7 @@ package app.katari.sync.client.restore
 
 import app.katari.sync.client.SyncingTestDevice
 import app.katari.sync.client.TestSyncServer
+import app.katari.sync.client.rows
 import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.run.SyncRequest
 import io.kotest.assertions.throwables.shouldThrow
@@ -59,6 +60,40 @@ class RestoreStampingTest {
                 a.restoreStamping.finishInterrupted()
             }
         }
+
+    @Test
+    fun `a restore into a profile that took a deleted profile's id records its settings`(): Unit = runBlocking {
+        TestSyncServer(directory).use { server ->
+            val account = server.account("reader")
+            SyncingTestDevice(directory.resolve("a.db")).use { a ->
+                SyncingTestDevice(directory.resolve("b.db")).use { b ->
+                    a.join(server, account)
+                    a.sql(
+                        "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'work', 'Work', 1, 1)",
+                    )
+                    a.displayMode(profileId = 2).set("list")
+                    a.sync() shouldBe SyncOutcome.SYNCED
+                    a.sql("DELETE FROM profiles WHERE uuid = 'work'")
+                    a.local.preferences.profiles.deleteProfileState(2)
+                    a.sync() shouldBe SyncOutcome.SYNCED
+
+                    // SQLite gives the next profile the deleted one's id, which the deleted profile's records still hold
+                    a.sql(
+                        "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'home', 'Home', 1, 1)",
+                    )
+                    a.restoreStamping.restoreOnThisDevice(Clock.System.now().toEpochMilliseconds()) {
+                        a.displayMode(profileId = 2).set("grid")
+                    }
+                    a.sync() shouldBe SyncOutcome.SYNCED
+                    b.join(server, account)
+                    b.sync() shouldBe SyncOutcome.SYNCED
+
+                    val home = b.local.rows("SELECT _id FROM profiles WHERE uuid = 'home'").single().toLong()
+                    b.displayMode(home).get() shouldBe "grid"
+                }
+            }
+        }
+    }
 
     /**
      * Syncs A and B, changes both after a backup of A, runs [restore] on A and checks that only what is older than the
@@ -123,8 +158,8 @@ class RestoreStampingTest {
         sorting().set("ALPHABETICAL,ASCENDING")
     }
 
-    private fun SyncingTestDevice.displayMode() =
-        local.preferences.profiles.profileStore(1).getString("pref_display_mode_library")
+    private fun SyncingTestDevice.displayMode(profileId: Long = 1) =
+        local.preferences.profiles.profileStore(profileId).getString("pref_display_mode_library")
 
     private fun SyncingTestDevice.sorting() = local.preferences.profiles.profileStore(
         1,

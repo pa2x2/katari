@@ -5,11 +5,11 @@ import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.data.extension.service.ExtensionStoreService
 import app.katari.domain.extension.model.ExtensionStore
 import app.katari.domain.extension.model.ExtensionStoreFormat
+import app.katari.domain.extension.model.StoreListings
 import app.katari.domain.extension.repository.ExtensionStoreRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -135,27 +135,25 @@ class ExtensionStoreRepositoryImpl(
         )
     }
 
-    override suspend fun fetchExtensions(): List<Extension.Available> = fetchExtensions(getAll())
+    override suspend fun fetchExtensions(): StoreListings = fetchExtensions(getAll())
 
-    override suspend fun fetchExtensions(stores: List<ExtensionStore>): List<Extension.Available> {
-        return try {
-            supervisorScope {
-                stores.map { store ->
-                    async {
-                        service.getExtensions(store).onFailure {
-                            this@ExtensionStoreRepositoryImpl.logcat(LogPriority.ERROR, it) {
-                                "Failed to fetch extensions for store '${store.name} (${store.indexUrl})'"
-                            }
+    override suspend fun fetchExtensions(stores: List<ExtensionStore>): StoreListings {
+        val results = supervisorScope {
+            stores.map { store ->
+                async {
+                    store to service.getExtensions(store).onFailure {
+                        this@ExtensionStoreRepositoryImpl.logcat(LogPriority.ERROR, it) {
+                            "Failed to fetch extensions for store '${store.name} (${store.indexUrl})'"
                         }
                     }
                 }
-                    .awaitAll()
-                    .flatMap { it.getOrDefault(emptyList()) }
             }
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e)
-            emptyList()
+                .awaitAll()
         }
+        return StoreListings(
+            available = results.flatMap { (_, listed) -> listed.getOrDefault(emptyList()) },
+            unreadable = results.filter { (_, listed) -> listed.isFailure }.map { (store, _) -> store },
+        )
     }
 
     override suspend fun getAll(): List<ExtensionStore> {

@@ -8,46 +8,28 @@ import androidx.compose.ui.Modifier
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import app.katari.core.platform.currentPlatformContext
-import app.katari.presentation.kit.feedback.rememberScreenMessages
 import app.katari.presentation.kit.navigation.FullWindowContent
 import app.katari.sync.ui.signin.SyncJoinOrigin
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.onboarding.OnboardingScreen
-import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
-import eu.kanade.presentation.more.settings.screen.data.rememberBackupFilePicker
 import eu.kanade.presentation.util.Screen
-import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.collectAsState
 
 class OnboardingScreen : Screen(), SyncJoinOrigin {
 
     @Composable
     override fun Content() {
-        val context = currentPlatformContext()
         val graph = LocalAppUiGraph.current
-        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
 
         val onboardingPreferences = remember(graph) { graph.onboardingPreferences }
         val shownOnboardingFlow by onboardingPreferences.shownOnboardingFlow.collectAsState()
-        val migrationPromptHandled by onboardingPreferences.mihonMigrationPromptHandled.collectAsState()
-        val mihonApp = remember(graph) { graph.mihonApp }
-        val installedMihon = remember(mihonApp) { mihonApp.findInstalled() }
-        val showMihonMigration = !shownOnboardingFlow && !migrationPromptHandled && installedMihon != null
 
         val finishOnboarding: () -> Unit = {
-            onboardingPreferences.mihonMigrationPromptHandled.set(true)
             onboardingPreferences.shownOnboardingFlow.set(true)
             navigator.pop()
-        }
-
-        // The restore runs in the background while the guide goes on, so its screen opens over the guide.
-        val chooseMihonBackup = rememberBackupFilePicker(mimeType = "application/*") { uri ->
-            if (uri == null) return@rememberBackupFilePicker
-            navigator.push(RestoreBackupScreen(uri))
         }
 
         // Prevent exiting if onboarding hasn't been completed
@@ -58,16 +40,7 @@ class OnboardingScreen : Screen(), SyncJoinOrigin {
         )
 
         FullWindowContent(Modifier.fillMaxSize()) {
-            OnboardingScreen(
-                onComplete = finishOnboarding,
-                offersMihon = showMihonMigration,
-                onOpenMihon = {
-                    if (installedMihon == null || !mihonApp.open(context, installedMihon)) {
-                        messages.show(MR.strings.app_not_available)
-                    }
-                },
-                onChooseMihonBackup = chooseMihonBackup,
-            )
+            OnboardingScreen(onComplete = finishOnboarding)
         }
     }
 }

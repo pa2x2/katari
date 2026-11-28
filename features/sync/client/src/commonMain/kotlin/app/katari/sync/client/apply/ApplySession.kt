@@ -488,6 +488,11 @@ internal class ApplySession(
         if (!changed && kind.sameRecord(merged, restored)) return
         val ref = stored?.local_ref ?: localRef
         if (changed) {
+            // A row is held by one record at most: the record it held before, such as a deleted profile's whose id a
+            // new profile took, lets it go
+            if (ref != null && stored?.local_ref == null) {
+                database.sync_recordsQueries.detachLocalRef(kind.name, ref, key)
+            }
             database.sync_recordsQueries.storeLocalChange(
                 recordKey = key,
                 kind = kind.name,

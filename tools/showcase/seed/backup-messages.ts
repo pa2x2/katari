@@ -170,7 +170,7 @@ function encodeProfile(writer: ProtoWriter, profile: ProfileScopedBackup): void 
 }
 
 // kotlinx.serialization writes a sealed class as its serial name followed by the encoded subclass.
-function encodePreference(writer: ProtoWriter, preference: BackupPreference): void {
+export function encodePreference(writer: ProtoWriter, preference: BackupPreference): void {
   writer.string(1, preference.key).message(2, preference.value, (inner, value) => {
     inner.string(1, `eu.kanade.tachiyomi.data.backup.models.${value.type}PreferenceValue`).message(2, value, (field, typed) => {
       switch (typed.type) {

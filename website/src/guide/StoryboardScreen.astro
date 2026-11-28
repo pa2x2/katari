@@ -1,0 +1,94 @@
+---
+/*
+ * One screen of a Storyboard: its title, the steps taken on it (the slot, usually an ordered list), and its capture on
+ * each platform, of which the storyboard's switch shows one. Its rows line up with the other screens' in the same line,
+ * so the captures start level however long the steps run.
+ */
+import type { CaptureImage } from "../media/planned-captures.ts";
+import Shot from "../media/Shot.astro";
+import type { Platform } from "./platforms.ts";
+
+interface Props {
+  title: string;
+  shots: Record<Platform, { image: CaptureImage; alt: string }>;
+}
+
+const { title, shots } = Astro.props;
+---
+
+<li class="screen">
+  <h3>{title}</h3>
+  <div class="steps"><slot /></div>
+  <div class="captures">
+    <div class="capture" data-platform="Android">
+      <Shot image={shots.Android.image} alt={shots.Android.alt} sizes="(min-width: 44rem) 13rem, 60vw" />
+    </div>
+    <div class="capture" data-platform="Linux">
+      <Shot image={shots.Linux.image} alt={shots.Linux.alt} device="window" sizes="(min-width: 44rem) 28rem, 80vw" />
+    </div>
+  </div>
+</li>
+
+<style>
+  .screen {
+    display: grid;
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+    margin-bottom: 2rem;
+  }
+
+  h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1.2rem;
+  }
+
+  .steps {
+    font-size: 0.95rem;
+  }
+
+  .steps :global(:last-child) {
+    margin-bottom: 0;
+  }
+
+  .captures {
+    margin-top: 0.6rem;
+  }
+
+  .capture {
+    --shot-width: min(100%, 13rem);
+  }
+
+  .capture[data-platform="Linux"] {
+    --shot-width: 100%;
+  }
+
+  :global(.storyboard[data-shows="Android"]) .capture[data-platform="Linux"],
+  :global(.storyboard[data-shows="Linux"]) .capture[data-platform="Android"] {
+    display: none;
+  }
+
+  @media (max-width: 44rem) {
+    .screen {
+      display: flex;
+      flex-direction: column;
+      flex: none;
+      width: min(80vw, 20rem);
+      margin: 0;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.8rem;
+      background: var(--surface);
+      scroll-snap-align: start;
+    }
+
+    .captures {
+      margin-top: auto;
+      padding-top: 0.6rem;
+    }
+
+    .capture[data-platform="Android"] > :global(.shot) {
+      margin: 0 auto;
+    }
+  }
+</style>

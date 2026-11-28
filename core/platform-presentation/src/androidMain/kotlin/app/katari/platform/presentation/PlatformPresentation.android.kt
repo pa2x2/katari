@@ -70,4 +70,5 @@ actual val platformPresentation = PlatformPresentation(
     defaultReadingModeIcon = PlatformSymbols.Rounded.MobileGear,
     unmeteredNetworkIcon = PlatformSymbols.Rounded.Wifi,
     touchpadSettings = null,
+    otherAppExtensionsNote = PlatformStrings.onboarding_other_app_extensions,
 )

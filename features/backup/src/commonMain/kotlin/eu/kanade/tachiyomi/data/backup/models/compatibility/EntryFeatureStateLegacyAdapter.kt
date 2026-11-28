@@ -209,7 +209,7 @@ private fun BackupEntry.legacyProgress(entry: Entry): EntryProgressSnapshot? {
     )?.let(::EntryProgressSnapshot)
 }
 
-private fun BackupPlaybackState.toProgressState(): EntryProgressStateSnapshot? {
+internal fun BackupPlaybackState.toProgressState(): EntryProgressStateSnapshot? {
     if (url.isBlank() || (!completed && positionMs <= 0L)) return null
     val position = positionMs.coerceAtLeast(0L)
     val duration = durationMs.takeIf { it > 0L }

@@ -57,8 +57,8 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | The base of every row: icon, title, subtitle, trailing control | `SettingsRow` | Use a more specific row below when one fits. `expanded` for a row that opens rows under it in its card, such as the changes behind a setting another device changed; `subtitleTone` for a subtitle that reports a state, such as a warning; `subtitleState` for a short state after the subtitle in its own tone, marked by a dot, such as Live on Sync's status; `iconAlert` for a row that tells of a problem its subtitle explains calmly |
 | Answers to the row above in the same card, such as which side of a conflict to keep | `RowActions` | The last is the proposed one and stands out; they wrap where the card is narrow |
 | An on/off setting | `ToggleRow` | Switch on screens, checkbox in sheets, picked by row density; `leading` for a picture such as a profile's avatar; `onOpen` for a setting with a page of its own, such as a sync area: the text opens the page and only the switch toggles |
-| One of a set where any number can be picked | `CheckRow` | |
-| One of a set where only one can be chosen | `ChoiceRow` | |
+| One of a set where any number can be picked | `CheckRow` | `avatar` for an item with one, such as a profile |
+| One of a set where only one can be chosen | `ChoiceRow` | `avatar` for an option with one, such as a profile |
 | A filter that includes, excludes or ignores | `TriStateRow` | |
 | A sort option | `SortRow` | |
 | A setting on a slider, its value in a pill | `SliderRow` | |
@@ -67,6 +67,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A row whose body the caller lays out, such as a segmented choice or a pair of buttons | `ControlRow` | |
 | Chips under a group header, such as quick filters in a sheet | `ChipsRow` | |
 | An explanation or note in a sheet or dialog | `InfoRow` | |
+| How much of one kind of data came over from elsewhere, such as a row of what another app's backup brings over | `CoverageRow` | A mark for all, part or none, an amount line and a bar; `details` opens under it, such as the lists of what came over and what didn't |
 | A part of a whole and how much it took, compact inside a card, such as an episode watched that day | `TallyRow` | An optional mark after the value, such as finished; `heading` for a row naming the rows under it, such as a session's span; `underCover` for rows unfolded under a `CoverRow` |
 | Options as icon-and-label tiles, such as reading modes | `IconChoiceGrid` | |
 | A choice of colour swatches | `ColorChoiceRow`, `ColorSwatches` | Swatches alone where tabs already name the colour |
@@ -92,7 +93,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A rounded container for one item or group | `Card` | |
 | A card holding a group of items, such as a shelf of entries; raised to float over content | `GroupCard`, `Modifier.groupCardBehind` | `groupCardBehind` draws the card behind items laid out one by one |
 | One choice of a set shown as a card, such as an engine in a picker | `SelectableCard` | The kit owns the selected look |
-| A notice or warning among a screen's or sheet's cards, such as an extension no store updates or a paused source | `NoticeCard` | `NoticeTone.Info` or `Warning`; an optional action at its end, and `dismissLabel` for a way to put it off (Not now), which moves the actions under the text. Never a `Card` or `Surface` with an icon of your own |
+| A notice or warning among a screen's or sheet's cards, such as an extension no store updates or a paused source | `NoticeCard` | `NoticeTone.Info`, `Warning` or `Success`; `progress` adds a bar under the text for work it follows, such as the restore setup started; an optional action at its end, and `dismissLabel` for a way to put it off (Not now), which moves the actions under the text. Never a `Card` or `Surface` with an icon of your own |
 | A banner in a story's colours that opens the story | `StoryBanner` | |
 | A dashboard section, its footer and headline tiles | `DashboardCard`, `DashboardCardFooter`, `DashboardTile` | Tiles go in `DashboardTiles` |
 | The figure a dashboard section or sheet leads with, such as a period's total time | `LeadFigure` | Short `facts` at its end, such as sessions; `detail` under it, such as the change from the period before |

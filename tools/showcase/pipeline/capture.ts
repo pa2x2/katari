@@ -5,7 +5,8 @@
  * and a sync server of its own when its devices sync (sync/sync-server.ts). CI runs each group in a job of its own,
  * with --group; locally, the groups run one after another.
  *
- * Expects the content server's folder (content/fetch.ts) and the seed, and for the phone the three APKs built:
+ * Expects the content server's folder (content/fetch.ts) and the seed with the Mihon backup beside it (seed/generate.ts),
+ * and for the phone the three APKs built:
  *
  *   ./gradlew :app:assembleBenchmark :tools:showcase:extension:assembleShowcase :tools:showcase:capture:assembleShowcase
  *
@@ -48,6 +49,7 @@ const { values } = parseArgs({
   options: {
     out: { type: "string", default: join(cacheDir(), "captures") },
     seed: { type: "string", default: join(cacheDir(), "showcase.tachibk") },
+    "mihon-backup": { type: "string", default: join(cacheDir(), "mihon.tachibk") },
     served: { type: "string", default: join(cacheDir(), "served") },
     "app-apk": { type: "string", default: join(repository, "app/build/outputs/apk/benchmark/app-x86_64-benchmark.apk") },
     "extension-apk": {
@@ -91,7 +93,7 @@ const runs = chosenRuns();
 const keepEmulator = values["keep-emulator"] || values["reuse-emulator"];
 if (values["reuse-emulator"] && runs.length > 1) throw new Error("--reuse-emulator needs --group or --scenes");
 const platforms = new Set(runs.flatMap((run) => [...platformsOf(run.scenes)]));
-const inputs = [values.seed, values.served, values["extension-apk"]];
+const inputs = [values.seed, values["mihon-backup"], values.served, values["extension-apk"]];
 if (platforms.has("phone")) inputs.push(values["app-apk"], values["capture-apk"]);
 const faketime = platforms.has("desktop") ? faketimeLibrary() : "";
 if (platforms.has("desktop")) requireCommand(values["gnome-keyring"], "GNOME Keyring (apt install gnome-keyring)");
@@ -163,6 +165,7 @@ async function capture(run: Run, keep: boolean): Promise<void> {
               extensionApk: values["extension-apk"],
               captureApk: values["capture-apk"],
               seed: values.seed,
+              mihonBackup: values["mihon-backup"],
               out,
               reuse: values["reuse-emulator"],
               keep,
@@ -183,6 +186,7 @@ async function capture(run: Run, keep: boolean): Promise<void> {
               agentJar: values["desktop-agent"],
               extensionApk: values["extension-apk"],
               seed: values.seed,
+              mihonBackup: values["mihon-backup"],
               faketime,
               keyring: values["gnome-keyring"],
               workDir: join(cacheDir(), "desktop"),
