@@ -19,9 +19,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.katari.backupconversion.BringOverScreen
 import app.katari.core.platform.currentPlatformContext
+import app.katari.missingextensions.model.CantInstall
 import app.katari.missingextensions.model.MissingExtension
 import app.katari.missingextensions.restore.BackupMissingExtensions
 import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.layout.RowList
@@ -240,7 +242,7 @@ class RestoreBackupScreen(
                 }
 
                 if (state.error != null) {
-                    errorMessageItem(state.error)
+                    errorMessageItem(state.error, onCheckStoresAgain = model::checkStoresAgain)
                 }
             }
         }
@@ -276,6 +278,7 @@ class RestoreBackupScreen(
 
     private fun LazyListScope.errorMessageItem(
         error: Any?,
+        onCheckStoresAgain: () -> Unit,
     ) {
         item {
             GroupCard(modifier = Modifier.padding(horizontal = KatariTheme.spacing.m)) {
@@ -286,7 +289,10 @@ class RestoreBackupScreen(
                     ) {
                         when (error) {
                             is MissingRestoreComponents -> {
-                                val (installable, unavailable) = error.extensions.partition { it.cantInstall == null }
+                                val byReason = error.extensions.groupBy { it.cantInstall }
+                                val installable = byReason[null].orEmpty()
+                                val unchecked = byReason[CantInstall.STORES_UNREADABLE].orEmpty()
+                                val unavailable = error.extensions - installable.toSet() - unchecked.toSet()
                                 Text(
                                     stringResource(
                                         if (error.extensions.isEmpty()) {
@@ -306,6 +312,18 @@ class RestoreBackupScreen(
                                     RestoreErrorSection(
                                         title = stringResource(MR.strings.missing_extensions_unavailable),
                                         body = unavailable.lines(),
+                                    )
+                                }
+                                // A store that couldn't be read may list them (D113)
+                                if (unchecked.isNotEmpty()) {
+                                    RestoreErrorSection(
+                                        title = stringResource(MR.strings.missing_extensions_stores_unreadable),
+                                        body = unchecked.lines(),
+                                    )
+                                    Button(
+                                        label = stringResource(MR.strings.action_retry),
+                                        onClick = onCheckStoresAgain,
+                                        style = ButtonStyle.Text,
                                     )
                                 }
                             }
@@ -411,6 +429,17 @@ internal class RestoreBackupViewModel(
     }
 
     private var missingExtensions: BackupMissingExtensions.Checked? = null
+
+    /** Checks the stores' lists again, as after a store couldn't be read (D113). */
+    fun checkStoresAgain() {
+        val checked = missingExtensions ?: return
+        viewModelScope.launchIO {
+            state.update { it.copy(checkingExtensions = true) }
+            missingExtensions = checked.again()
+            state.update { it.copy(checkingExtensions = false) }
+            showMissingExtensions()
+        }
+    }
 
     /** What's missing, as restoring with the current options leaves it: the backup's stores may list extensions. */
     private fun showMissingExtensions() {

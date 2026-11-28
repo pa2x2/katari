@@ -39,6 +39,7 @@ internal class BringOverViewModel(
     @Assisted file: DocumentUri?,
     private val converter: BackupConverter,
     private val fileNames: BackupFileNames,
+    private val validator: BackupFileValidator,
     private val missingExtensions: BackupMissingExtensions,
 ) : ViewModel() {
 
@@ -123,18 +124,27 @@ internal class BringOverViewModel(
         }
     }
 
-    // Which extensions the stores have, as Restore backup finds them (D106); the report shows meanwhile
+    /** Asks the stores again, as after one couldn't be read (D113). */
+    fun checkStoresAgain() {
+        val backup = (state.value.conversion as? Conversion.Done)?.backup ?: return
+        step { checkStores(backup) }
+    }
+
+    // Which extensions the stores have and what the sources are called, as Restore backup finds them for the converted
+    // file (D106, D114); the report shows meanwhile
     private suspend fun checkStores(backup: ConvertedBackup) {
-        val sources = backup.report.rows
-            .flatMap { it.carried + it.leftBehind }
-            .mapNotNull { it.name as? ConversionReport.Name.Source }
-            .distinctBy { it.identity }
-            .map { BackupFileValidator.MissingSource(it.text, it.identity, libraryEntries = 0) }
-        if (sources.isEmpty()) return
         state.update { it.copy(stores = StoreCheck.Checking) }
         val checked = try {
-            val check = missingExtensions.check(sources, backup.extensionStores)
-            StoreCheck.Checked(check.cantInstall(withBackupStores = true))
+            val results = validator.validate(backup.uri)
+            if (results.missingSources.isEmpty()) {
+                null
+            } else {
+                val check = missingExtensions.check(results.missingSources, results.extensionStores)
+                StoreCheck.Checked(
+                    cantInstall = check.cantInstall(withBackupStores = true),
+                    names = check.names(withBackupStores = true),
+                )
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -190,8 +200,14 @@ internal class BringOverViewModel(
     sealed interface StoreCheck {
         data object Checking : StoreCheck
 
-        /** Why each source's extension can't be installed after restoring, null where it can. */
-        data class Checked(val cantInstall: Map<SourceIdentity, CantInstall?>) : StoreCheck
+        /**
+         * Why each source's extension can't be installed after restoring, null where it can, and what each is called,
+         * null where nothing names it (D114).
+         */
+        data class Checked(
+            val cantInstall: Map<SourceIdentity, CantInstall?>,
+            val names: Map<SourceIdentity, String?>,
+        ) : StoreCheck
     }
 
     /** [name] and [size] (in bytes) are null while they're read or when the file's storage doesn't say. */

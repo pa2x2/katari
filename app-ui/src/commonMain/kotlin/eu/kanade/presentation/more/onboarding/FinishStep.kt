@@ -49,6 +49,8 @@ internal class FinishStep(private val startedFromBackup: Boolean) : OnboardingSt
             heading = stringResource(MR.strings.onboarding_finish_heading),
             subtitle = if (offer == null) {
                 stringResource(MR.strings.onboarding_finish_subtitle, stringResource(MR.strings.app_name))
+            } else if (offer.unchecked) {
+                pluralStringResource(MR.plurals.onboarding_finish_stores_unreadable, offer.titles, offer.titles)
             } else {
                 val plural = when (offer.from) {
                     LibraryOrigin.Account -> if (offer.libraryArriving) {
@@ -74,14 +76,17 @@ internal class FinishStep(private val startedFromBackup: Boolean) : OnboardingSt
         val handler = LocalUriHandler.current
         val navigator = LocalNavigator.currentOrThrow
         val offer = extensionsOffer(startedFromBackup)
+        val model = metroViewModel<MissingExtensionsNoticeViewModel>()
         var sheetShown by rememberSaveable { mutableStateOf(false) }
         RowGroup {
             row {
                 ControlRow {
                     if (offer != null) {
                         Button(
-                            label = stringResource(MR.strings.missing_extensions_title),
-                            onClick = { sheetShown = true },
+                            label = stringResource(
+                                if (offer.unchecked) MR.strings.action_retry else MR.strings.missing_extensions_title,
+                            ),
+                            onClick = { if (offer.unchecked) model.readStoresAgain() else sheetShown = true },
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
@@ -107,10 +112,16 @@ internal class FinishStep(private val startedFromBackup: Boolean) : OnboardingSt
 }
 
 /**
- * [titles] of the library [from] an account or a backup need extensions this device can install or trust;
- * [libraryArriving] while a first sync still downloads the library or the restore still runs, so the count still climbs.
+ * [titles] of the library [from] an account or a backup need extensions this device can install or trust, or, when
+ * [unchecked], extensions a store that couldn't be read may list (D113); [libraryArriving] while a first sync still
+ * downloads the library or the restore still runs, so the count still climbs.
  */
-private class ExtensionsOffer(val titles: Int, val from: LibraryOrigin, val libraryArriving: Boolean)
+private class ExtensionsOffer(
+    val titles: Int,
+    val from: LibraryOrigin,
+    val libraryArriving: Boolean,
+    val unchecked: Boolean,
+)
 
 private enum class LibraryOrigin { Account, Backup }
 
@@ -123,13 +134,17 @@ private fun extensionsOffer(startedFromBackup: Boolean): ExtensionsOffer? {
     val linked = rememberSyncStatus()?.link is SyncStatus.Link.Linked
     val model = metroViewModel<MissingExtensionsNoticeViewModel>()
     val extensions by model.installable.collectAsStateWithLifecycle()
+    val unchecked by model.unchecked.collectAsStateWithLifecycle()
     val arriving by model.libraryArriving.collectAsStateWithLifecycle()
+    val installableTitles = extensions.sumOf { it.titleCount }.toInt()
+    val uncheckedTitles = unchecked.sumOf { it.titleCount }.toInt()
+    val isUnchecked = installableTitles == 0
+    val titles = if (isUnchecked) uncheckedTitles else installableTitles
     val restoring by rememberRestoreRunning(startedFromBackup)
-    val titles = extensions.sumOf { it.titleCount }.toInt()
     return when {
         titles == 0 -> null
-        linked -> ExtensionsOffer(titles, LibraryOrigin.Account, libraryArriving = arriving == true)
-        startedFromBackup -> ExtensionsOffer(titles, LibraryOrigin.Backup, libraryArriving = restoring)
+        linked -> ExtensionsOffer(titles, LibraryOrigin.Account, libraryArriving = arriving == true, isUnchecked)
+        startedFromBackup -> ExtensionsOffer(titles, LibraryOrigin.Backup, libraryArriving = restoring, isUnchecked)
         else -> null
     }
 }

@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension
 
+import app.katari.domain.extension.model.ExtensionStore
 import app.katari.profiles.core.ProfileStore
 import app.katari.profiles.sourcepreferences.SourcePreferenceFiles
 import dev.zacsweers.metro.AppScope
@@ -37,6 +38,8 @@ class DefaultExtensionManagement(
     override fun installed(pkgName: String): Extension.Installed? = extensionManager.getInstalledExtension(pkgName)
 
     override val listingsBySource: Flow<Map<Long, Extension.Available>> = extensionManager.listingsBySource
+
+    override val unreadableStores: Flow<List<ExtensionStore>> = extensionManager.unreadableStoresFlow
 
     override suspend fun refreshAvailable(refreshStores: Boolean) {
         extensionManager.findAvailableExtensions(forceRefresh = refreshStores)

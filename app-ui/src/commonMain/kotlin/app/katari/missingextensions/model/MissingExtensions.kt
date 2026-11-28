@@ -44,7 +44,8 @@ class MissingExtensions(
             .onEach { if (it.isNotEmpty()) scope.launch { extensions.fetchListingsOnce() } },
         extensions.listingsBySource,
         extensions.notLoaded,
-    ) { sources, listings, notLoaded ->
+        extensions.unreadableStores,
+    ) { sources, listings, notLoaded, unreadable ->
         val untrusted = notLoaded
             .filter { it.reason is Extension.NotLoaded.Reason.Untrusted }
             .associateBy { it.pkgName }
@@ -65,9 +66,14 @@ class MissingExtensions(
                 countsByProfile = it.countsByProfile,
             )
         }
-        missingExtensions(needed) { compatibility.cantInstall(it) }
+        missingExtensions(needed, storesUnreadable = unreadable.isNotEmpty()) { compatibility.cantInstall(it) }
     }
         .stateIn(scope, SharingStarted.WhileSubscribed(5.seconds), null)
+
+    /** Reads the stores' lists again, as after a store couldn't be read. */
+    suspend fun readStoresAgain() {
+        extensions.refreshAvailable()
+    }
 
     /** Whether this platform installs extensions at all; where it doesn't, nothing suggests installing them. */
     val isInstallOffered: Boolean

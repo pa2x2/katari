@@ -44,9 +44,13 @@ data class NeededSource(
     val countsByProfile: Map<Long, Long>,
 )
 
-/** [sources] grouped by the extension that provides each, most titles first. */
+/**
+ * [sources] grouped by the extension that provides each, most titles first; one no listing provides is unlisted, or
+ * unchecked while [storesUnreadable].
+ */
 fun missingExtensions(
     sources: List<NeededSource>,
+    storesUnreadable: Boolean,
     cantInstall: (Extension.Available) -> CantInstall?,
 ): List<MissingExtension> = sources
     .groupBy { it.untrusted?.pkgName ?: it.listing?.pkgName ?: "source:${it.key}" }
@@ -60,7 +64,7 @@ fun missingExtensions(
             untrusted = untrusted,
             cantInstall = when {
                 untrusted != null -> null
-                listing == null -> CantInstall.NOT_LISTED
+                listing == null -> if (storesUnreadable) CantInstall.STORES_UNREADABLE else CantInstall.NOT_LISTED
                 else -> cantInstall(listing)
             },
             countsByProfile = grouped

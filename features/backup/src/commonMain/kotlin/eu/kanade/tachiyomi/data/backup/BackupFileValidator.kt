@@ -47,16 +47,14 @@ class BackupFileValidator(
                 // A source never seen here yet would get its own ID as the key in the schemes that keep it
                 val localKey =
                     localKeys[identity] ?: identity.externalId.takeIf { identity.scheme.externalIdIsLocalKey }
-                val name = when {
-                    localKey != null && sourceManager.get(localKey) != null -> return@mapNotNull null
-                    StubSource.isKnownName(source.name) -> source.name
-                    localKey != null -> sourceManager.getDisplayInfo(localKey).visualName()
-                    else -> identity.externalId.toString()
-                }
+                if (localKey != null && sourceManager.get(localKey) != null) return@mapNotNull null
+                // The name Katari has seen, with its language, before the backup's own (D114)
+                val name = localKey?.let(sourceManager::getDisplayInfo)?.takeIf { it.hasKnownName }?.visualName()
+                    ?: source.name.takeIf(StubSource::isKnownName)
                 MissingSource(name, identity, summary.librarySourceCounts[source.sourceId] ?: 0)
             }
             .distinctBy { it.identity }
-            .sortedBy { it.name }
+            .sortedWith(compareBy(nullsLast()) { it.name })
 
         return Results(
             missingSources = missingSources,
@@ -67,8 +65,12 @@ class BackupFileValidator(
         )
     }
 
-    /** A source the backup's entries come from that isn't installed, and how many of them are in a library. */
-    data class MissingSource(val name: String, val identity: SourceIdentity, val libraryEntries: Int)
+    /**
+     * A source the backup's entries come from that isn't installed, and how many of them are in a library. [name] is
+     * the name Katari has seen for it, or the backup's; null when neither names it, as TachiyomiSY and Aniyomi write a
+     * source whose extension wasn't installed.
+     */
+    data class MissingSource(val name: String?, val identity: SourceIdentity, val libraryEntries: Int)
 
     /** [profiles] is empty for a converted backup, which restores into one profile the restore screen picks. */
     data class Results(

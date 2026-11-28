@@ -48,10 +48,10 @@ data class ConversionReport(val rows: List<Row>) {
         data class Part(val label: StringResource) : Name
 
         /**
-         * A source the backup's entries come from, by its name or id as [reportName] gives it, and the [identity] a
-         * store lists its extension under, so the tool can look the extension up in the stores (D106).
+         * A source the backup's entries come from, by its name, null where the backup has none (D114), and the
+         * [identity] a store lists its extension under, so the tool can look the extension up in the stores (D106).
          */
-        data class Source(val text: String, val identity: SourceIdentity) : Name
+        data class Source(val text: String?, val identity: SourceIdentity) : Name
     }
 
     enum class Kind {
@@ -72,8 +72,8 @@ data class ConversionReport(val rows: List<Row>) {
 }
 
 /**
- * How the report names a source: by its name, or by its id where the backup has none, as TachiyomiSY and Aniyomi write a
- * source whose extension isn't installed. Katari's restore names such a source by its id too.
+ * How the report names a source's settings and the rules kept for it: by its name, or by its id where the backup has
+ * none, as TachiyomiSY and Aniyomi write a source whose extension isn't installed.
  */
 internal val BackupSource.reportName: String
     get() = name.ifEmpty { sourceId.toString() }
@@ -81,6 +81,6 @@ internal val BackupSource.reportName: String
 /** A source whose extension isn't carried: the person installs it from a store after restoring. */
 internal val BackupSource.extensionItem: ConversionReport.Item
     get() = ConversionReport.Item(
-        ConversionReport.Name.Source(reportName, identity),
+        ConversionReport.Name.Source(name.ifEmpty { null }, identity),
         MR.strings.backup_conversion_install_from_store,
     )

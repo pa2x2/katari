@@ -1,9 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.conversion
 
 import app.katari.core.platform.PlatformContext
-import app.katari.domain.extension.model.ExtensionStore
 import dev.zacsweers.metro.Inject
-import eu.kanade.tachiyomi.data.backup.models.toExtensionStore
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocument
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocuments
 import eu.kanade.tachiyomi.data.backup.storage.BackupReadCounter
@@ -114,11 +112,7 @@ class BackupConverter(
                 writer.writeMetadata(content.metadata.copy(convertedFrom = app.name))
                 content
             }
-            ConvertedBackup(
-                DocumentUri(file.toURI().toString()),
-                content.report,
-                content.metadata.backupExtensionStores.map { it.toExtensionStore() },
-            )
+            ConvertedBackup(DocumentUri(file.toURI().toString()), content.report)
         } catch (e: Throwable) {
             file.delete()
             throw e
@@ -195,8 +189,5 @@ sealed interface BackupIdentity {
 /** The file converted as [app]'s isn't a backup that app wrote. */
 class NotAppBackupException(val app: BackupApp, cause: Throwable) : IOException(cause)
 
-/**
- * A Katari backup converted from another app's, at [uri] in the app's cache, what came over into it, and the
- * [extensionStores] restoring it adds.
- */
-class ConvertedBackup(val uri: DocumentUri, val report: ConversionReport, val extensionStores: List<ExtensionStore>)
+/** A Katari backup converted from another app's, at [uri] in the app's cache, and what came over into it. */
+class ConvertedBackup(val uri: DocumentUri, val report: ConversionReport)

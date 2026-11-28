@@ -164,7 +164,13 @@ class BringOverScreen(private val file: DocumentUri? = null) : Screen() {
                         onPickApp = model::pickApp,
                     )
                     (state.conversion as? Conversion.Done)?.let {
-                        conversionReportItems(it.backup.report, state.stores, state.expanded, model::toggle)
+                        conversionReportItems(
+                            report = it.backup.report,
+                            stores = state.stores,
+                            expanded = state.expanded,
+                            onToggle = model::toggle,
+                            onCheckStoresAgain = model::checkStoresAgain,
+                        )
                     }
                 }
             }

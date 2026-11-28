@@ -1271,6 +1271,9 @@
     <string name="missing_extensions_in_profiles">%1$s, in %2$s</string>
     <string name="missing_extensions_also_in_profiles">%1$s, also in %2$s</string>
     <string name="missing_extensions_not_listed">No store you added lists it</string>
+    <string name="missing_extensions_stores_unreadable">Couldn\'t check the stores</string>
+    <string name="backup_source_unnamed">Unnamed source</string>
+    <string name="backup_source_unnamed_numbered">Unnamed source (%1$s)</string>
     <string name="missing_extensions_torrent">Finds torrents, which Katari can\'t play</string>
     <string name="missing_extensions_incompatible">This version of Katari can\'t run it</string>
     <string name="missing_extensions_entry">Install extensions for your titles</string>
@@ -1950,6 +1953,7 @@
     <string name="backup_conversion_install_from_store">Install from a store after restoring</string>
     <string name="backup_conversion_checking_stores">Checking the stores</string>
     <string name="backup_conversion_no_store">Can\'t install here: no store offers it</string>
+    <string name="backup_conversion_stores_unreadable">Couldn\'t check the stores. Install from a store after restoring if one has it</string>
     <string name="backup_conversion_torrent_extension">Can\'t install here: it finds torrents, which Katari can\'t play</string>
     <string name="backup_conversion_incompatible_extension">Can\'t install here: this version of Katari can\'t run it</string>
     <string name="backup_conversion_extension_files">Extension files saved in the backup</string>
