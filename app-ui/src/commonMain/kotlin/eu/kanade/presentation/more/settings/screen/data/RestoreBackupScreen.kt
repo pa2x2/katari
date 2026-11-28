@@ -32,8 +32,8 @@ import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.SettingsRow
 import app.katari.presentation.kit.list.rowGroupItems
 import app.katari.presentation.kit.navigation.AppBar
-import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.ScreenAction
 import app.katari.presentation.kit.progress.LoadingIndicator
 import app.katari.presentation.kit.surface.GroupCard
 import app.katari.presentation.kit.surface.NoticeCard
@@ -114,26 +114,26 @@ class RestoreBackupScreen(
                     scrollBehavior = it,
                 )
             },
-            bottomBar = {
-                BottomActionBar {
-                    val identity = state.identity
-                    if (identity != null && identity != BackupIdentity.Katari) {
-                        Button(
+            actions = run {
+                val identity = state.identity
+                if (identity != null && identity != BackupIdentity.Katari) {
+                    listOf(
+                        ScreenAction(
                             label = (identity as? BackupIdentity.Foreign)?.apps?.singleOrNull()
                                 ?.let { stringResource(MR.strings.backup_conversion_bring_over_from, it.name) }
                                 ?: stringResource(MR.strings.backup_conversion_title),
                             onClick = { navigator.replace(BringOverScreen(uri)) },
-                            modifier = Modifier.weight(1f),
-                        )
-                    } else {
-                        Button(
+                        ),
+                    )
+                } else {
+                    listOf(
+                        ScreenAction(
                             label = stringResource(MR.strings.action_restore),
                             onClick = { if (state.options.rollBackAccount) confirmRollBack = true else restore() },
-                            modifier = Modifier.weight(1f),
                             enabled = state.canRestore && state.options.canRestore() &&
                                 (state.profiles.isEmpty() || state.selectedProfileUuids.isNotEmpty()),
-                        )
-                    }
+                        ),
+                    )
                 }
             },
         ) { contentPadding ->

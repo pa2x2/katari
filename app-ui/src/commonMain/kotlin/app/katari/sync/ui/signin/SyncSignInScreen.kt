@@ -41,8 +41,8 @@ import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.navigation.AppBar
-import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.ScreenAction
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.sync.client.account.ServerCheck
@@ -126,19 +126,16 @@ class SyncSignInScreen(
                     scrollBehavior = it,
                 )
             },
-            bottomBar = {
-                BottomActionBar {
-                    Button(
-                        label = stringResource(
-                            if (withInvite) MR.strings.sync_action_create_account else MR.strings.sync_action_sign_in,
-                        ),
-                        onClick = submit,
-                        modifier = Modifier.weight(1f),
-                        enabled = canSubmit,
-                        loading = joining,
-                    )
-                }
-            },
+            actions = listOf(
+                ScreenAction(
+                    label = stringResource(
+                        if (withInvite) MR.strings.sync_action_create_account else MR.strings.sync_action_sign_in,
+                    ),
+                    onClick = submit,
+                    enabled = canSubmit,
+                    loading = joining,
+                ),
+            ),
         ) { contentPadding ->
             RowList(contentPadding = contentPadding) {
                 item {

@@ -8,7 +8,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 
 | Job | Component | Notes |
 |---|---|---|
-| A screen: bars, floating action, snackbars, insets, room for the dock, how wide content grows | `Scaffold` | Pick the content width with its `frame` (see `adaptive-layout`) |
+| A screen: bars, floating action, snackbars, insets, room for the dock, how wide content grows | `Scaffold` | Pick the content width with its `frame` (see `adaptive-layout`). The screen's main actions, such as Restore or Save, go in `actions` as `ScreenAction`s, the main one last: a bottom bar that stacks them when a label doesn't fit, or the end of the `AppBar` in a short window. Never a `BottomActionBar` of buttons by hand |
 | A screen's top bar, with an action mode while items are selected | `AppBar`, `AppBarTitle`, `UpButton` | `UpButton` takes another icon where "up" closes something, such as a full-screen editor |
 | The bar's actions: icons with tooltips, the rest in one "More" menu | `AppBarActions`, `AppBarAvatarButton` | The avatar button ends the actions, such as the active profile; an action's `spin` turns its icon while its work runs, or only its `arrows` over a still icon, such as sync's cloud |
 | Filter chips or a summary line under the app bar, in the same top bar | `AppBarExtension` | Filled like the bar (`actionMode` for a bar in action mode); never a `Surface` or row of your own under the bar |
@@ -16,7 +16,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | An app bar that turns into a search field | `SearchToolbar` | |
 | An overlay app bar continued by an action on a row beneath it | `OverlayBarRow` | Such as Search all chapters under a reader's search |
 | The screen's main action, floating | `FloatingActionButton`, `SmallFloatingActionButton` | The small one is a secondary jump stacked above the main one; `loading` shows the wait indicator in place of the icon while what the action opens is still being checked |
-| A prompt and its actions raised from the bottom edge, such as unsaved changes | `BottomActionBar` | |
+| A prompt and its actions raised from the bottom edge, such as unsaved changes | `BottomActionBar` | Its contents line up with the screen's frame. A screen's main actions go in `Scaffold(actions)` instead |
 | Actions on a selection | `SelectionActionBar`, `SelectionAction` | Raised from the bottom in narrow windows, floating from Medium |
 | A screen with no app bar names itself to the window | `ReportScreenTitle` | App bars report their own title |
 | A screen whose whole content is empty | `EmptyScreen` | A kaomoji, a message and optional actions |

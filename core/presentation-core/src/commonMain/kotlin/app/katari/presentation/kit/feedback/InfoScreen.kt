@@ -5,13 +5,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,10 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Newspaper
-import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.layout.FramedScrollColumn
+import app.katari.presentation.kit.navigation.ActionButtons
 import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.ScreenAction
 import app.katari.presentation.kit.theme.KatariTheme
 
 /**
@@ -51,14 +50,17 @@ fun InfoScreen(
     Scaffold(
         bottomBar = {
             BottomActionBar {
-                InfoActions(
-                    acceptText = acceptText,
-                    onAcceptClick = onAcceptClick,
-                    canAccept = canAccept,
-                    rejectText = rejectText,
-                    onRejectClick = onRejectClick,
-                    alternativeText = alternativeText,
-                    onAlternativeClick = onAlternativeClick,
+                ActionButtons(
+                    infoActions(
+                        acceptText = acceptText,
+                        onAcceptClick = onAcceptClick,
+                        canAccept = canAccept,
+                        rejectText = rejectText,
+                        onRejectClick = onRejectClick,
+                        alternativeText = alternativeText,
+                        onAlternativeClick = onAlternativeClick,
+                    ),
+                    Modifier.weight(1f),
                 )
             }
         },
@@ -72,22 +74,14 @@ fun InfoScreen(
                 .height(paddingValues.calculateTopPadding()),
         )
 
-        InfoPage(
-            icon = icon,
-            headingText = headingText,
-            subtitleText = subtitleText,
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .fillMaxWidth()
-                .padding(paddingValues),
-            content = content,
-        )
+        FramedScrollColumn(modifier = Modifier.fillMaxWidth(), contentPadding = paddingValues) {
+            InfoPage(icon = icon, headingText = headingText, subtitleText = subtitleText, content = content)
+        }
     }
 }
 
 /** The bottom bar's buttons of an [InfoScreen] or a [GuideScreen] page: reject, the alternative, then accept. */
-@Composable
-internal fun RowScope.InfoActions(
+internal fun infoActions(
     acceptText: String,
     onAcceptClick: () -> Unit,
     canAccept: Boolean,
@@ -95,30 +89,11 @@ internal fun RowScope.InfoActions(
     onRejectClick: (() -> Unit)?,
     alternativeText: String? = null,
     onAlternativeClick: (() -> Unit)? = null,
-) {
-    if (rejectText != null && onRejectClick != null) {
-        Button(
-            label = rejectText,
-            onClick = onRejectClick,
-            modifier = Modifier.weight(1f),
-            style = ButtonStyle.Outlined,
-        )
-    }
-    if (alternativeText != null && onAlternativeClick != null) {
-        Button(
-            label = alternativeText,
-            onClick = onAlternativeClick,
-            modifier = Modifier.weight(1f),
-            style = ButtonStyle.Outlined,
-        )
-    }
-    Button(
-        label = acceptText,
-        onClick = onAcceptClick,
-        modifier = Modifier.weight(1f),
-        enabled = canAccept,
-    )
-}
+): List<ScreenAction> = listOfNotNull(
+    onRejectClick?.let { onClick -> rejectText?.let { ScreenAction(it, onClick, ButtonStyle.Outlined) } },
+    onAlternativeClick?.let { onClick -> alternativeText?.let { ScreenAction(it, onClick, ButtonStyle.Outlined) } },
+    ScreenAction(acceptText, onAcceptClick, enabled = canAccept),
+)
 
 /** An [InfoScreen]'s or [GuideScreen] page's icon, heading and subtitle above its [content]. */
 @Composable

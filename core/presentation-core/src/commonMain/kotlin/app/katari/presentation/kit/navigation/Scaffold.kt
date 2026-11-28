@@ -93,8 +93,11 @@ import kotlin.math.max
  * behind a snackbar of the screen's that closes on its own, and a never-ending one steps aside for it.
  * @param floatingActionButton Main action button of the screen, typically a [FloatingActionButton]
  * @param container what the screen is filled with; [SurfaceContainer.None] for a scaffold laid over other content.
- * @param frame how wide the screen's content may grow. The frame is centred beside the dock: the top bar's contents,
- * the kit layouts holding the content and the FAB line up with it.
+ * @param frame how wide the screen's content may grow. The frame is centred beside the dock: the bars' contents, the
+ * kit layouts holding the content and the FAB line up with it.
+ * @param actions the screen's main actions, the main one last: in a bar at the bottom, side by side or stacked when a
+ * label doesn't fit, and at the end of the kit's [AppBar] in a short window, where a bottom bar would take too much of
+ * the height. A screen with actions has no [bottomBar] of its own.
  * @param contentWindowInsets window insets to be passed to content slot via PaddingValues params.
  * Scaffold will take the insets into account from the top/bottom only if the topBar/ bottomBar
  * are not present, as the scaffold expect topBar/bottomBar to handle insets instead
@@ -114,9 +117,12 @@ fun Scaffold(
     floatingActionButton: @Composable () -> Unit = {},
     container: SurfaceContainer = SurfaceContainer.Background,
     frame: ScreenFrame = ScreenFrame.Rows,
+    actions: List<ScreenAction> = emptyList(),
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     content: @Composable (PaddingValues) -> Unit,
 ) {
+    val window = currentWindowLayout()
+    val actionsInAppBar = window.isShort
     val (fill, contentColor) = container.colors(KatariTheme.colors)
     // Tachiyomi: Handle consumed window insets
     val remainingWindowInsets = remember { MutableWindowInsets() }
@@ -142,10 +148,20 @@ fun Scaffold(
                 dockClearance = LocalDockClearance.current,
                 outerSides = LocalContentSides.current,
                 frame = frame,
-                window = currentWindowLayout(),
+                window = window,
                 fabPosition = FabPosition.End,
-                topBar = { topBar(topBarScrollBehavior) },
-                bottomBar = bottomBar,
+                topBar = {
+                    CompositionLocalProvider(
+                        LocalScreenActions provides if (actionsInAppBar) actions else emptyList(),
+                    ) {
+                        topBar(topBarScrollBehavior)
+                    }
+                },
+                bottomBar = if (actions.isEmpty() || actionsInAppBar) {
+                    bottomBar
+                } else {
+                    { BottomActionBar { ActionButtons(actions, Modifier.weight(1f)) } }
+                },
                 content = content,
                 snackbar = { ScreenSnackbarHost(snackbars) },
                 contentWindowInsets = remainingWindowInsets,
@@ -215,8 +231,8 @@ private fun ScaffoldLayout(
                 .coerceAtLeast(0.dp)
             val frameMarginPx = frameMargin.roundToPx()
 
-            // The kit's app bar keeps its own contents clear of the bars, cutout and side dock and inside the frame
-            // while its container runs under them
+            // The kit's app bar and bottom bar keep their own contents clear of the bars, cutout and side dock and
+            // inside the frame while their containers run under them
             val topBarMargins = FrameMargins(
                 start = outerSides.start - outerSides.insetStart + frameMargin,
                 end = outerSides.end - outerSides.insetEnd + frameMargin,
@@ -277,7 +293,7 @@ private fun ScaffoldLayout(
             }
 
             val bottomBarPlaceables = subcompose(ScaffoldLayoutContent.BottomBar) {
-                bottomBar()
+                CompositionLocalProvider(LocalScreenFrameMargin provides topBarMargins, content = bottomBar)
             }.fastMap { it.measure(looseConstraints) }
 
             val bottomBarHeight = bottomBarPlaceables

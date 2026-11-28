@@ -21,8 +21,8 @@ import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.navigation.AppBar
-import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.ScreenAction
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.sync.client.account.LinkCodeLink
@@ -78,10 +78,10 @@ class EnterLinkCodeScreen : Screen() {
                     scrollBehavior = it,
                 )
             },
-            bottomBar = {
-                BottomActionBar {
-                    val lookingUp = lookUp == SyncJoinViewModel.LookUpState.LookingUp
-                    Button(
+            actions = run {
+                val lookingUp = lookUp == SyncJoinViewModel.LookUpState.LookingUp
+                listOf(
+                    ScreenAction(
                         label = stringResource(
                             if (lookingUp) MR.strings.sync_link_code_checking else MR.strings.sync_action_join,
                         ),
@@ -89,11 +89,10 @@ class EnterLinkCodeScreen : Screen() {
                             model.clearResult()
                             model.lookUpLinkCode(address.text.toString(), code.text.toString())
                         },
-                        modifier = Modifier.weight(1f),
                         enabled = server != null && code.text.isNotBlank() && !lookingUp,
                         loading = lookingUp,
-                    )
-                }
+                    ),
+                )
             },
         ) { contentPadding ->
             RowList(contentPadding = contentPadding) {
