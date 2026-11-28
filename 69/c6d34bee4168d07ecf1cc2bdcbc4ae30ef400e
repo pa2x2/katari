@@ -1,0 +1,33 @@
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_6fe593bebbf462::t_7231db5bc91b7e 1967-1968
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiBackupFormat.kt
+  s_6fe593bebbf462::t_1e66cb06a388e1 3,9,12,39,92-93
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderBackupFormat.kt
+  s_6fe593bebbf462::t_59df3171cce4ee 3,9,29,67
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderCategories.kt
+  s_6fe593bebbf462::t_99b7816d2e4baa 4-5,12,14,17,19,21,31
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/ConvertedCategories.kt
+  s_6fe593bebbf462::t_098da8bc0b769b 6,16,18,35,40-41,57-59,70,78-80,82-83
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonBackupFormat.kt
+  s_6fe593bebbf462::t_daef1479f6ebac 3,9,29,68
+features/backup/src/commonTest/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiConversionReportTest.kt
+  s_6fe593bebbf462::t_c040446930acca 5,42-46
+features/backup/src/commonTest/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/ConvertedCategoriesTest.kt
+  s_6fe593bebbf462::t_702647fd56002c 4,15,38,48-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "69c6d34bee4168d07ecf1cc2bdcbc4ae30ef400e",
+  "prompts": {},
+  "sessions": {
+    "s_6fe593bebbf462": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "969d43c3-b240-4424-b2ba-ca94e31a35f7",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
