@@ -1,0 +1,6 @@
+-- Sync records' indexes by kind keep each kind's entries in the order records were stored
+-- (app/katari/sync/data/sync_records.sq).
+DROP INDEX idx_sync_records_pending;
+CREATE INDEX idx_sync_records_pending ON sync_records(kind) WHERE change_id IS NOT NULL AND held_back = 0;
+DROP INDEX idx_sync_records_kind;
+CREATE INDEX idx_sync_records_kind ON sync_records(kind);

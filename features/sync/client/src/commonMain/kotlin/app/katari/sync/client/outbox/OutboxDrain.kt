@@ -177,9 +177,10 @@ class OutboxDrain(
     }
 
     private companion object {
-        // A drain's records land all over sync_records' indexes, and its commit rewrites every page it touched, so
-        // larger batches write each page once for more records; a first sync drains a whole library. Each still holds
-        // the database's writer for only a moment.
+        // A drain's records land all over the index of record keys, which are hashes, and its commit rewrites every
+        // page it touched, so larger batches write each page once for more records; a first sync drains a whole
+        // library. Each still holds the database's writer for only a moment: reading and building a record takes far
+        // longer than writing it, so 10,000 held it for seconds on an emulator.
         const val BATCH = 2000L
     }
 }

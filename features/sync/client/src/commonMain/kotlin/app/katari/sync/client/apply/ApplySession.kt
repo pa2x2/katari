@@ -576,9 +576,9 @@ internal class ApplySession(
             page.forEach { visit(it.record_key, it.kind, it.deleted, it.payload) }
             after = page.lastOrNull()?.record_key ?: break
         }
-        after = ""
+        var afterRow = 0L
         while (true) {
-            val page = records.kindPageAfter(EntryKind.name, after, PAGE).awaitAsList()
+            val page = records.kindPageAfter(EntryKind.name, afterRow, PAGE).awaitAsList()
             page.forEach { title ->
                 if (parts.profileOf(EntryKind, title.deleted, title.payload) != uuid) return@forEach
                 action(title.record_key, title.deleted)
@@ -586,7 +586,7 @@ internal class ApplySession(
                     .filter { it.record_key != title.record_key }
                     .forEach { visit(it.record_key, it.kind, it.deleted, it.payload) }
             }
-            after = page.lastOrNull()?.record_key ?: break
+            afterRow = page.lastOrNull()?.row ?: break
         }
     }
 
