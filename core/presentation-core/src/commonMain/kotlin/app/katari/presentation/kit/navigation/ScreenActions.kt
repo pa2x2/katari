@@ -9,10 +9,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.unit.Constraints
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonSize
 import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.button.shareOrStack
 import app.katari.presentation.kit.theme.KatariTheme
 
 /**
@@ -34,10 +34,7 @@ class ScreenAction(
  */
 internal val LocalScreenActions = staticCompositionLocalOf<List<ScreenAction>> { emptyList() }
 
-/**
- * [actions] side by side, sharing the width equally; stacked, the main action on top, when a label wouldn't fit on one
- * line in its share, such as with a large font.
- */
+/** [actions] sharing the width, or stacked with the main one on top where a label doesn't fit ([shareOrStack]). */
 @Composable
 internal fun ActionButtons(actions: List<ScreenAction>, modifier: Modifier = Modifier) {
     val gap = KatariTheme.spacing.s
@@ -55,26 +52,8 @@ internal fun ActionButtons(actions: List<ScreenAction>, modifier: Modifier = Mod
         },
         modifier = modifier,
     ) { measurables, constraints ->
-        if (measurables.isEmpty()) return@Layout layout(0, 0) {}
-        val width = constraints.maxWidth
-        val gapPx = gap.roundToPx()
-        val share = (width - gapPx * (measurables.size - 1)) / measurables.size
-        val fits = measurables.all { it.maxIntrinsicWidth(Constraints.Infinity) <= share }
-        if (fits) {
-            val placeables = measurables.map { it.measure(Constraints.fixedWidth(share)) }
-            layout(width, placeables.maxOf { it.height }) {
-                placeables.forEachIndexed { index, placeable -> placeable.place(index * (share + gapPx), 0) }
-            }
-        } else {
-            val placeables = measurables.asReversed().map { it.measure(Constraints.fixedWidth(width)) }
-            layout(width, placeables.sumOf { it.height } + gapPx * (placeables.size - 1)) {
-                var y = 0
-                placeables.forEach { placeable ->
-                    placeable.place(0, y)
-                    y += placeable.height + gapPx
-                }
-            }
-        }
+        val buttons = shareOrStack(measurables, constraints.maxWidth, gap.roundToPx())
+        layout(constraints.maxWidth, buttons.height) { buttons.place(this, 0) }
     }
 }
 
