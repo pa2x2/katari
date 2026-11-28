@@ -1,0 +1,67 @@
+app-ui/src/commonMain/kotlin/app/katari/backupconversion/BringOverScreen.kt
+  s_0e279b045f255e::t_8d98cc8c2823cb 167-173
+app-ui/src/commonMain/kotlin/app/katari/backupconversion/BringOverViewModel.kt
+  s_0e279b045f255e::t_d64a403328c696 42,127-134,138-147,203-210
+app-ui/src/commonMain/kotlin/app/katari/backupconversion/ConversionReportRows.kt
+  s_0e279b045f255e::t_920994cffa9dd0 8-9,36,42-46,59,71,73,83-89,93-99,109,114-118,186,189-192,197-199
+app-ui/src/commonMain/kotlin/app/katari/missingextensions/model/CantInstall.kt
+  s_0e279b045f255e::t_9cef00cf8bb2d7 11-13
+app-ui/src/commonMain/kotlin/app/katari/missingextensions/model/MissingExtension.kt
+  s_0e279b045f255e::t_78a10358b5d5ae 47-50,53,67
+app-ui/src/commonMain/kotlin/app/katari/missingextensions/model/MissingExtensions.kt
+  s_0e279b045f255e::t_277bccf3b8b8d2 47-48,69,73-77
+app-ui/src/commonMain/kotlin/app/katari/missingextensions/restore/BackupMissingExtensions.kt
+  s_0e279b045f255e::t_6e48837c68177e 3,5,16,18-19,27,31,35,40-41,44-49,52,56-59,65,71-72,75,79-93,96
+app-ui/src/commonMain/kotlin/app/katari/missingextensions/suggestion/MissingExtensionSuggestion.kt
+  s_0e279b045f255e::t_d1c456f31f22d9 3,39-49
+app-ui/src/commonMain/kotlin/app/katari/missingextensions/ui/MissingExtensionsNoticeViewModel.kt
+  s_0e279b045f255e::t_97ce18ddd61cbf 15,26-28,36-39
+app-ui/src/commonMain/kotlin/app/katari/missingextensions/ui/MissingExtensionsSheet.kt
+  s_0e279b045f255e::t_c8742e7c149d73 250
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/onboarding/FinishStep.kt
+  s_0e279b045f255e::t_b046ae1ab99311 52-53,79,86-89,115-117,119-124,137,139-142,146-147
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/data/RestoreBackupScreen.kt
+  s_0e279b045f255e::t_b4fd59701bc13d 22,26,245,281,292-295,317-328,433-443
+core/data/src/commonMain/kotlin/app/katari/data/extension/model/lnreader/LnReaderStore.kt
+  s_0e279b045f255e::t_92f2da6d97d722 9-10,16
+core/data/src/commonMain/kotlin/app/katari/data/extension/repository/ExtensionStoreRepositoryImpl.kt
+  s_0e279b045f255e::t_7995fed42d0f07 8,138,140-146,151,153-156
+core/domain/src/commonMain/kotlin/app/katari/domain/extension/model/StoreListings.kt
+  s_0e279b045f255e::t_34c6c913f0eaa1 1-9
+core/domain/src/commonMain/kotlin/app/katari/domain/extension/repository/ExtensionStoreRepository.kt
+  s_0e279b045f255e::t_c37f8eccd70fe8 4,17,19-20
+core/domain/src/commonMain/kotlin/eu/kanade/tachiyomi/extension/ExtensionManagement.kt
+  s_0e279b045f255e::t_3cf3227c68cb21 3,45-50
+core/domain/src/commonMain/kotlin/eu/kanade/tachiyomi/source/SourceDisplayNames.kt
+  s_0e279b045f255e::t_bc09c43f1db152 6-9
+core/i18n/src/commonMain/moko-resources/base/plurals.xml
+  s_0e279b045f255e::t_bf56d188100a47 582-585
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_0e279b045f255e::t_7f1b9aaeb32fed 1274-1276,1956
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/BackupFileValidator.kt
+  s_0e279b045f255e::t_4ccf2f615069ff 50-53,57,68-73
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/BackupConverter.kt
+  s_0e279b045f255e::t_34b8819da6eb9c 115,192-193
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/ConversionReport.kt
+  s_0e279b045f255e::t_67ec1a055f7089 51-52,54,75-76,84
+sources/extension-runtime/src/commonMain/kotlin/eu/kanade/tachiyomi/extension/DefaultExtensionManagement.kt
+  s_0e279b045f255e::t_38df1179b4366c 3,42-43
+sources/extension-runtime/src/commonMain/kotlin/eu/kanade/tachiyomi/extension/ExtensionManager.kt
+  s_0e279b045f255e::t_f84b5fdbdedfae 6,146-150,315,325,327,339,348,386,390-391,394
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "026f9f0e74918d89c08bfce3b286b53992374e74",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
