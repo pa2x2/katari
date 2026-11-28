@@ -22,9 +22,14 @@ data class ConversionReport(val rows: List<Row>) {
      * An entry, setting, store or other thing the backup held. [note] says what of it came over or was left behind, and
      * why, or how it changed.
      */
-    data class Item(val name: Name, val note: StringResource? = null) {
+    data class Item(val name: Name, val note: Note? = null) {
+        constructor(name: Name, note: StringResource?) : this(name, note?.let(::Note))
+
         constructor(text: String, note: StringResource? = null) : this(Name.Text(text), note)
     }
+
+    /** A note's [text], filled in with [args], such as the category a category shares its place with (D116). */
+    data class Note(val text: StringResource, val args: List<String> = emptyList())
 
     sealed interface Name {
         /** As the backup has it: a title, a store's name, an address. */

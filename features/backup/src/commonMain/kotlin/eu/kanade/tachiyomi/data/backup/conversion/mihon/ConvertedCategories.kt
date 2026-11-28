@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.data.backup.conversion.mihon
 
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
+import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
+import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Note
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.i18n.*
@@ -40,9 +42,18 @@ internal class ConvertedCategories(vararg lists: List<MihonCategory>) {
         orders = lists.map { list ->
             list.groupBy({ it.order }, { orderByName.getValue(it.name) }).mapValues { (_, merged) -> merged.distinct() }
         }
-        val shared = lists.flatMap { list -> list.groupBy { it.order }.values.filter { it.size > 1 }.flatten() }
-            .mapTo(hashSetOf()) { it.name }
-        reportItems = merged.map { it.reportItem(sharesOrder = it.name in shared) }
+        // Per list: Aniyomi's manga and anime lists number their orders apart
+        val sharers = buildMap<String, MutableSet<String>> {
+            lists.forEach { list ->
+                list.groupBy { it.order }.values.filter { it.size > 1 }.forEach { group ->
+                    group.forEach { category ->
+                        getOrPut(category.name, ::linkedSetOf) +=
+                            group.map { it.name } - category.name
+                    }
+                }
+            }
+        }
+        reportItems = merged.map { it.reportItem(sharesWith = sharers[it.name].orEmpty()) }
     }
 
     /** The merged list's orders for an entry of the [list]-th list that names [entryOrders]. */
@@ -61,11 +72,14 @@ private fun MihonCategory.toBackupCategory(order: Long): BackupCategory = Backup
 )
 
 /**
- * The report's line for the category: entries placed in it and another for sharing its order (D060), a Komikku hidden
- * one shown in Katari (D031), a sort Katari lacks noted.
+ * The report's line for the category: entries placed in it and the categories [sharesWith] for sharing its order (D060,
+ * D116), a Komikku hidden one shown in Katari (D031), a sort Katari lacks noted.
  */
-private fun MihonCategory.reportItem(sharesOrder: Boolean): Item = when {
-    sharesOrder -> Item(name, MR.strings.backup_conversion_category_shared_order)
+private fun MihonCategory.reportItem(sharesWith: Set<String>): Item = when {
+    sharesWith.isNotEmpty() -> Item(
+        Name.Text(name),
+        Note(MR.strings.backup_conversion_category_shared_order, listOf(sharesWith.joinToString())),
+    )
     hidden -> Item(name, MR.strings.backup_conversion_hidden_category)
     j2kSort != null && j2kLibrarySort(j2kSort) == null -> Item(name, MR.strings.backup_conversion_manual_category_sort)
     else -> Item(name)

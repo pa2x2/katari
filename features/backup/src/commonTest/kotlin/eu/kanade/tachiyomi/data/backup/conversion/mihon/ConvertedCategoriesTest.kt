@@ -22,8 +22,11 @@ class ConvertedCategoriesTest {
         val nameOf = categories.backupCategories.associate { it.order to it.name }
         nameOf.size shouldBe 4
         categories.of(0, listOf(1, 5)).map(nameOf::getValue) shouldBe listOf("Action", "Plan to read", "Completed")
-        categories.reportItems.filter { it.note == MR.strings.backup_conversion_category_shared_order }
-            .map { it.name } shouldBe listOf(Name.Text("Action"), Name.Text("Plan to read"))
+        categories.reportItems.filter { it.note?.text == MR.strings.backup_conversion_category_shared_order }
+            .map { it.name to it.note?.args } shouldBe listOf(
+            Name.Text("Action") to listOf("Plan to read"),
+            Name.Text("Plan to read") to listOf("Action"),
+        )
     }
 
     @Test

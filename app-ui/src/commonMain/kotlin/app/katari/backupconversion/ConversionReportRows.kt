@@ -23,7 +23,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * "What comes over" (D023): one row per kind of data the backup holds, with its amount and bar. A kind with things left
  * behind opens in place to them, then to what comes over (D053, D076), each thing with where it is and its notes. A
- * kind that comes over whole opens only when the report has notes on its things (D061), to what comes over.
+ * kind that comes over whole opens only when the report has notes on its things (D061), to what comes over, except the
+ * kinds that mix different things, which always open (D117).
  */
 internal fun LazyListScope.conversionReportItems(
     report: ConversionReport,
@@ -39,6 +40,7 @@ internal fun LazyListScope.conversionReportItems(
         val carried = row.carried.thingCount()
         val total = carried + row.leftBehind.thingCount()
         val notedWhole = row.leftBehind.isEmpty() && row.carried.any { it.note != null }
+        val opens = row.leftBehind.isNotEmpty() || notedWhole || row.kind in KINDS_OF_MIXED_THINGS
         CoverageRow(
             title = stringResource(row.kind.title),
             amount = row.amount(),
@@ -46,7 +48,7 @@ internal fun LazyListScope.conversionReportItems(
             total = total,
             expanded = row.kind in expanded,
             onClick = { onToggle(row.kind) },
-            details = if (row.leftBehind.isNotEmpty() || notedWhole) {
+            details = if (opens) {
                 { CoverageDetails(row) }
             } else {
                 null
@@ -55,6 +57,9 @@ internal fun LazyListScope.conversionReportItems(
     }
     item(key = "report-gap") { RowGroupGap() }
 }
+
+// Their titles don't say what they hold, such as saved searches and feeds, or custom titles and covers
+private val KINDS_OF_MIXED_THINGS = setOf(Kind.APP_SPECIFIC, Kind.CUSTOM_INFO)
 
 @Composable
 private fun CoverageDetails(row: ConversionReport.Row) {
@@ -76,12 +81,12 @@ private fun ConversionReport.Row.withStores(stores: StoreCheck?): ConversionRepo
     fun List<ConversionReport.Item>.checked() = map { item ->
         val source = item.name as? ConversionReport.Name.Source ?: return@map item
         val note = when (stores) {
-            StoreCheck.Checking -> MR.strings.backup_conversion_checking_stores
+            StoreCheck.Checking -> ConversionReport.Note(MR.strings.backup_conversion_checking_stores)
             is StoreCheck.Checked -> when (stores.cantInstall[source.identity]) {
                 null -> item.note
-                CantInstall.NOT_LISTED -> MR.strings.backup_conversion_no_store
-                CantInstall.TORRENT -> MR.strings.backup_conversion_torrent_extension
-                CantInstall.INCOMPATIBLE -> MR.strings.backup_conversion_incompatible_extension
+                CantInstall.NOT_LISTED -> ConversionReport.Note(MR.strings.backup_conversion_no_store)
+                CantInstall.TORRENT -> ConversionReport.Note(MR.strings.backup_conversion_torrent_extension)
+                CantInstall.INCOMPATIBLE -> ConversionReport.Note(MR.strings.backup_conversion_incompatible_extension)
             }
         }
         item.copy(note = note)
@@ -97,7 +102,7 @@ private fun ConversionReport.Row.withStores(stores: StoreCheck?): ConversionRepo
 private fun ItemRows(items: List<ConversionReport.Item>) {
     items.groupBy { it.name.shown }.values.forEach { notes ->
         val name = notes.first().name
-        val details = listOfNotNull(name.place()) + notes.mapNotNull { it.note }.distinct().map { stringResource(it) }
+        val details = listOfNotNull(name.place()) + notes.mapNotNull { it.note }.distinct().map { it.shown() }
         SettingsRow(title = name.label(), subtitle = details.joinToString(" · ").ifEmpty { null })
     }
 }
@@ -128,7 +133,7 @@ private fun ConversionReport.Row.amount(): String {
             pluralStringResource(kind.count, carriedCount, carriedCount),
         )
         carriedCount == 0 -> leftBehind.map { it.note }.distinct().singleOrNull()
-            ?.let { stringResource(MR.strings.backup_conversion_amount_none_because, stringResource(it)) }
+            ?.let { stringResource(MR.strings.backup_conversion_amount_none_because, it.shown()) }
             ?: stringResource(MR.strings.backup_conversion_amount_none)
         else -> stringResource(
             MR.strings.backup_conversion_amount_part,
@@ -138,6 +143,9 @@ private fun ConversionReport.Row.amount(): String {
         )
     }
 }
+
+@Composable
+private fun ConversionReport.Note.shown(): String = stringResource(text, *args.toTypedArray())
 
 /**
  * What the report calls a thing: its own name, a Katari setting by Katari's title (D043), a setting of the other app

@@ -1659,7 +1659,7 @@
     <string name="backup_conversion_aniyomi_sort_tracker_score">Sorted by tracker score, which Katari can\'t sort by. Katari\'s default sort is used</string>
     <string name="backup_conversion_aniyomi_sort_airing_time">Sorted by airing time, which Katari can\'t sort by. Katari\'s default sort is used</string>
     <string name="backup_conversion_aniyomi_filler_action">Set to toggle the filler mark, which Katari has no action for. It now does nothing</string>
-    <string name="backup_conversion_aniyomi_theme">A color theme Katari doesn\'t have. Katari\'s default theme is used</string>
+    <string name="backup_conversion_aniyomi_theme">%1$s, a theme Katari doesn\'t have. Katari\'s default theme is used</string>
     <string name="backup_conversion_aniyomi_aniskip_only">Looks intro times up on AniSkip only, the service the other app used</string>
     <string name="backup_conversion_aniyomi_subtitle_box">A box behind the text, which Katari makes with the subtitle background instead. The text has no edge</string>
     <string name="backup_conversion_lnreader_unreadable">Its value couldn\'t be read</string>
@@ -1928,7 +1928,7 @@
     <string name="backup_conversion_lnreader_show_last_update_time">Show last update time</string>
     <string name="backup_conversion_lnreader_genre_taxonomy">Genre taxonomy</string>
     <string name="backup_conversion_lnreader_syntax_highlighting">Syntax highlighting</string>
-    <string name="backup_conversion_category_shared_order">The backup gives it the same place as another category, so it can\'t tell their entries apart: they\'re in both</string>
+    <string name="backup_conversion_category_shared_order">Shares its place with %1$s in the backup, so it can\'t tell their entries apart: they\'re in both</string>
     <string name="backup_conversion_hidden_category">Hidden in the other app, shown in Katari</string>
     <string name="backup_conversion_manual_category_sort">Sorted by hand in the other app. Katari has no manual sort, so it uses the default</string>
     <string name="backup_conversion_custom_title">Custom title</string>
