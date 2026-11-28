@@ -24,7 +24,8 @@ internal object StrawberryColorScheme : BaseColorScheme() {
         onPrimaryContainer = Color(0xFFFFFFFF),
         secondary = Color(0xFFED4A65), // Unread badge
         onSecondary = Color(0xFF201A1A), // Unread badge text
-        secondaryContainer = Color(0xFF91002A), // Navigation bar selector pill & progress indicator (remaining)
+        // The builder's #91002A outweighed the filled button: same hue and tone at chroma 16
+        secondaryContainer = Color(0xFF5C3F40),
         onSecondaryContainer = Color(0xFFFFFFFF), // Navigation bar selector icon
         tertiary = Color(0xFFE8C08E), // Downloaded badge
         onTertiary = Color(0xFF201A1A), // Downloaded badge text
