@@ -54,7 +54,7 @@ internal fun AniyomiAnime.toBackupEntry(source: Long, categories: List<Long>): B
 
 /** The custom info Animetail, Anikku and Animiru keep, each at its own field numbers. */
 internal val AniyomiAnime.customInfo: CustomInfo
-    get() = CustomInfo(
+    get() = CustomInfo.over(
         title = customTitle ?: animiruCustomTitle,
         artist = customArtist ?: animiruCustomArtist,
         author = customAuthor ?: animiruCustomAuthor,
@@ -62,6 +62,13 @@ internal val AniyomiAnime.customInfo: CustomInfo
         genre = customGenre ?: animiruCustomGenre,
         status = customStatus ?: animiruCustomStatus,
         cover = customThumbnailUrl,
+        ownTitle = title,
+        ownArtist = artist,
+        ownAuthor = author,
+        ownDescription = description,
+        ownGenre = genre,
+        ownStatus = status,
+        ownCover = thumbnailUrl,
     )
 
 /**

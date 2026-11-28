@@ -35,14 +35,22 @@ internal fun MihonManga.toBackupEntry(): BackupEntry = BackupEntry(
 )
 
 internal val MihonManga.customInfo: CustomInfo
-    get() = CustomInfo(
+    get() = CustomInfo.over(
         title = customTitle,
         artist = customArtist,
         author = customAuthor,
         description = customDescription,
         genre = customGenre,
-        status = customStatus,
+        // TachiyomiJ2K and Yōkai write -1 for no custom status and read 0 as none too (CustomMangaManager, BackupManga)
+        status = customStatus?.takeUnless { it == 0 || it == -1 },
         cover = customThumbnailUrl,
+        ownTitle = title,
+        ownArtist = artist,
+        ownAuthor = author,
+        ownDescription = description,
+        ownGenre = genre,
+        ownStatus = status,
+        ownCover = thumbnailUrl,
     )
 
 internal val MihonManga.hasSuwayomiMeta: Boolean
