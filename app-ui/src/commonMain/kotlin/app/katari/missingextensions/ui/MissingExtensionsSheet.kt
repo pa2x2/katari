@@ -71,10 +71,18 @@ fun MissingExtensionsSheet(onDismissRequest: () -> Unit, onOpenStores: () -> Uni
                         UntrustedRow(extension, current, onTrust = { trustingKey = extension.key })
                     }
                 }
-                if (current.installable.isNotEmpty()) {
+                // Each moves from Ready to install to Installed as it finishes, keeping its row until the sheet closes
+                val (installed, ready) = current.installable.partition { it.installed }
+                if (ready.isNotEmpty()) {
                     item(key = "ready") { RowGroupHeader(stringResource(MR.strings.missing_extensions_ready)) }
-                    rowGroupItems(current.installable, key = { it.extension.key }) { row ->
+                    rowGroupItems(ready, key = { it.extension.key }) { row ->
                         InstallableRow(row, current, onTickedChange = { model.setTicked(row.extension.key, it) })
+                    }
+                }
+                if (installed.isNotEmpty()) {
+                    item(key = "installed") { RowGroupHeader(stringResource(MR.strings.ext_installed)) }
+                    rowGroupItems(installed, key = { it.extension.key }) { row ->
+                        InstallableRow(row, current, onTickedChange = {})
                     }
                 }
                 if (current.otherInstalls.isNotEmpty()) {

@@ -42,6 +42,7 @@ import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import eu.kanade.presentation.more.settings.screen.data.BackupFileRow
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.more.settings.screen.data.backupReadAmount
 import eu.kanade.presentation.more.settings.screen.data.rememberBackupFilePicker
@@ -262,10 +263,10 @@ private fun LazyListScope.fileItems(
     val appRow = (finding.offersApps && !asking) || finding == Finding.Reading
     rowGroupItems(listOfNotNull("file", "app".takeIf { appRow }), key = { it }) { row ->
         when (row) {
-            "file" -> SettingsRow(
-                title = file.name ?: file.uri.value,
-                subtitle = file.size?.let { fileSize(it) },
-                icon = MaterialSymbols.Rounded.Description,
+            "file" -> BackupFileRow(
+                name = file.name,
+                size = file.size,
+                fallback = file.uri.value,
                 onClick = onChooseFile,
             )
             else -> if (finding == Finding.Reading) {
@@ -348,7 +349,11 @@ private fun LazyListScope.fileItems(
 @Composable
 private fun AppRow(state: BringOverViewModel.State, onChangeApp: () -> Unit) {
     SettingsRow(
-        title = state.app?.name ?: stringResource(MR.strings.backup_conversion_no_app),
+        title = when {
+            state.app == null -> stringResource(MR.strings.backup_conversion_no_app)
+            state.familyOnly -> stringResource(MR.strings.backup_conversion_family_app, state.app.name)
+            else -> state.app.name
+        },
         subtitle = when {
             state.app == null -> null
             state.appDetected -> stringResource(MR.strings.backup_conversion_detected)
