@@ -43,6 +43,8 @@ fun CoverageRow(
             leading = { Icon(mark, contentDescription = null, tone = tone) },
             expanded = expanded.takeIf { details != null },
             onClick = onClick.takeIf { details != null },
+            // Rows that open have an arrow: the bars run under it so every row's bar ends at the same edge (D141)
+            belowUnderTrailing = true,
             below = {
                 LinearProgressIndicator(
                     progress = { if (total == 0) 1f else carried.toFloat() / total },

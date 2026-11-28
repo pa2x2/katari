@@ -4,11 +4,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.Measurable
-import androidx.compose.ui.layout.Placeable
-import androidx.compose.ui.unit.Constraints
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.button.shareOrStack
 import app.katari.presentation.kit.theme.KatariTheme
 
 /**
@@ -38,7 +36,7 @@ fun DialogActions(
         val gap = spacing.roundToPx()
         val width = constraints.maxWidth
         if (neutral == null) {
-            val pair = pair(measurables, width, gap)
+            val pair = shareOrStack(measurables, width, gap)
             return@Layout layout(width, pair.height) { pair.place(this, 0) }
         }
         val neutralButton = measurables.first()
@@ -58,37 +56,12 @@ fun DialogActions(
             }
         } else {
             val neutralPlaceable = neutralButton.measure(constraints.copy(minWidth = 0, minHeight = 0))
-            val pair = pair(ends, width, gap)
+            val pair = shareOrStack(ends, width, gap)
             val endsTop = if (ends.isEmpty()) 0 else neutralPlaceable.height + gap
             layout(width, endsTop + pair.height) {
                 neutralPlaceable.place(0, 0)
                 pair.place(this, endsTop)
             }
-        }
-    }
-}
-
-private class ActionPair(val height: Int, val place: Placeable.PlacementScope.(top: Int) -> Unit)
-
-// The dismiss and confirm buttons, in that order, across the whole width
-private fun pair(buttons: List<Measurable>, width: Int, gap: Int): ActionPair {
-    if (buttons.isEmpty()) return ActionPair(0) {}
-    val shared = (width - gap * (buttons.size - 1)) / buttons.size
-    if (buttons.all { it.maxIntrinsicWidth(Constraints.Infinity) <= shared }) {
-        val placeables = buttons.map { it.measure(Constraints.fixedWidth(shared)) }
-        val height = placeables.maxOf { it.height }
-        return ActionPair(height) { top ->
-            placeables.forEachIndexed { index, placeable ->
-                placeable.place(index * (shared + gap), top + (height - placeable.height) / 2)
-            }
-        }
-    }
-    val stacked = buttons.asReversed().map { it.measure(Constraints.fixedWidth(width)) }
-    return ActionPair(stacked.sumOf { it.height } + gap * (stacked.size - 1)) { top ->
-        var y = top
-        stacked.forEach { placeable ->
-            placeable.place(0, y)
-            y += placeable.height + gap
         }
     }
 }

@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.library
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +26,7 @@ import app.katari.missingextensions.ui.MissingExtensionsSheet
 import app.katari.missingextensions.ui.OtherDeviceExtensionsLibraryNotice
 import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.layout.ScreenFrame
 import app.katari.presentation.kit.layout.rememberCoverSizing
 import app.katari.presentation.kit.navigation.HideDocks
@@ -59,6 +61,7 @@ import eu.kanade.presentation.library.settings.LibrarySettingsDialog
 import eu.kanade.presentation.library.update.rememberReportingLibraryUpdateStarter
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
+import eu.kanade.presentation.more.settings.screen.data.RestoreStatusNotice
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
@@ -245,14 +248,23 @@ data object LibraryTab : Tab {
                 state.searchQuery.isNullOrEmpty() && !state.hasActiveFilters && state.isLibraryEmpty -> {
                     val handler = LocalUriHandler.current
                     val restoreBackup = rememberRestoreBackupLauncher()
-                    EmptyLibraryScreen(
-                        onBrowseSources = {
-                            scope.launch { HomeScreen.openTab(HomeScreen.Tab.Browse(BrowseTab.Page.Sources)) }
-                        },
-                        onRestoreBackup = restoreBackup,
-                        onOpenGuide = { handler.openUri(GETTING_STARTED_URL) },
-                        modifier = Modifier.padding(contentPadding),
-                    )
+                    // A restore into an empty library shows here until its first entry arrives
+                    FramedContent(modifier = Modifier.padding(contentPadding)) {
+                        Column {
+                            RestoreStatusNotice(
+                                dismissible = true,
+                                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                            )
+                            EmptyLibraryScreen(
+                                onBrowseSources = {
+                                    scope.launch { HomeScreen.openTab(HomeScreen.Tab.Browse(BrowseTab.Page.Sources)) }
+                                },
+                                onRestoreBackup = restoreBackup,
+                                onOpenGuide = { handler.openUri(GETTING_STARTED_URL) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
                 }
                 else -> SelectableItems(
                     selection = ItemSelection(
@@ -300,6 +312,10 @@ data object LibraryTab : Tab {
                         updateState = updateState,
                         onCancelUpdate = viewModel::cancelUpdate,
                         notice = {
+                            RestoreStatusNotice(
+                                dismissible = true,
+                                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                            )
                             MissingExtensionsLibraryNotice(
                                 onReview = { showMissingExtensions = true },
                                 modifier = Modifier.padding(vertical = KatariTheme.spacing.s),

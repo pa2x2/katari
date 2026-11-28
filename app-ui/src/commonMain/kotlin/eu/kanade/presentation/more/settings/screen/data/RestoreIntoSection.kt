@@ -84,6 +84,8 @@ internal fun RestoreIntoDialog(
             title = stringResource(MR.strings.restore_into_name_title),
             suggestion = into.newProfileName,
             existingProfiles = profiles,
+            // It only names the choice: the profile is made when the restore starts (D050, D144)
+            confirmLabel = stringResource(MR.strings.action_save),
             onDismissRequest = { naming = false },
             onConfirm = {
                 onRename(it)

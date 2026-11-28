@@ -33,8 +33,8 @@ import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.SettingsRow
 import app.katari.presentation.kit.list.rowGroupItems
 import app.katari.presentation.kit.navigation.AppBar
-import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.ScreenAction
 import app.katari.presentation.kit.surface.NoticeCard
 import app.katari.presentation.kit.surface.NoticeTone
 import app.katari.presentation.kit.theme.TextRole
@@ -42,6 +42,7 @@ import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import eu.kanade.presentation.more.settings.screen.data.BackupFileRow
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.more.settings.screen.data.backupReadAmount
 import eu.kanade.presentation.more.settings.screen.data.rememberBackupFilePicker
@@ -121,50 +122,45 @@ class BringOverScreen(private val file: DocumentUri? = null) : Screen() {
                     scrollBehavior = it,
                 )
             },
-            bottomBar = {
-                BottomActionBar {
-                    val conversion = state.conversion
-                    val file = state.file
-                    when {
-                        file == null || state.finding is Finding.Unreadable -> Button(
-                            label = stringResource(MR.strings.backup_conversion_choose_file),
-                            onClick = chooseFile,
-                            modifier = Modifier.weight(1f),
-                        )
-                        state.finding == Finding.Katari -> Button(
-                            label = stringResource(MR.strings.action_restore),
-                            onClick = { restore(file.uri) },
-                            modifier = Modifier.weight(1f),
-                        )
-                        conversion is Conversion.Done -> {
-                            // Nothing came over: there is nothing to restore or keep (D107)
-                            val anything = conversion.backup.report.rows.isNotEmpty()
-                            Button(
+            actions = run {
+                val conversion = state.conversion
+                val file = state.file
+                when {
+                    file == null || state.finding is Finding.Unreadable -> listOf(
+                        ScreenAction(stringResource(MR.strings.backup_conversion_choose_file), chooseFile),
+                    )
+                    state.finding == Finding.Katari -> listOf(
+                        ScreenAction(stringResource(MR.strings.action_restore), { restore(file.uri) }),
+                    )
+                    conversion is Conversion.Done -> {
+                        // Nothing came over: there is nothing to restore or keep (D107)
+                        val anything = conversion.backup.report.rows.isNotEmpty()
+                        listOf(
+                            ScreenAction(
                                 label = stringResource(MR.strings.backup_conversion_save),
                                 onClick = {
                                     if (!saveFile.launch(model.savedFileName())) {
                                         messages.show(MR.strings.file_picker_error)
                                     }
                                 },
-                                modifier = Modifier.weight(1f),
-                                enabled = anything,
                                 style = ButtonStyle.Outlined,
-                            )
-                            Button(
+                                enabled = anything,
+                            ),
+                            ScreenAction(
                                 label = stringResource(MR.strings.action_restore),
                                 onClick = { restore(conversion.backup.uri) },
-                                modifier = Modifier.weight(1f),
                                 enabled = anything,
-                            )
-                        }
-                        else -> Button(
-                            label = stringResource(MR.strings.backup_conversion_convert),
-                            onClick = model::convert,
-                            modifier = Modifier.weight(1f),
-                            enabled = state.app != null && conversion != Conversion.Running &&
-                                state.finding != Finding.Reading,
+                            ),
                         )
                     }
+                    else -> listOf(
+                        ScreenAction(
+                            label = stringResource(MR.strings.backup_conversion_convert),
+                            onClick = model::convert,
+                            enabled = state.app != null && conversion != Conversion.Running &&
+                                state.finding != Finding.Reading,
+                        ),
+                    )
                 }
             },
         ) { contentPadding ->
@@ -267,10 +263,10 @@ private fun LazyListScope.fileItems(
     val appRow = (finding.offersApps && !asking) || finding == Finding.Reading
     rowGroupItems(listOfNotNull("file", "app".takeIf { appRow }), key = { it }) { row ->
         when (row) {
-            "file" -> SettingsRow(
-                title = file.name ?: file.uri.value,
-                subtitle = file.size?.let { fileSize(it) },
-                icon = MaterialSymbols.Rounded.Description,
+            "file" -> BackupFileRow(
+                name = file.name,
+                size = file.size,
+                fallback = file.uri.value,
                 onClick = onChooseFile,
             )
             else -> if (finding == Finding.Reading) {
@@ -353,7 +349,11 @@ private fun LazyListScope.fileItems(
 @Composable
 private fun AppRow(state: BringOverViewModel.State, onChangeApp: () -> Unit) {
     SettingsRow(
-        title = state.app?.name ?: stringResource(MR.strings.backup_conversion_no_app),
+        title = when {
+            state.app == null -> stringResource(MR.strings.backup_conversion_no_app)
+            state.familyOnly -> stringResource(MR.strings.backup_conversion_family_app, state.app.name)
+            else -> state.app.name
+        },
         subtitle = when {
             state.app == null -> null
             state.appDetected -> stringResource(MR.strings.backup_conversion_detected)

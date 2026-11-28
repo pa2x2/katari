@@ -25,8 +25,8 @@ import app.katari.presentation.kit.menu.DropdownMenu
 import app.katari.presentation.kit.menu.DropdownMenuItem
 import app.katari.presentation.kit.menu.MenuPill
 import app.katari.presentation.kit.navigation.AppBar
-import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.ScreenAction
 import app.katari.presentation.kit.surface.AvatarSize
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.TextRole
@@ -69,23 +69,15 @@ class FirstSyncScreen : Screen() {
                     scrollBehavior = it,
                 )
             },
-            bottomBar = {
-                BottomActionBar {
-                    Button(
-                        label = stringResource(MR.strings.action_cancel),
-                        onClick = navigator::pop,
-                        modifier = Modifier.weight(1f),
-                        style = ButtonStyle.Outlined,
-                    )
-                    Button(
-                        label = stringResource(MR.strings.sync_action_start_sync),
-                        onClick = model::start,
-                        modifier = Modifier.weight(1f),
-                        enabled = choosing != null,
-                        loading = state == FirstSyncViewModel.State.Starting,
-                    )
-                }
-            },
+            actions = listOf(
+                ScreenAction(stringResource(MR.strings.action_cancel), navigator::pop, ButtonStyle.Outlined),
+                ScreenAction(
+                    label = stringResource(MR.strings.sync_action_start_sync),
+                    onClick = model::start,
+                    enabled = choosing != null,
+                    loading = state == FirstSyncViewModel.State.Starting,
+                ),
+            ),
         ) { contentPadding ->
             when (val shown = state) {
                 FirstSyncViewModel.State.Loading,

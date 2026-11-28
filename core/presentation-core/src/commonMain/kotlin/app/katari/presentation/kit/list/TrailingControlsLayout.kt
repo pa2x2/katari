@@ -21,7 +21,8 @@ import app.katari.presentation.kit.theme.KatariTheme
  * the controls move to a line of their own under the text, still at the row's end. Only narrow screens and large fonts
  * get there; at other widths this is a plain row. A line that can't wrap, such as a title capped at one line with
  * "…", doesn't count: it shortens instead. Neither does [below], which is arbitrary content, such as a progress bar,
- * that fills whatever width the text gets.
+ * that fills whatever width the text gets: the words' width, or with [belowUnderTrailing] the room up to the row's end,
+ * under the controls, which then sit beside the words alone.
  */
 @Composable
 internal fun TrailingControlsLayout(
@@ -33,6 +34,7 @@ internal fun TrailingControlsLayout(
     modifier: Modifier = Modifier,
     lineGap: Dp = KatariTheme.sizes.none,
     below: @Composable () -> Unit = {},
+    belowUnderTrailing: Boolean = false,
 ) {
     val stackedGap = KatariTheme.spacing.s
     Layout(
@@ -84,8 +86,14 @@ internal fun TrailingControlsLayout(
                 )
                 val textWidth = trailingPlaceable?.let { (textRoom - trailingGapPx - it.width).coerceAtLeast(0) }
                     ?: textRoom
-                val text = measureText(wordsSlot, belowSlot, lineGapPx, loose.copy(maxWidth = textWidth))
-                placeInline(width, constraints, leadingPlaceables, leadingGapPx, text, trailingPlaceable)
+                if (belowUnderTrailing) {
+                    val words = measureText(wordsSlot, emptyList(), lineGapPx, loose.copy(maxWidth = textWidth))
+                    val under = measureText(belowSlot, emptyList(), lineGapPx, loose.copy(maxWidth = textRoom))
+                    placeOverBelow(width, constraints, leadingPlaceables, leadingGapPx, words, trailingPlaceable, under)
+                } else {
+                    val text = measureText(wordsSlot, belowSlot, lineGapPx, loose.copy(maxWidth = textWidth))
+                    placeInline(width, constraints, leadingPlaceables, leadingGapPx, text, trailingPlaceable)
+                }
             }
         },
     )
@@ -142,5 +150,28 @@ private fun MeasureScope.placeInline(
         placeLeading(leading, leadingGap, height)
         text.place(this, leading.sumOf { it.width + leadingGap }, (height - text.height) / 2)
         trailing?.placeRelative(width - trailing.width, (height - trailing.height) / 2)
+    }
+}
+
+/** The words with the controls beside them, and [below] under both from the text's start to the row's end. */
+private fun MeasureScope.placeOverBelow(
+    width: Int,
+    constraints: Constraints,
+    leading: List<Placeable>,
+    leadingGap: Int,
+    words: TextBlock,
+    trailing: Placeable?,
+    below: TextBlock,
+): MeasureResult {
+    val topHeight = maxOf(words.height, trailing?.height ?: 0)
+    val height = maxOf(leading.maxOfOrNull { it.height } ?: 0, topHeight + below.height)
+        .coerceIn(constraints.minHeight, constraints.maxHeight)
+    val top = (height - topHeight - below.height) / 2
+    return layout(width, height) {
+        placeLeading(leading, leadingGap, height)
+        val textStart = leading.sumOf { it.width + leadingGap }
+        words.place(this, textStart, top + (topHeight - words.height) / 2)
+        trailing?.placeRelative(width - trailing.width, top + (topHeight - trailing.height) / 2)
+        below.place(this, textStart, top + topHeight)
     }
 }

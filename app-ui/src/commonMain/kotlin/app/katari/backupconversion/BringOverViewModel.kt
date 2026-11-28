@@ -267,7 +267,15 @@ internal class BringOverViewModel(
         val stores: StoreCheck? = null,
         /** The issue Report or Ask is about to open, while its dialog shows. */
         val issue: PendingIssue? = null,
-    )
+    ) {
+        /**
+         * Whether the file only tells which family wrote it, such as a J2K or Yōkai backup read as Mihon's: its fork
+         * left nothing of its own in the file (D144).
+         */
+        val familyOnly: Boolean
+            get() = appDetected && app != null && app.name == app.format.appName &&
+                app.format.relatedAppNames.isNotEmpty()
+    }
 
     /** An issue whose dialog shows, and whether the person chose to put the backup in its file. */
     @Immutable

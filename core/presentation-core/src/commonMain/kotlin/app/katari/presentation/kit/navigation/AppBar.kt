@@ -176,13 +176,21 @@ private fun AppBarLayout(
 ) {
     val screenTitle = if (LocalScreenTitles.current != null) remember { AppBarScreenTitle() } else null
     screenTitle?.let { ReportScreenTitle(it.title) }
-    CompositionLocalProvider(LocalAppBarScreenTitle provides screenTitle?.takeUnless { isActionMode }) {
+    val screenActions = LocalScreenActions.current
+    // The screen's actions are this bar's alone: a bar in a sheet or dialog opened from it doesn't repeat them
+    CompositionLocalProvider(
+        LocalAppBarScreenTitle provides screenTitle?.takeUnless { isActionMode },
+        LocalScreenActions provides emptyList(),
+    ) {
         AppBarLayoutContent(
             titleContent = titleContent,
             modifier = modifier,
             navigateUp = navigateUp,
             navigationIcon = navigationIcon,
-            actions = actions,
+            actions = {
+                actions()
+                if (!isActionMode && screenActions.isNotEmpty()) AppBarScreenActions(screenActions)
+            },
             isActionMode = isActionMode,
             onCancelActionMode = onCancelActionMode,
             containerAlpha = containerAlpha,
@@ -406,9 +414,9 @@ fun AppBarExtension(modifier: Modifier = Modifier, actionMode: Boolean = false, 
 }
 
 // The bars, a camera cutout, a side dock and the screen frame's margins, as the content under the bar is inset by, so
-// the bar's contents line up with it. The dock's room and the margins are added rather than combined: the dock sits
+// the bar's contents line up with it, at the top or the bottom of the screen. The dock's room and the margins are added rather than combined: the dock sits
 // inside the other insets, and the frame is centred in the room they leave.
-private val AppBarInsets: WindowInsets
+internal val AppBarInsets: WindowInsets
     @Composable get() {
         val dock = LocalDockClearance.current.start
         val margins = LocalScreenFrameMargin.current

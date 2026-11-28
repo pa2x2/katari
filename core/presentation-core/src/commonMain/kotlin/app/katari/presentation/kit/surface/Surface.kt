@@ -32,7 +32,6 @@ enum class SurfaceContainer {
     SecondaryContainer,
     TertiaryContainer,
     ErrorContainer,
-    SuccessContainer,
     WarningContainer,
     Inverse,
     Selected,
@@ -163,7 +162,6 @@ internal fun SurfaceContainer.colors(colors: KatariColors): Pair<Color, Color> =
     SurfaceContainer.SecondaryContainer -> colors.secondaryContainer to colors.onSecondaryContainer
     SurfaceContainer.TertiaryContainer -> colors.tertiaryContainer to colors.onTertiaryContainer
     SurfaceContainer.ErrorContainer -> colors.errorContainer to colors.onErrorContainer
-    SurfaceContainer.SuccessContainer -> colors.successContainer to colors.onSuccessContainer
     SurfaceContainer.WarningContainer -> colors.warningContainer to colors.onWarningContainer
     SurfaceContainer.Inverse -> colors.inverseSurface to colors.inverseOnSurface
     SurfaceContainer.Selected -> colors.selected to colors.onSecondaryContainer

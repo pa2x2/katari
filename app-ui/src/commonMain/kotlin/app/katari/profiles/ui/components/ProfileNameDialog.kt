@@ -22,7 +22,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * Asks for a profile's name, refusing an empty one or one another profile already has. The field opens empty with
  * [suggestion] greyed in it, the name kept when nothing is typed, such as a new profile's suggested name or the
- * current one when renaming (D121).
+ * current one when renaming (D121). [confirmLabel] says what confirming does: Add makes a new profile, Save keeps a
+ * name.
  */
 @Composable
 internal fun ProfileNameDialog(
@@ -32,6 +33,15 @@ internal fun ProfileNameDialog(
     onDismissRequest: () -> Unit,
     onConfirm: (String) -> Unit,
     originalProfileId: Long? = null,
+    confirmLabel: String = stringResource(
+        if (originalProfileId ==
+            null
+        ) {
+            MR.strings.action_add
+        } else {
+            MR.strings.action_save
+        },
+    ),
 ) {
     val focusRequester = remember { FocusRequester() }
     var value by rememberSaveable { mutableStateOf("") }
@@ -52,7 +62,7 @@ internal fun ProfileNameDialog(
         onDismissRequest = onDismissRequest,
         title = title,
         confirm = DialogAction(
-            label = stringResource(if (originalProfileId == null) MR.strings.action_add else MR.strings.action_save),
+            label = confirmLabel,
             onClick = { onConfirm(trimmedValue) },
             enabled = trimmedValue.isNotEmpty() && !duplicate,
         ),

@@ -2,6 +2,7 @@ package eu.kanade.presentation.more.settings.screen.data
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -28,12 +29,13 @@ import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.CheckRow
+import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.SettingsRow
 import app.katari.presentation.kit.list.rowGroupItems
 import app.katari.presentation.kit.navigation.AppBar
-import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.ScreenAction
 import app.katari.presentation.kit.progress.LoadingIndicator
 import app.katari.presentation.kit.surface.GroupCard
 import app.katari.presentation.kit.surface.NoticeCard
@@ -63,6 +65,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.conversion.BackupConverter
 import eu.kanade.tachiyomi.data.backup.conversion.BackupIdentity
+import eu.kanade.tachiyomi.data.backup.storage.BackupDocument
 import eu.kanade.tachiyomi.data.backup.storage.BackupReadProgress
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -114,26 +117,26 @@ class RestoreBackupScreen(
                     scrollBehavior = it,
                 )
             },
-            bottomBar = {
-                BottomActionBar {
-                    val identity = state.identity
-                    if (identity != null && identity != BackupIdentity.Katari) {
-                        Button(
+            actions = run {
+                val identity = state.identity
+                if (identity != null && identity != BackupIdentity.Katari) {
+                    listOf(
+                        ScreenAction(
                             label = (identity as? BackupIdentity.Foreign)?.apps?.singleOrNull()
                                 ?.let { stringResource(MR.strings.backup_conversion_bring_over_from, it.name) }
                                 ?: stringResource(MR.strings.backup_conversion_title),
                             onClick = { navigator.replace(BringOverScreen(uri)) },
-                            modifier = Modifier.weight(1f),
-                        )
-                    } else {
-                        Button(
+                        ),
+                    )
+                } else {
+                    listOf(
+                        ScreenAction(
                             label = stringResource(MR.strings.action_restore),
                             onClick = { if (state.options.rollBackAccount) confirmRollBack = true else restore() },
-                            modifier = Modifier.weight(1f),
                             enabled = state.canRestore && state.options.canRestore() &&
                                 (state.profiles.isEmpty() || state.selectedProfileUuids.isNotEmpty()),
-                        )
-                    }
+                        ),
+                    )
                 }
             },
         ) { contentPadding ->
@@ -155,6 +158,14 @@ class RestoreBackupScreen(
                     item {
                         NoticeCard(stringResource(MR.strings.restore_miui_warning), NoticeTone.Warning)
                     }
+                }
+
+                val file = state.file
+                if (file != null && state.identity.let { it != null && it != BackupIdentity.Katari }) {
+                    rowGroupItems(listOf(file), key = { "file" }) {
+                        BackupFileRow(name = it.name, size = it.size, fallback = uri.value)
+                    }
+                    item(key = "file-gap") { RowGroupGap() }
                 }
 
                 when (val identity = state.identity) {
@@ -281,7 +292,7 @@ class RestoreBackupScreen(
         onCheckStoresAgain: () -> Unit,
     ) {
         item {
-            GroupCard(modifier = Modifier.padding(horizontal = KatariTheme.spacing.m)) {
+            GroupCard(modifier = Modifier.fillMaxWidth().padding(horizontal = KatariTheme.spacing.m)) {
                 SelectionContainer {
                     Column(
                         modifier = Modifier.padding(KatariTheme.spacing.l),
@@ -328,16 +339,12 @@ class RestoreBackupScreen(
                                 }
                             }
 
-                            is InvalidRestore -> {
-                                RestoreErrorSection(
-                                    title = stringResource(MR.strings.invalid_backup_file),
-                                    body = error.uri.value,
-                                )
-                                RestoreErrorSection(
-                                    title = stringResource(MR.strings.invalid_backup_file_error),
-                                    body = error.message,
-                                )
-                            }
+                            is InvalidRestore -> RestoreErrorSection(
+                                title = error.fileName
+                                    ?.let { stringResource(MR.strings.invalid_backup_file_cant_restore, it) }
+                                    ?: stringResource(MR.strings.invalid_backup_file_cant_restore_unnamed),
+                                body = error.message,
+                            )
 
                             else -> Text(error.toString())
                         }
@@ -494,12 +501,14 @@ internal class RestoreBackupViewModel(
     }
 
     private suspend fun validate(uri: DocumentUri) {
+        val file = runCatching { backupConverter.describe(uri) }.getOrNull()
+        state.update { it.copy(file = file) }
         val onProgress = { progress: BackupReadProgress -> state.update { it.copy(readProgress = progress) } }
         val identity = try {
             backupConverter.identify(uri, onProgress)
         } catch (e: Exception) {
             state.update { it.copy(reading = false) }
-            setError(error = InvalidRestore(uri, e.message.toString()), canRestore = false)
+            setError(error = InvalidRestore(file?.name, e.message.toString()), canRestore = false)
             return
         }
         // Restore reads Katari backups only; another app's is brought over through the tool (D002)
@@ -514,7 +523,7 @@ internal class RestoreBackupViewModel(
         } catch (e: Exception) {
             state.update { it.copy(reading = false) }
             setError(
-                error = InvalidRestore(uri, e.message.toString()),
+                error = InvalidRestore(file?.name, e.message.toString()),
                 canRestore = false,
             )
             return
@@ -589,6 +598,8 @@ internal class RestoreBackupViewModel(
         val syncLinked: Boolean = false,
         /** Which profile a converted backup goes into; null for a Katari backup, which lists its own profiles. */
         val into: RestoreInto? = null,
+        /** The file's name and size; null until they're known, or when the system doesn't tell them. */
+        val file: BackupDocument? = null,
         /** Which app wrote the file; null until it's read. Only a Katari backup restores here. */
         val identity: BackupIdentity? = null,
         /** Whether the file is still being read, which the options wait for. */
@@ -622,6 +633,6 @@ private data class MissingRestoreComponents(
 )
 
 private data class InvalidRestore(
-    val uri: DocumentUri,
+    val fileName: String?,
     val message: String,
 )
