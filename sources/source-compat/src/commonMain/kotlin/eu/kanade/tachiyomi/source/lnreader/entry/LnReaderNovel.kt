@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.source.lnreader.runtime.text
 import eu.kanade.tachiyomi.source.lnreader.web.LnReaderUrls
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import tachiyomi.domain.source.lnreader.lnReaderStatus
 
 /** What `parseNovel` gives: the novel's details, its chapters or page 1's, and how many pages its list has. */
 internal class LnReaderNovel(private val fields: JsonObject) {
@@ -30,7 +31,7 @@ internal class LnReaderNovel(private val fields: JsonObject) {
             ?.filter(String::isNotEmpty)
             ?.distinct()
             ?.takeIf(List<String>::isNotEmpty)
-        it.status = lnReaderStatus(fields.text("status"))
+        it.status = lnReaderStatus(fields.text("status")).value
         urls.coverUrl(fields.text("cover"))?.let { cover -> it.thumbnailUrl = cover }
         it.type = EntryType.BOOK
     }

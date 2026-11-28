@@ -178,7 +178,6 @@ private fun MigrateSourceItem(
     BaseSourceItem(
         modifier = modifier,
         source = source,
-        title = source.name.ifBlank { source.id.toString() },
         showLanguageInContent = source.lang != "",
         onClickItem = onClickItem,
         onLongClickItem = onLongClickItem,

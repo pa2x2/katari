@@ -11,6 +11,7 @@ import app.katari.presentation.kit.button.DownloadIndicator
 import app.katari.presentation.kit.button.DownloadIndicatorAction
 import app.katari.presentation.kit.button.DownloadIndicatorMenuItem
 import app.katari.presentation.kit.button.DownloadIndicatorState
+import app.katari.presentation.kit.button.DownloadedShare
 import app.katari.presentation.kit.sheet.popoverAnchor
 import app.katari.presentation.kit.sheet.rememberPopoverAnchor
 import app.katari.sync.ui.download.DownloadElsewhereRequest
@@ -31,7 +32,8 @@ enum class ChapterDownloadAction {
 
 /**
  * A chapter's or group's download button. Its menu adds translating them when [onTranslateClick] is given, and asking
- * another device of the account to download them ([downloadElsewhere]) on a screen that offers it.
+ * another device of the account to download them ([downloadElsewhere]) on a screen that offers it. A group gives
+ * [downloadedShareProvider] so that a partly downloaded one shows how much of it is.
  */
 @Composable
 fun EntryChapterDownloadIndicator(
@@ -43,6 +45,7 @@ fun EntryChapterDownloadIndicator(
     translateStatusProvider: () -> EntryTranslateStatus? = { null },
     onTranslateClick: ((ChapterTranslateAction) -> Unit)? = null,
     downloadElsewhere: DownloadElsewhereRequest? = null,
+    downloadedShareProvider: () -> DownloadedShare? = { null },
 ) {
     if (onClick == null) return
 
@@ -84,14 +87,19 @@ fun EntryChapterDownloadIndicator(
             }
         },
         downloadProgressProvider = downloadProgressProvider,
+        downloadedShareProvider = downloadedShareProvider,
         startContentDescription = stringResource(MR.strings.manga_download),
         errorContentDescription = stringResource(MR.strings.chapter_error),
         queuedContentDescription = stringResource(MR.strings.download_state_queued),
         downloadingContentDescription = stringResource(MR.strings.download_state_downloading),
         downloadedContentDescription = stringResource(MR.strings.label_downloaded),
+        partlyDownloadedContentDescription = { share ->
+            stringResource(MR.strings.download_state_partly_downloaded, share.downloaded, share.total)
+        },
         startNowText = stringResource(MR.strings.action_start_downloading_now),
         cancelText = stringResource(MR.strings.action_cancel),
         deleteText = stringResource(MR.strings.action_delete),
+        deleteDownloadedText = stringResource(MR.strings.delete_downloaded),
         onClick = {
             onClick(
                 when (it) {

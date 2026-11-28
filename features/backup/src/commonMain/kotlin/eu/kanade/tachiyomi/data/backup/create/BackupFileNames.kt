@@ -20,6 +20,15 @@ class BackupFileNames(appIdentity: AppIdentity) {
         return "${prefix}_$date.tachibk"
     }
 
+    /**
+     * The name offered for a backup converted from [app]'s, such as "katari_from-mihon_2026-11-26_18-04.tachibk"
+     * (D017). [isOwnBackup] never matches it, so automatic backups never delete it.
+     */
+    fun convertedFileName(app: String): String {
+        val date = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.ENGLISH).format(Date())
+        return "${prefix}_from-${app.lowercase(Locale.ROOT).replace(' ', '-')}_$date.tachibk"
+    }
+
     /** Whether [fileName] is a name [newFileName] gives, so automatic backups may delete the file to make room. */
     fun isOwnBackup(fileName: String): Boolean = ownBackupName.matches(fileName)
 }

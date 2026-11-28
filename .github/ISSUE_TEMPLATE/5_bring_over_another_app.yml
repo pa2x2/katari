@@ -1,0 +1,34 @@
+name: 📥 Bring over from another app
+description: Ask Katari to read backups of an app it doesn't read yet. Start it from Ask in Bring over from another app, which fills this in.
+labels: [feature request]
+body:
+  - type: input
+    id: app
+    attributes:
+      label: App
+      description: The app that made the backup, with its version.
+      placeholder: 'Example: "Mangayomi 0.9.97"'
+    validations:
+      required: true
+
+  - type: input
+    id: where
+    attributes:
+      label: Where to get it
+      description: A link to the app's site or repository.
+      placeholder: 'Example: "github.com/kodjodevf/mangayomi"'
+
+  - type: textarea
+    id: found
+    attributes:
+      label: What Katari found in the file
+      description: Filled in by Katari. It describes how the file is laid out, not what it holds.
+    validations:
+      required: true
+
+  - type: textarea
+    id: file
+    attributes:
+      label: The file Katari saved
+      description: Attach the .zip file Katari saved when you pressed Ask. It holds your backup only if you chose to include it. The issue is public.
+      placeholder: Drop the file here, or click to attach it.

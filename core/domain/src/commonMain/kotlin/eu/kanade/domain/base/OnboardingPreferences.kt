@@ -11,12 +11,6 @@ class OnboardingPreferences(preferenceStore: PreferenceStore) {
         false,
     )
 
-    /** Whether the guide's offer to bring the library over from Mihon was taken up or passed over. */
-    val mihonMigrationPromptHandled: Preference<Boolean> = preferenceStore.getBoolean(
-        Preference.appStateKey("mihon_migration_prompt_handled"),
-        false,
-    )
-
     /**
      * The person-level settings the guide's own pages set, as the app names them, while it hasn't finished. Sync's first
      * sync doesn't count them as the person's data, so picking light or dark on the way to linking doesn't stop the join

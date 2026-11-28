@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.data.backup.stream.readBackup
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -101,6 +102,8 @@ class RestoredSourceKeysTest {
         override suspend fun find(identity: SourceIdentity): RegisteredSource? = error("Not used by restore")
 
         override suspend fun findAll(): List<RegisteredSource> = error("Not used by restore")
+
+        override fun subscribeAll(): Flow<List<RegisteredSource>> = error("Not used by restore")
 
         override suspend fun recordProvider(localKey: Long, provider: SourceProvider) = error("Not used by restore")
     }

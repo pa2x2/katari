@@ -1,8 +1,8 @@
 /**
  * Addresses pages had before they moved, and where each page is now. GitHub Pages can't redirect, so every old address
- * stays a page that sends the visitor on: released apps opened the docs under /guide/, and the developer pages lived
- * under /docs/extensions/ until they got a section of their own. The list only ever grows, except that a page of a feature
- * Katari dropped leaves it along with the page.
+ * stays a page that sends the visitor on: released apps opened the docs under /guide/, the developer pages lived under
+ * /docs/extensions/ until they got a section of their own, and Coming from Mihon became Coming from another app. The list
+ * only ever grows, except that a page of a feature Katari dropped leaves it along with the page.
  */
 const userSlugs = [
   "install",
@@ -28,6 +28,7 @@ export const movedPages: Record<string, string> = Object.fromEntries([
   ...userSlugs.map((slug) => [`guide/${slug}/`, `docs/${slug}/`]),
   ["guide/extensions/", "developers/"],
   ["docs/extensions/", "developers/"],
+  ["docs/coming-from-mihon/", "docs/coming-from-another-app/"],
   ...developerSlugs.flatMap((slug) => [
     [`guide/extensions/${slug}/`, `developers/${slug}/`],
     [`docs/extensions/${slug}/`, `developers/${slug}/`],

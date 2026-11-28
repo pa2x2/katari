@@ -1,5 +1,7 @@
 package tachiyomi.domain.source.identity
 
+import kotlinx.coroutines.flow.Flow
+
 /**
  * The registry of source identities and the local keys every other table and preference stores for them. A key once
  * given to an identity stays with it.
@@ -15,6 +17,8 @@ interface SourceIdentityRepository {
     suspend fun find(identity: SourceIdentity): RegisteredSource?
 
     suspend fun findAll(): List<RegisteredSource>
+
+    fun subscribeAll(): Flow<List<RegisteredSource>>
 
     suspend fun recordProvider(localKey: Long, provider: SourceProvider)
 }

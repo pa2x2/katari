@@ -27,11 +27,13 @@ import okio.buffer
 import okio.sink
 import okio.source
 import tachiyomi.core.common.storage.StorageFileResolver
+import tachiyomi.core.common.util.system.imageFileExtension
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryCover
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import java.net.URI
 import java.net.URISyntaxException
 
@@ -112,7 +114,7 @@ class EntryCoverFetcher(
             null
         }
         if (options.diskCachePolicy.readEnabled) {
-            validCoverCacheFile(libraryCoverCacheFile)?.let {
+            cachedImage(libraryCoverCacheFile)?.let {
                 return fileLoader(it)
             }
         }
@@ -139,23 +141,27 @@ class EntryCoverFetcher(
             val response = executeNetworkRequest()
             val responseBody = checkNotNull(response.body) { "Null response source" }
             try {
-                // Read from cover cache after library manga cover updated
-                val responseCoverCache = writeResponseToCoverCache(response, libraryCoverCacheFile)
-                if (responseCoverCache != null) {
-                    return fileLoader(responseCoverCache)
+                // A site can answer with a web page in place of the image, such as the browser check a request without
+                // the source's headers gets. Cached, it would stand for the cover until the cache is cleared.
+                if (isImage(responseBody.source().peek().inputStream())) {
+                    // Read from cover cache after library manga cover updated
+                    val responseCoverCache = writeResponseToCoverCache(response, libraryCoverCacheFile)
+                    if (responseCoverCache != null) {
+                        return fileLoader(responseCoverCache)
+                    }
+
+                    // Read from disk cache
+                    snapshot = writeToDiskCache(response)
+                    if (snapshot != null) {
+                        return SourceFetchResult(
+                            source = snapshot.toImageSource(),
+                            mimeType = "image/*",
+                            dataSource = DataSource.NETWORK,
+                        )
+                    }
                 }
 
-                // Read from disk cache
-                snapshot = writeToDiskCache(response)
-                if (snapshot != null) {
-                    return SourceFetchResult(
-                        source = snapshot.toImageSource(),
-                        mimeType = "image/*",
-                        dataSource = DataSource.NETWORK,
-                    )
-                }
-
-                // Read from response if cache is unused or unusable
+                // Read from response if cache is unused, unusable or the response isn't an image
                 return SourceFetchResult(
                     source = ImageSource(source = responseBody.source(), fileSystem = FileSystem.SYSTEM),
                     mimeType = "image/*",
@@ -267,13 +273,27 @@ class EntryCoverFetcher(
         return null
     }
 
-    private fun readFromDiskCache(): DiskCache.Snapshot? {
-        return if (options.diskCachePolicy.readEnabled) {
-            imageLoader.diskCache?.openSnapshot(diskCacheKey)
-        } else {
-            null
-        }
+    // Covers cached before responses were checked can be web pages, which are dropped so the cover downloads again
+    private fun cachedImage(file: File?): File? {
+        val cover = validCoverCacheFile(file) ?: return null
+        if (cover.inputStream().use(::isImage)) return cover
+
+        cover.delete()
+        return null
     }
+
+    private fun readFromDiskCache(): DiskCache.Snapshot? {
+        if (!options.diskCachePolicy.readEnabled) return null
+        val diskCache = imageLoader.diskCache ?: return null
+        val snapshot = diskCache.openSnapshot(diskCacheKey) ?: return null
+        if (diskCache.fileSystem.read(snapshot.data) { isImage(inputStream()) }) return snapshot
+
+        snapshot.close()
+        diskCache.remove(diskCacheKey)
+        return null
+    }
+
+    private fun isImage(stream: InputStream): Boolean = imageFileExtension(stream) != null
 
     private fun writeToDiskCache(
         response: Response,

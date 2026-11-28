@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension
 
+import app.katari.domain.extension.model.ExtensionStore
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import kotlinx.coroutines.flow.Flow
@@ -40,6 +41,12 @@ interface ExtensionManagement {
      * removed.
      */
     val listingsBySource: Flow<Map<Long, Extension.Available>>
+
+    /**
+     * The added stores whose lists couldn't be read the last time they were read, so a source no listing provides may
+     * still be in one of them (D113).
+     */
+    val unreadableStores: Flow<List<ExtensionStore>>
 
     /** Reads again what the stores list, after reading the stores themselves again when [refreshStores]. */
     suspend fun refreshAvailable(refreshStores: Boolean = false)

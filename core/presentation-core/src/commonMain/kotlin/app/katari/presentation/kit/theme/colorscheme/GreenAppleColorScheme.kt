@@ -24,7 +24,8 @@ internal object GreenAppleColorScheme : BaseColorScheme() {
         onPrimaryContainer = Color(0xFFFFFFFF),
         secondary = Color(0xFF7ADB8F), // Unread badge
         onSecondary = Color(0xFF003917), // Unread badge text
-        secondaryContainer = Color(0xFF017737), // Navigation bar selector pill & progress indicator (remaining)
+        // The builder's #017737 outweighed the filled button: same hue and tone at chroma 16
+        secondaryContainer = Color(0xFF596C5A),
         onSecondaryContainer = Color(0xFFFFFFFF), // Navigation bar selected icon
         tertiary = Color(0xFFFFB3AC), // Downloaded badge
         onTertiary = Color(0xFF680008), // Downloaded badge text

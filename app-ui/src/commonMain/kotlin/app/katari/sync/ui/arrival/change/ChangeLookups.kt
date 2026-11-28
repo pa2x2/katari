@@ -33,7 +33,7 @@ class ChangeLookups(
 ) {
     internal fun namedSetting(key: String): NamedSetting? = namedSettings.of(key)
 
-    fun sourceName(sourceKey: Long): String = sourceManager.getOrStub(sourceKey).name
+    fun sourceName(sourceKey: Long): String = sourceManager.getDisplayInfo(sourceKey).name
 
     /** The name of the profile with [profileId]; null when it is gone. */
     fun profileName(profileId: Long): String? = profileManager.profiles.value.find { it.id == profileId }?.name

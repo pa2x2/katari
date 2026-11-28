@@ -8,6 +8,9 @@ enum class CantInstall {
     /** No added store lists it: it's in a store not added here, or gone from every store. */
     NOT_LISTED,
 
+    /** No store that could be read lists it, but a store couldn't be read, so it may be there (D113). */
+    STORES_UNREADABLE,
+
     /** It finds torrents, which the app can't play. */
     TORRENT,
 

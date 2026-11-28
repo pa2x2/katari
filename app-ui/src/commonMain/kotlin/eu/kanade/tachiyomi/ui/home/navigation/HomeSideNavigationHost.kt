@@ -9,6 +9,7 @@ import app.katari.core.common.HomeScreenTabs
 import app.katari.presentation.kit.navigation.DockPlacement
 import app.katari.presentation.kit.navigation.DockedScreen
 import app.katari.presentation.kit.navigation.FloatingDockHost
+import app.katari.presentation.kit.navigation.HideDocks
 import app.katari.presentation.kit.sheet.popoverAnchor
 import app.katari.presentation.kit.window.currentWindowLayout
 import app.katari.profiles.ui.switcher.LocalProfileSwitcher
@@ -17,6 +18,7 @@ import app.katari.ui.telemetry.ShownEntryTypes
 import app.katari.ui.telemetry.ShownScreenReport
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
+import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 
 /**
  * Shows the screens of [navigator] with the home destinations beside every one of them in a wide window, not only beside
@@ -64,6 +66,9 @@ fun HomeSideNavigationHost(
         ) {
             DefaultNavigatorScreenTransition(navigator = navigator) { screen ->
                 DockedScreen(shown = screen.key == navigator.lastItem.key) {
+                    // Setup takes the window, and so does every screen it opens, so none offers a way out of it (D108)
+                    val belowScreen = navigator.items.takeWhile { it.key != screen.key }
+                    HideDocks(hidden = belowScreen.any { it is OnboardingScreen })
                     screen.Content()
                 }
             }

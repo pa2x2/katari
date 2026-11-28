@@ -27,8 +27,8 @@ import app.katari.presentation.kit.list.SettingsRow
 import app.katari.presentation.kit.list.rowGroupItems
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.AppBarActions
-import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.ScreenAction
 import app.katari.ui.di.AppUiScope
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -107,17 +107,16 @@ class ClearDatabaseScreen : Screen() {
                             scrollBehavior = scrollBehavior,
                         )
                     },
-                    bottomBar = {
-                        if (s.items.isNotEmpty()) {
-                            BottomActionBar {
-                                Button(
-                                    label = stringResource(MR.strings.action_delete),
-                                    onClick = model::showConfirmation,
-                                    modifier = Modifier.weight(1f),
-                                    enabled = s.selection.isNotEmpty(),
-                                )
-                            }
-                        }
+                    actions = if (s.items.isEmpty()) {
+                        emptyList()
+                    } else {
+                        listOf(
+                            ScreenAction(
+                                label = stringResource(MR.strings.action_delete),
+                                onClick = model::showConfirmation,
+                                enabled = s.selection.isNotEmpty(),
+                            ),
+                        )
                     },
                 ) { contentPadding ->
                     if (s.items.isEmpty()) {

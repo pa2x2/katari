@@ -55,8 +55,6 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
 
     val success: Color
     val onSuccess: Color
-    val successContainer: Color
-    val onSuccessContainer: Color
 
     val warning: Color
     val onWarning: Color
@@ -134,8 +132,6 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
         val success = ToneSet.of(SUCCESS_SEED.harmonize(primary), isDark)
         this.success = success.accent
         onSuccess = success.onAccent
-        successContainer = success.container
-        onSuccessContainer = success.onContainer
         val warning = ToneSet.of(WARNING_SEED.harmonize(primary), isDark)
         this.warning = warning.accent
         onWarning = warning.onAccent

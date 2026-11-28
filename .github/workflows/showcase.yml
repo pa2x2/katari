@@ -112,7 +112,7 @@ jobs:
           content="$RUNNER_TEMP/showcase-content"
           mkdir -p "$content"
           cp tools/showcase/extension/build/outputs/apk/showcase/extension-showcase.apk "$content/extension.apk"
-          cp "$KATARI_SHOWCASE_CACHE/showcase.tachibk" "$content/"
+          cp "$KATARI_SHOWCASE_CACHE/showcase.tachibk" "$KATARI_SHOWCASE_CACHE/mihon.tachibk" "$content/"
           cp -r "$KATARI_SHOWCASE_CACHE/served" "$content/"
 
       - name: Upload what the capture jobs need
@@ -381,7 +381,8 @@ jobs:
         run: |
           npm ci
           npm run capture -- --group "$GROUP" --out "$RUNNER_TEMP/captures" \
-            --seed "$CONTENT/showcase.tachibk" --served "$CONTENT/served" --extension-apk "$CONTENT/extension.apk" \
+            --seed "$CONTENT/showcase.tachibk" --mihon-backup "$CONTENT/mihon.tachibk" --served "$CONTENT/served" \
+            --extension-apk "$CONTENT/extension.apk" \
             --app-apk "$ANDROID/app.apk" --capture-apk "$ANDROID/capture.apk" \
             --desktop-app-dir "$DESKTOP/Katari.AppDir" --desktop-agent "$DESKTOP/desktop-capture.jar" \
             --sync-server "$DESKTOP/showcase-sync-server/bin/showcase-sync-server"

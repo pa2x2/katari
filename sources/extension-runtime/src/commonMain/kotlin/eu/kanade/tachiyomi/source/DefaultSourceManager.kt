@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
+import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.domain.source.model.UnifiedStubSource
@@ -28,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap
 class DefaultSourceManager(
     private val extensionManager: ExtensionManager,
     private val sourceRepository: StubSourceRepository,
+    private val sourceIdentities: SourceIdentityRepository,
     private val scope: CoroutineScope,
     private val downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
     private val localSource: () -> UnifiedSource,
@@ -39,6 +41,12 @@ class DefaultSourceManager(
     private val sourcesMap = ConcurrentHashMap<Long, UnifiedSource>()
     private val stubSourcesMap = ConcurrentHashMap<Long, StubSource>()
     private val storedStubsLoaded = CompletableDeferred<Unit>()
+
+    // By local key. A source whose name was never recorded is shown by the ID its extension gives it, which is the same
+    // on every device, unlike the local key.
+    @Volatile
+    private var externalIds: Map<Long, Long> = emptyMap()
+    private val identitiesLoaded = CompletableDeferred<Unit>()
 
     private val _sources = MutableStateFlow<List<UnifiedSource>>(emptyList())
     override val sources: Flow<List<UnifiedSource>> = _sources.asStateFlow()
@@ -60,8 +68,10 @@ class DefaultSourceManager(
                         registerStubSource(source)
                     }
 
-                    // Callers waiting for the sources also expect a missing source to come with its stored name
+                    // Callers waiting for the sources also expect a missing source to come with its stored name, or
+                    // the ID it's shown by without one
                     storedStubsLoaded.await()
+                    identitiesLoaded.await()
                     _isInitialized.value = true
                 }
         }
@@ -74,6 +84,15 @@ class DefaultSourceManager(
                         stubSourcesMap[it.id] = it
                     }
                     storedStubsLoaded.complete(Unit)
+                }
+        }
+
+        scope.launch {
+            sourceIdentities.subscribeAll()
+                .onCompletion { identitiesLoaded.complete(Unit) }
+                .collect { sources ->
+                    externalIds = sources.associate { it.localKey to it.identity.externalId }
+                    identitiesLoaded.complete(Unit)
                 }
         }
 
@@ -123,7 +142,8 @@ class DefaultSourceManager(
         val stub = stubSource(sourceKey)
         return SourceDisplayInfo(
             id = stub.id,
-            name = stub.name.ifBlank { stub.id.toString() },
+            // A key the registry doesn't hold was stored before identities were recorded, when it was the source's ID
+            name = stub.name.ifBlank { (externalIds[sourceKey] ?: sourceKey).toString() },
             lang = stub.lang,
             isMissing = true,
             hasKnownName = stub.name.isNotBlank(),

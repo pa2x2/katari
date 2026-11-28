@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.extension
 import app.katari.core.common.GlobalCustomPreferences
 import app.katari.domain.extension.interactor.UpdateExtensionStores
 import app.katari.domain.extension.model.ExtensionStore
+import app.katari.domain.extension.model.StoreListings
 import app.katari.domain.extension.repository.ExtensionStoreRepository
 import app.katari.profiles.core.ProfileConstants
 import app.katari.profiles.core.ProfileDatabase
@@ -141,6 +142,11 @@ class ExtensionManager(
     val availableExtensionsFlow = availableExtensionListFlow
         .map { it.newestListingPerOrigin(kinds) }
         .stateIn(scope, WhileSubscribed(5_000), emptyList())
+
+    private val unreadableStoreListFlow = MutableStateFlow(emptyList<ExtensionStore>())
+
+    /** The added stores whose lists couldn't be read the last time they were read (D113). */
+    val unreadableStoresFlow = unreadableStoreListFlow.asStateFlow()
 
     @Volatile
     private var hasFetchedListings = false
@@ -306,7 +312,7 @@ class ExtensionManager(
      * @param forceRefresh whether to refresh the stores themselves first.
      */
     suspend fun findAvailableExtensions(forceRefresh: Boolean = false) {
-        val extensions = try {
+        val listings = try {
             if (forceRefresh) {
                 updateExtensionStores()
             }
@@ -316,8 +322,9 @@ class ExtensionManager(
             withUIContext { notices.storesUnreachable() }
             return
         }
+        if (listings.unreadable.isNotEmpty()) withUIContext { notices.storesUnreachable() }
 
-        setAvailableExtensions(extensions)
+        setAvailableExtensions(listings)
     }
 
     /**
@@ -329,7 +336,7 @@ class ExtensionManager(
         if (!updateCheckInProgress.compareAndSet(false, true)) return true
 
         try {
-            val extensions = try {
+            val listings = try {
                 updateExtensionStores()
                 fetchExtensions()
             } catch (e: Exception) {
@@ -338,7 +345,7 @@ class ExtensionManager(
             }
 
             isInitialized.first { it }
-            setAvailableExtensions(extensions)
+            setAvailableExtensions(listings)
 
             val availableExtensions = availableExtensionListFlow.value
             val candidates = (loadedExtensionMapFlow.value.values + notLoadedExtensionMapFlow.value.values)
@@ -376,13 +383,15 @@ class ExtensionManager(
         }
     }
 
-    private suspend fun fetchExtensions(): List<Extension.Available> {
+    private suspend fun fetchExtensions(): StoreListings {
         return withIOContext { extensionStoreRepository.fetchExtensions() }
     }
 
-    private suspend fun setAvailableExtensions(extensions: List<Extension.Available>) {
+    private suspend fun setAvailableExtensions(listings: StoreListings) {
+        val extensions = listings.available
         enableAdditionalSubLanguages(extensions)
         availableExtensionListFlow.value = extensions
+        unreadableStoreListFlow.value = listings.unreadable
         hasFetchedListings = true
         refreshStatuses()
         setupAvailableExtensionsSourcesDataMap(extensions)

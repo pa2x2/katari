@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
@@ -26,6 +24,9 @@ import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Palette
 import app.katari.icons.materialsymbols.rounded.RocketLaunch
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.layout.FramedContent
+import app.katari.presentation.kit.layout.FramedScrollColumn
+import app.katari.presentation.kit.navigation.ActionButtons
 import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
 import app.katari.presentation.kit.progress.LinearProgressIndicator
@@ -57,19 +58,23 @@ fun GuideScreen(
 ) {
     Scaffold(
         bottomBar = {
+            // No app bar to take them in a short window: the bar keeps them, with less room around
             BottomActionBar {
-                InfoActions(
-                    acceptText = nextText,
-                    onAcceptClick = onNextClick,
-                    canAccept = canGoNext,
-                    rejectText = skipText,
-                    onRejectClick = onSkipClick,
+                ActionButtons(
+                    infoActions(
+                        acceptText = nextText,
+                        onAcceptClick = onNextClick,
+                        canAccept = canGoNext,
+                        rejectText = skipText,
+                        onRejectClick = onSkipClick,
+                    ),
+                    Modifier.weight(1f),
                 )
             }
         },
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            GuideProgress(page = page, pageCount = pageCount)
+            FramedContent { GuideProgress(page = page, pageCount = pageCount) }
             AnimatedContent(
                 targetState = page,
                 modifier = Modifier.weight(1f),
@@ -84,16 +89,15 @@ fun GuideScreen(
                 label = "guidePage",
             ) { shown ->
                 val pageHeading = heading(shown)
-                InfoPage(
-                    icon = pageHeading.icon,
-                    headingText = pageHeading.heading,
-                    subtitleText = pageHeading.subtitle,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
-                    topPadding = PaddingValues(top = KatariTheme.spacing.xl),
-                    content = { content(shown) },
-                )
+                FramedScrollColumn(modifier = Modifier.fillMaxWidth()) {
+                    InfoPage(
+                        icon = pageHeading.icon,
+                        headingText = pageHeading.heading,
+                        subtitleText = pageHeading.subtitle,
+                        topPadding = PaddingValues(top = KatariTheme.spacing.xl),
+                        content = { content(shown) },
+                    )
+                }
             }
         }
     }

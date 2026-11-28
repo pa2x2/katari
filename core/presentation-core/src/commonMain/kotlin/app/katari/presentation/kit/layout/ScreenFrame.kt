@@ -61,9 +61,9 @@ internal fun startPaneWidth(width: WindowWidth, available: Dp): Dp = when (width
 }
 
 /**
- * How far the app bar's contents sit in from each side, beyond the system bars, cutout and dock: the margins that
- * centre the screen's frame, and the room of a screen around a `Scaffold` nested in it that it hasn't applied. The
- * `Scaffold` provides it to its top bar only, so a sheet or dialog opened from the content never inherits it.
+ * How far the bars' contents sit in from each side, beyond the system bars, cutout and dock: the margins that centre
+ * the screen's frame, and the room of a screen around a `Scaffold` nested in it that it hasn't applied. The `Scaffold`
+ * provides it to its top and bottom bars only, so a sheet or dialog opened from the content never inherits it.
  */
 @Immutable
 internal data class FrameMargins(val start: Dp = 0.dp, val end: Dp = 0.dp)

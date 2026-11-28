@@ -18,10 +18,6 @@ changelog writing rules; this skill adds what only the Android app's changelog n
 
 ## Update CHANGELOG.md
 
-1. Update `CHANGELOG.md` for the configured version using the shared writing rules.
-   Update `[Unreleased]` to compare the target tag with `HEAD`, and add or update the target
-   version's release link using the repository URL established by the existing link definitions.
-2. If changes include merge with upstream repository of Mihon - include information
-   on the version which was merged in the following format:
-
-   ## Based on [Mihon <version>](<link to mihon release on github>)
+Update `CHANGELOG.md` for the configured version using the shared writing rules. Update `[Unreleased]` to compare the
+target tag with `HEAD`, and add or update the target version's release link using the repository URL established by
+the existing link definitions.

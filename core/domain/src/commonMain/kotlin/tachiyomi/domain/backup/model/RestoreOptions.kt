@@ -3,7 +3,10 @@ package tachiyomi.domain.backup.model
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.*
 
-/** What to restore. [profileUuids] picks which of a backup's profiles to restore; null restores all of them. */
+/**
+ * What to restore. [profileUuids] picks which of a backup's profiles to restore; null restores all of them. A backup
+ * without profiles restores into [newProfileId], or the active profile when it is null.
+ */
 data class RestoreOptions(
     val libraryEntries: Boolean = true,
     val categories: Boolean = true,
@@ -16,6 +19,11 @@ data class RestoreOptions(
      * is older or missing; only offered while the device syncs, with every part and profile restored.
      */
     val rollBackAccount: Boolean = false,
+    /**
+     * A profile made for restoring a backup without profiles into. The settings all profiles share stay as they are
+     * on this device, so restoring into it changes no other profile.
+     */
+    val newProfileId: Long? = null,
 ) {
 
     fun asBooleanArray() = booleanArrayOf(
@@ -57,16 +65,21 @@ data class RestoreOptions(
             ),
         )
 
-        fun fromBooleanArray(array: BooleanArray, profileUuids: Set<String>?, rollBackAccount: Boolean) =
-            RestoreOptions(
-                libraryEntries = array[0],
-                categories = array[1],
-                appSettings = array[2],
-                extensionStores = array[3],
-                sourceSettings = array[4],
-                profileUuids = profileUuids,
-                rollBackAccount = rollBackAccount,
-            )
+        fun fromBooleanArray(
+            array: BooleanArray,
+            profileUuids: Set<String>?,
+            rollBackAccount: Boolean,
+            newProfileId: Long?,
+        ) = RestoreOptions(
+            libraryEntries = array[0],
+            categories = array[1],
+            appSettings = array[2],
+            extensionStores = array[3],
+            sourceSettings = array[4],
+            profileUuids = profileUuids,
+            rollBackAccount = rollBackAccount,
+            newProfileId = newProfileId,
+        )
     }
 
     data class Entry(

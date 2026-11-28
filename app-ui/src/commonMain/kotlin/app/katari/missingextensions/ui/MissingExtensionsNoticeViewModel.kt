@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
 /** What the notices and rows that open the missing-extensions sheet show. */
@@ -22,12 +23,19 @@ class MissingExtensionsNoticeViewModel(private val suggestion: MissingExtensionS
     val installable: StateFlow<List<MissingExtension>> = suggestion.installable
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
 
+    val unchecked: StateFlow<List<MissingExtension>> = suggestion.unchecked
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
+
     /** Whether a first sync is downloading the library, so the counts still climb; null until known. */
     val libraryArriving: StateFlow<Boolean?> = suggestion.libraryArriving
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
     val libraryCard: StateFlow<List<MissingExtension>> = suggestion.libraryCard
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
+
+    fun readStoresAgain() {
+        viewModelScope.launch { suggestion.readStoresAgain() }
+    }
 
     fun answerLibraryCard() {
         suggestion.answered(libraryCard.value)

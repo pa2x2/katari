@@ -27,7 +27,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 internal class StorageStep(
     private val storagePreferences: StoragePreferences,
-    private val migratingFromMihon: Boolean,
 ) : OnboardingStep {
 
     private var _isComplete by mutableStateOf(false)
@@ -63,9 +62,6 @@ internal class StorageStep(
                         )
                         if (pickedLocationPath != null) {
                             Text(stringResource(MR.strings.onboarding_storage_selected_folder, pickedLocationPath))
-                        }
-                        if (migratingFromMihon) {
-                            Text(text = stringResource(MR.strings.onboarding_mihon_migration_storage))
                         }
                         Button(
                             label = stringResource(MR.strings.onboarding_storage_action_select),

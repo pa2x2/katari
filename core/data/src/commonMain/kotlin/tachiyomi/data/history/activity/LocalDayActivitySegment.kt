@@ -7,7 +7,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 
-internal data class LocalDayActivitySegment(
+data class LocalDayActivitySegment(
     val localDate: String,
     val startedAtEpochMillis: Long,
     val endedAtEpochMillis: Long,
@@ -15,7 +15,7 @@ internal data class LocalDayActivitySegment(
 )
 
 /** Splits a contiguous checkpoint at experienced local-midnight boundaries while preserving its exact duration. */
-internal fun splitActivityByLocalDay(
+fun splitActivityByLocalDay(
     startedAtEpochMillis: Long,
     endedAtEpochMillis: Long,
     durationMillis: Long,

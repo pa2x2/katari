@@ -488,6 +488,11 @@ internal class ApplySession(
         if (!changed && kind.sameRecord(merged, restored)) return
         val ref = stored?.local_ref ?: localRef
         if (changed) {
+            // A row is held by one record at most: the record it held before, such as a deleted profile's whose id a
+            // new profile took, lets it go
+            if (ref != null && stored?.local_ref == null) {
+                database.sync_recordsQueries.detachLocalRef(kind.name, ref, key)
+            }
             database.sync_recordsQueries.storeLocalChange(
                 recordKey = key,
                 kind = kind.name,
@@ -576,9 +581,9 @@ internal class ApplySession(
             page.forEach { visit(it.record_key, it.kind, it.deleted, it.payload) }
             after = page.lastOrNull()?.record_key ?: break
         }
-        after = ""
+        var afterRow = 0L
         while (true) {
-            val page = records.kindPageAfter(EntryKind.name, after, PAGE).awaitAsList()
+            val page = records.kindPageAfter(EntryKind.name, afterRow, PAGE).awaitAsList()
             page.forEach { title ->
                 if (parts.profileOf(EntryKind, title.deleted, title.payload) != uuid) return@forEach
                 action(title.record_key, title.deleted)
@@ -586,7 +591,7 @@ internal class ApplySession(
                     .filter { it.record_key != title.record_key }
                     .forEach { visit(it.record_key, it.kind, it.deleted, it.payload) }
             }
-            after = page.lastOrNull()?.record_key ?: break
+            afterRow = page.lastOrNull()?.row ?: break
         }
     }
 

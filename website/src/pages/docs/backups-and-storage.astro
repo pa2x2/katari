@@ -92,15 +92,21 @@ import { sitePath } from "../../site/links.ts";
         If the backup holds several profiles, untick the ones to skip. Each one is either added as a new profile or merges into the profile
         it came from, and locked ones ask to be unlocked first.
       </li>
-      <li>Katari lists the extensions the backup's titles need, and after the restore the Library offers to install them.</li>
+      <li>
+        Katari lists the extensions the backup's titles need. After the restore the Library offers to install them, and a restore started
+        in setup offers them on setup's last page.
+      </li>
     </ol>
-    <p>Restoring doesn't switch the profile you're using. Backups from Mihon and Tachiyomi restore the same way. Old JSON backups don't.</p>
+    <p>
+      Restoring doesn't switch the profile you're using. A backup of another app, such as Mihon, Aniyomi or LNReader, is brought over
+      instead: picking one here sends you to <a href={sitePath("docs/coming-from-another-app/")}>Bring over from another app</a>.
+    </p>
   </Task>
 
-  <Task id="mihon" title="Move from Mihon">
+  <Task id="mihon" title="Move from another app">
     <p>
-      Backups from Mihon restore like Katari's own. <a href={sitePath("docs/coming-from-mihon/")}>Coming from Mihon</a> covers the whole
-      move, extensions included, and on Android downloads too.
+      Katari turns a backup of Mihon, Aniyomi, LNReader or an app built on them into a Katari backup and restores that.
+      <a href={sitePath("docs/coming-from-another-app/")}>Coming from another app</a> covers the whole move, extensions included.
     </p>
   </Task>
 </GuidePage>

@@ -108,9 +108,10 @@ fun ToggleRow(
 }
 
 /**
- * One option of a set where only one can be chosen. [below] holds what the option shows under its text, such as the
- * state of what it needs and an action for it. [onLongClick] opens what can be done with an option the user made,
- * such as editing or deleting it.
+ * One option of a set where only one can be chosen. [avatar] follows the radio button when the option is something
+ * with one, such as a profile. [below] holds what the option shows under its text, such as the state of what it needs
+ * and an action for it. [onLongClick] opens what can be done with an option the user made, such as editing or deleting
+ * it.
  */
 @Composable
 fun ChoiceRow(
@@ -120,6 +121,7 @@ fun ChoiceRow(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     enabled: Boolean = true,
+    avatar: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     below: (@Composable () -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
@@ -128,7 +130,10 @@ fun ChoiceRow(
         title = title,
         modifier = modifier.dialogSelectionFill(selected),
         subtitle = subtitle,
-        leading = { RadioButton(selected, onClick = null, enabled = enabled) },
+        leading = {
+            RadioButton(selected, onClick = null, enabled = enabled)
+            avatar?.invoke()
+        },
         trailing = trailing,
         enabled = enabled,
         role = Role.RadioButton,

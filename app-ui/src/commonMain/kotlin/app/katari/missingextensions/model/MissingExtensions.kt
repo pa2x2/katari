@@ -1,6 +1,7 @@
 package app.katari.missingextensions.model
 
 import app.katari.core.metro.AppCoroutineScope
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -18,6 +19,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.SourceRepository
+import tachiyomi.i18n.*
+import tachiyomi.i18n.platform.stringResource
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -35,6 +38,7 @@ class MissingExtensions(
     private val extensions: ExtensionManagement,
     private val sourceIdentities: SourceIdentityRepository,
     compatibility: ExtensionCompatibility,
+    private val context: PlatformContext,
     @AppCoroutineScope private val scope: CoroutineScope,
 ) {
     /** Null until it's known. */
@@ -44,7 +48,8 @@ class MissingExtensions(
             .onEach { if (it.isNotEmpty()) scope.launch { extensions.fetchListingsOnce() } },
         extensions.listingsBySource,
         extensions.notLoaded,
-    ) { sources, listings, notLoaded ->
+        extensions.unreadableStores,
+    ) { sources, listings, notLoaded, unreadable ->
         val untrusted = notLoaded
             .filter { it.reason is Extension.NotLoaded.Reason.Untrusted }
             .associateBy { it.pkgName }
@@ -59,15 +64,25 @@ class MissingExtensions(
             val listing = listings[it.source.id]
             NeededSource(
                 key = it.source.id,
-                name = it.source.visualName(),
+                // As Restore backup names a source nothing names (D114)
+                name = if (it.source.hasKnownName) {
+                    it.source.visualName()
+                } else {
+                    context.stringResource(MR.strings.backup_source_unnamed_numbered, it.source.name)
+                },
                 listing = listing,
                 untrusted = (listing?.pkgName ?: providers[it.source.id])?.let(untrusted::get),
                 countsByProfile = it.countsByProfile,
             )
         }
-        missingExtensions(needed) { compatibility.cantInstall(it) }
+        missingExtensions(needed, storesUnreadable = unreadable.isNotEmpty()) { compatibility.cantInstall(it) }
     }
         .stateIn(scope, SharingStarted.WhileSubscribed(5.seconds), null)
+
+    /** Reads the stores' lists again, as after a store couldn't be read. */
+    suspend fun readStoresAgain() {
+        extensions.refreshAvailable()
+    }
 
     /** Whether this platform installs extensions at all; where it doesn't, nothing suggests installing them. */
     val isInstallOffered: Boolean

@@ -19,8 +19,8 @@ import app.katari.presentation.kit.files.rememberDocumentPicker
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.CheckRow
 import app.katari.presentation.kit.navigation.AppBar
-import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.ScreenAction
 import app.katari.presentation.kit.surface.NoticeCard
 import app.katari.presentation.kit.surface.NoticeTone
 import app.katari.profiles.core.Profile
@@ -73,28 +73,25 @@ class CreateBackupScreen : Screen() {
                     scrollBehavior = it,
                 )
             },
-            bottomBar = {
-                BottomActionBar {
-                    Button(
-                        label = stringResource(MR.strings.action_create),
-                        onClick = {
-                            scope.launch {
-                                if (!profileUnlock.unlock(context, state.lockedSelectedProfileNames)) return@launch
-                                if (!backupCreateSchedule.isManualBackupRunning()) {
-                                    if (!chooseBackupDir.launch(backupFileNames.newFileName())) {
-                                        messages.show(MR.strings.file_picker_error)
-                                    }
-                                } else {
-                                    messages.show(MR.strings.backup_in_progress)
+            actions = listOf(
+                ScreenAction(
+                    label = stringResource(MR.strings.action_create),
+                    onClick = {
+                        scope.launch {
+                            if (!profileUnlock.unlock(context, state.lockedSelectedProfileNames)) return@launch
+                            if (!backupCreateSchedule.isManualBackupRunning()) {
+                                if (!chooseBackupDir.launch(backupFileNames.newFileName())) {
+                                    messages.show(MR.strings.file_picker_error)
                                 }
+                            } else {
+                                messages.show(MR.strings.backup_in_progress)
                             }
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = state.options.canCreate() &&
-                            (state.profiles.isEmpty() || state.selectedProfileIds.isNotEmpty()),
-                    )
-                }
-            },
+                        }
+                    },
+                    enabled = state.options.canCreate() &&
+                        (state.profiles.isEmpty() || state.selectedProfileIds.isNotEmpty()),
+                ),
+            ),
         ) { contentPadding ->
             RowList(contentPadding = contentPadding) {
                 if (backupSystemWarning.applies) {

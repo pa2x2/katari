@@ -464,6 +464,24 @@ AND SEG.local_date >= :firstLocalDate
 AND SEG.local_date <= :lastLocalDate
 ORDER BY SEG.started_at, SEG.chapter_id;
 
+getEntryProfile:
+SELECT PRF._id, PRF.uuid
+FROM entries ENT
+JOIN profiles PRF ON PRF._id = ENT.profile_id
+WHERE ENT._id = :entryId;
+
+getActivitySessionProfile:
+SELECT ENT.profile_id
+FROM activity_sessions SES
+JOIN entries ENT ON ENT._id = SES.entry_id
+WHERE SES.session_id = :sessionId;
+
+getCompletionEventProfile:
+SELECT ENT.profile_id
+FROM activity_completion_events CMP
+JOIN entries ENT ON ENT._id = CMP.entry_id
+WHERE CMP.event_id = :eventId;
+
 restoreActivitySession:
 INSERT INTO activity_sessions(
     session_id,

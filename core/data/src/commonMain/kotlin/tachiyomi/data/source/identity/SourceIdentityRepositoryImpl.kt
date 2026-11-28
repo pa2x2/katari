@@ -5,6 +5,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.source.identity.RegisteredSource
 import tachiyomi.domain.source.identity.SourceIdScheme
@@ -50,6 +51,10 @@ class SourceIdentityRepositoryImpl(
 
     override suspend fun findAll(): List<RegisteredSource> {
         return handler.awaitList { source_identitiesQueries.findAll(::mapRegisteredSource) }
+    }
+
+    override fun subscribeAll(): Flow<List<RegisteredSource>> {
+        return handler.subscribeToList { source_identitiesQueries.findAll(::mapRegisteredSource) }
     }
 
     override suspend fun recordProvider(localKey: Long, provider: SourceProvider) {

@@ -1,6 +1,7 @@
 ---
 // Opens a zoomable shot (Shot.astro) at the full height of the window. The arrows step through the shots of the same
-// [data-zoom-group], such as one feature's screenshots.
+// [data-zoom-group], such as one feature's screenshots, leaving out those the group doesn't show, such as the other
+// platform's in a storyboard.
 ---
 
 <dialog class="viewer" aria-label="Screenshot">
@@ -47,7 +48,7 @@
       // A click from a pointer counts its presses; one from the keyboard (Enter or Space) counts none.
       openedWithPointer = event.detail > 0;
       const group = shot.closest("[data-zoom-group]");
-      shots = group ? [...group.querySelectorAll<HTMLElement>("[data-zoom]")] : [shot];
+      shots = group ? [...group.querySelectorAll<HTMLElement>("[data-zoom]")].filter((other) => other.checkVisibility()) : [shot];
       previous.hidden = next.hidden = shots.length < 2;
       show(shots.indexOf(shot));
       viewer.showModal();

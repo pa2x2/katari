@@ -1,5 +1,40 @@
 # Desktop Changelog
 
+## [1.4.0] - 2026-11-28
+
+### ✨ Added
+
+- Bring over turns a backup from Mihon, Aniyomi, LNReader or one of their forks into a Katari backup.
+
+### 🔄 Changed
+
+- Restore backup takes only Katari backups and sends another app's backup to Bring over.
+- A new profile's name field starts empty, with the suggested name greyed in.
+
+### 🧩 Improved
+
+- Setup and the Library show a restore's progress and then its result.
+- Setup's last page offers the extensions a restored library needs.
+- Restore backup and Bring over show how much of a large file they have read.
+- Restore backup names the chosen file and says plainly why it can't restore it.
+- A partly downloaded group in Updates shows how much of it is downloaded.
+- Buttons whose labels don't fit side by side stack instead of wrapping, and a screen's main buttons keep to its content column.
+- Tonal buttons and info cards no longer outweigh the main button in the dark Default, Green Apple, Strawberry Daiquiri and Yotsuba themes.
+
+### ⚡️ Performance
+
+- A first sync writes about half as much to disk.
+
+### 🐛 Fixed
+
+- Chapters of a profile this device doesn't sync no longer reach the sync account.
+- With sync on, restoring into a profile made after deleting another no longer fails.
+- A backup restored into a second profile keeps its reading activity there.
+- Start downloading now works on a group of chapters in Updates.
+- A source whose name was never recorded shows its ID instead of a blank name.
+- A web page a site serves in place of a cover is no longer saved as the cover.
+- Screens opened from setup no longer show the navigation.
+
 ## [1.3.0] - 2026-11-25
 
 ### ✨ Added
@@ -510,7 +545,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.3.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.4.0...HEAD
+[1.4.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.4.0
 [1.3.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.3.0
 [1.2.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.2.0
 [1.1.5]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.1.5

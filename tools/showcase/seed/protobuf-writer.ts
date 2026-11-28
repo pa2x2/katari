@@ -1,7 +1,8 @@
 /**
- * The protobuf encoding kotlinx.serialization uses for Katari backups: integers and booleans as plain varints (negative
- * values as ten-byte two's complement), doubles as fixed64, strings, byte arrays, and nested messages as
- * length-delimited fields, and lists as repeated fields. Absent values are left out, as the app leaves out defaults.
+ * The protobuf encoding kotlinx.serialization uses for Katari backups and the Mihon backup the seed writes beside them:
+ * integers and booleans as plain varints (negative values as ten-byte two's complement), doubles as fixed64, floats as
+ * fixed32, strings, byte arrays, and nested messages as length-delimited fields, and lists as repeated fields. Absent
+ * values are left out, as the app leaves out defaults.
  */
 export class ProtoWriter {
   private readonly chunks: Uint8Array[] = [];
@@ -22,6 +23,16 @@ export class ProtoWriter {
     this.tag(field, 1);
     const bytes = new Uint8Array(8);
     new DataView(bytes.buffer).setFloat64(0, value, true);
+    this.chunks.push(bytes);
+    return this;
+  }
+
+  /** A 32-bit float, as kotlinx.serialization writes a Kotlin Float: fixed32. */
+  float(field: number, value: number | undefined): this {
+    if (value === undefined) return this;
+    this.tag(field, 5);
+    const bytes = new Uint8Array(4);
+    new DataView(bytes.buffer).setFloat32(0, value, true);
     this.chunks.push(bytes);
     return this;
   }

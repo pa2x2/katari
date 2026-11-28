@@ -1,22 +1,21 @@
 package app.katari.presentation.kit.dialog
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.unit.Constraints
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.button.shareOrStack
 import app.katari.presentation.kit.theme.KatariTheme
 
 /**
  * The buttons closing a dialog or sheet. [confirm] is the one filled button (red when destructive) and [dismiss] is
- * tonal; as a pair they share the width, and a lone button takes all of it. [neutral] is a text button at the start,
- * apart from the others, which then keep their own width at the end. Where the three don't fit on one line, as in a
- * narrow side sheet, [neutral] takes a line of its own above the others, which share theirs again.
+ * tonal; as a pair they share the width, and a lone button takes all of it. Where a label doesn't fit on one line in
+ * its half, as a long or translated one on a phone, the pair stacks instead, each taking the whole width and [confirm]
+ * on top. [neutral] is a text button at the start, apart from the others, which then keep their own width at the end.
+ * Where the three don't fit on one line, as in a narrow side sheet, [neutral] takes a line of its own above the others,
+ * which share theirs again.
  */
 @Composable
 fun DialogActions(
@@ -25,21 +24,10 @@ fun DialogActions(
     dismiss: DialogAction? = null,
     neutral: DialogAction? = null,
 ) {
-    if (neutral == null) {
-        Row(
-            modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            dismiss?.let { ActionButton(it, ButtonStyle.Tonal, Modifier.weight(1f)) }
-            confirm?.let { ActionButton(it, ButtonStyle.Filled, Modifier.weight(1f)) }
-        }
-        return
-    }
     val spacing = KatariTheme.spacing.s
     Layout(
         content = {
-            ActionButton(neutral, ButtonStyle.Text)
+            neutral?.let { ActionButton(it, ButtonStyle.Text) }
             dismiss?.let { ActionButton(it, ButtonStyle.Tonal) }
             confirm?.let { ActionButton(it, ButtonStyle.Filled) }
         },
@@ -47,6 +35,10 @@ fun DialogActions(
     ) { measurables, constraints ->
         val gap = spacing.roundToPx()
         val width = constraints.maxWidth
+        if (neutral == null) {
+            val pair = shareOrStack(measurables, width, gap)
+            return@Layout layout(width, pair.height) { pair.place(this, 0) }
+        }
         val neutralButton = measurables.first()
         val ends = measurables.drop(1)
         val wanted = measurables.sumOf { it.maxIntrinsicWidth(constraints.maxHeight) } + gap * (measurables.size - 1)
@@ -64,15 +56,11 @@ fun DialogActions(
             }
         } else {
             val neutralPlaceable = neutralButton.measure(constraints.copy(minWidth = 0, minHeight = 0))
-            val shared = if (ends.isEmpty()) 0 else (width - gap * (ends.size - 1)) / ends.size
-            val endPlaceables = ends.map { it.measure(Constraints.fixedWidth(shared)) }
-            val endsHeight = endPlaceables.maxOfOrNull { it.height } ?: 0
-            val endsTop = if (endPlaceables.isEmpty()) 0 else neutralPlaceable.height + gap
-            layout(width, endsTop + endsHeight) {
+            val pair = shareOrStack(ends, width, gap)
+            val endsTop = if (ends.isEmpty()) 0 else neutralPlaceable.height + gap
+            layout(width, endsTop + pair.height) {
                 neutralPlaceable.place(0, 0)
-                endPlaceables.forEachIndexed { index, placeable ->
-                    placeable.place(index * (shared + gap), endsTop + (endsHeight - placeable.height) / 2)
-                }
+                pair.place(this, endsTop)
             }
         }
     }

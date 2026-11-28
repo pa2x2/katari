@@ -76,4 +76,5 @@ actual val platformPresentation = PlatformPresentation(
         summary = PlatformStrings.pref_touchpad_summary,
         icon = PlatformSymbols.Rounded.TrackpadInput2,
     ),
+    otherAppExtensionsNote = null,
 )

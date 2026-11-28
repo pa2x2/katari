@@ -10,7 +10,7 @@ import kotlinx.serialization.protobuf.ProtoNumber
  */
 @Serializable
 data class Backup(
-    @ProtoNumber(1) internal val backupManga: List<LegacyBackupManga> = emptyList(),
+    // @ProtoNumber(1) var backupManga, manga before entries, in backups no released Katari wrote; never reuse
     @ProtoNumber(2) var backupCategories: List<BackupCategory> = emptyList(),
     // @ProtoNumber(100) var backupBrokenSources, legacy source model with non-compliant proto number,
     @ProtoNumber(101) var backupSources: List<BackupSource> = emptyList(),
@@ -22,7 +22,7 @@ data class Backup(
     @ProtoNumber(108) var backupFileExtensions: List<BackupFileExtension> = emptyList(),
     @ProtoNumber(200) var backupProfiles: List<ProfileScopedBackup> = emptyList(),
     @ProtoNumber(201) var activeProfileUuid: String? = null,
-    @ProtoNumber(202) internal val backupAnime: List<LegacyBackupAnime> = emptyList(),
+    // @ProtoNumber(202) var backupAnime, anime before entries, in backups no released Katari wrote; never reuse
     @ProtoNumber(203) var backupEntries: List<BackupEntry> = emptyList(),
     // @ProtoNumber(204) var kitsuScoresNative, a tracker score scale marker from before trackers were removed; never reuse
     /**
@@ -30,4 +30,9 @@ data class Backup(
      * written ([eu.kanade.tachiyomi.data.backup.stream.BackupSummary.createdAt] says what stands in).
      */
     @ProtoNumber(205) var createdAt: Long = 0,
+    /**
+     * The app whose backup this was converted from, by the name the conversion tool shows it under; null for a backup
+     * Katari made. A converted backup has no profiles, and restoring it can make a profile named after the app.
+     */
+    @ProtoNumber(206) var convertedFrom: String? = null,
 )

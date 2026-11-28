@@ -120,16 +120,55 @@ internal object Desktop {
     fun scrollToTop(selector: Selector) {
         val target = find(selector)
         val done = onAwt {
-            val list = generateSequence(target.parent, Node::parent)
-                .firstOrNull { it.semantics?.getOrNull(SemanticsActions.ScrollBy) != null }
-                ?: throw SceneFailure("No list holds $selector")
-            // Compose scrolls in the window's device pixels; the bounds are in AWT's coordinates.
-            val scale = list.window.graphicsConfiguration.defaultTransform.scaleY
-            val distance = ((target.bounds.y - list.bounds.y) * scale).toFloat()
+            val list = listHolding(target, selector)
+            val distance = ((target.bounds.y - list.bounds.y) * list.scale).toFloat()
             list.semantics?.getOrNull(SemanticsActions.ScrollBy)?.action?.invoke(0f, distance) == true
         }
         if (!done) throw SceneFailure("The list holding $selector didn't scroll")
     }
+
+    /**
+     * Scrolls the list holding the node [anchor] finds down, most of its height at a time, until [target] is wholly
+     * inside the list, as an assistive tool pages through a list. A list leaves the rows it hasn't reached out of the
+     * tree, so they can't be found before, but it does lay out the row its bottom edge cuts through: a click at the
+     * middle of that row can land below the window.
+     */
+    fun scrollDownTo(anchor: Selector, target: Selector) {
+        val anchorNode = find(anchor)
+        // The anchor scrolls away with the first page, but the list's action keeps scrolling the list.
+        val (list, scrollBy) = onAwt {
+            val list = listHolding(anchorNode, anchor)
+            val action = list.semantics?.getOrNull(SemanticsActions.ScrollBy)?.action
+                ?: throw SceneFailure("The list holding $anchor can't scroll")
+            list to action
+        }
+        val page = (list.bounds.height * list.scale * PAGE_SHARE).toFloat()
+        for (pagesScrolled in 0..MAX_PAGES) {
+            val found = onAwt { allNodes().firstOrNull(target::matches) }
+            if (found != null) {
+                val cutOff = found.bounds.maxY - list.bounds.maxY
+                if (cutOff > 0) {
+                    if (!onAwt { scrollBy(0f, (cutOff * list.scale).toFloat()) }) {
+                        throw SceneFailure("The list holding $anchor ended with $target cut off")
+                    }
+                    settle(PAGE_SETTLE_MS)
+                }
+                return
+            }
+            if (pagesScrolled == MAX_PAGES) break
+            if (!onAwt { scrollBy(0f, page) }) throw SceneFailure("The list holding $anchor ended before $target")
+            settle(PAGE_SETTLE_MS)
+        }
+        throw SceneFailure("Scrolling never reached $target")
+    }
+
+    private fun listHolding(node: Node, selector: Selector): Node =
+        generateSequence(node.parent, Node::parent)
+            .firstOrNull { it.semantics?.getOrNull(SemanticsActions.ScrollBy) != null }
+            ?: throw SceneFailure("No list holds $selector")
+
+    /** Compose scrolls in the window's device pixels; the bounds are in AWT's coordinates. */
+    private val Node.scale: Double get() = window.graphicsConfiguration.defaultTransform.scaleY
 
     /** Waits for the app to handle what is queued, and for images loaded over the network to fade in. */
     fun settle(extraMs: Long = SETTLE_MS) {
@@ -211,6 +250,9 @@ internal object Desktop {
     private const val STEADY_SAMPLES = 2
     private const val STEADY_TIMEOUT_MS = 2_000L
     private const val TOGGLE_WAIT_MS = 1_000L
+    private const val PAGE_SHARE = 0.8
+    private const val MAX_PAGES = 20
+    private const val PAGE_SETTLE_MS = 300L
 }
 
 /** What a scene expected and didn't find; the runner reports it with a screenshot. */

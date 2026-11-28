@@ -24,10 +24,6 @@ Comics, books, and video in one app.
 
 </div>
 
-## Built on Mihon
-
-Katari would not exist without [Mihon](https://github.com/mihonapp/mihon) and the many people who contribute to it.
-
 ## Extensions
 
 Katari doesn't come with any extensions. It loads extensions built with these libraries:
@@ -59,6 +55,8 @@ Katari keeps your library on your device. The [privacy policy](https://pa2x2.git
 The developer(s) of this application does not have any affiliation with the content providers available, and this application hosts zero content.
 
 ## License
+
+Katari contains code from [Tachiyomi](https://github.com/tachiyomiorg) and [Mihon](https://github.com/mihonapp/mihon), used under the Apache License 2.0.
 
 ```text
 Copyright © 2015 Javier Tomás

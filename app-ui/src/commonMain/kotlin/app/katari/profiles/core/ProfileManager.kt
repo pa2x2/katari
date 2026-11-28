@@ -113,7 +113,16 @@ class ProfileManager(
         switchRequests.value = profile.id
     }
 
-    suspend fun createProfile(name: String): Profile {
+    /**
+     * A new profile starts with every installed source hidden, unless [hideInstalledSources] is false, as for a profile
+     * made to restore a converted backup into: the backup's settings say which sources it hides, and its library comes
+     * from the sources it doesn't.
+     */
+    suspend fun createProfile(
+        name: String,
+        colorSeed: Long = Random.nextLong(0x00FFFFFF),
+        hideInstalledSources: Boolean = true,
+    ): Profile {
         val trimmedName = name.trim()
         require(trimmedName.isNotEmpty())
         validateUniqueProfileName(trimmedName)
@@ -122,7 +131,7 @@ class ProfileManager(
         val id = profileDatabase.insertProfile(
             uuid = newUuid(),
             name = trimmedName,
-            colorSeed = Random.nextLong(0x00FFFFFF),
+            colorSeed = colorSeed,
             position = position,
             requiresAuth = false,
             isArchived = false,
@@ -130,10 +139,12 @@ class ProfileManager(
         profileStore.deleteProfileState(id)
         extensions.deleteSettings(id)
         bookReaderFonts.deleteProfile(id)
-        val hiddenSourceIds = extensions.installedSourceIds().mapTo(mutableSetOf(), Long::toString)
-        profileStore.profileStore(id)
-            .getStringSet(SourcePreferences.HIDDEN_SOURCES_KEY, hiddenSourceIds)
-            .set(hiddenSourceIds)
+        if (hideInstalledSources) {
+            val hiddenSourceIds = extensions.installedSourceIds().mapTo(mutableSetOf(), Long::toString)
+            profileStore.profileStore(id)
+                .getStringSet(SourcePreferences.HIDDEN_SOURCES_KEY, hiddenSourceIds)
+                .set(hiddenSourceIds)
+        }
         val customPreferences = CustomPreferences(profileStore.profileStore(id))
         customPreferences.homeScreenTabs.set(defaultHomeScreenTabs())
         customPreferences.homeScreenStartupTab.set(HomeScreenTabs.Library)

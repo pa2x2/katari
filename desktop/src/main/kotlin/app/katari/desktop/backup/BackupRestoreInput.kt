@@ -10,6 +10,7 @@ internal object BackupRestoreInput {
     private const val KEY_PROFILES = "profiles"
     private const val KEY_SYNC = "sync"
     private const val KEY_ROLL_BACK_ACCOUNT = "roll_back_account"
+    private const val KEY_NEW_PROFILE = "new_profile"
 
     fun encode(uri: DocumentUri, options: RestoreOptions, sync: Boolean): Map<String, String> = buildMap {
         put(KEY_URI, uri.value)
@@ -18,6 +19,7 @@ internal object BackupRestoreInput {
         options.profileUuids?.let { put(KEY_PROFILES, it.joinToString(",")) }
         put(KEY_SYNC, sync.toString())
         put(KEY_ROLL_BACK_ACCOUNT, options.rollBackAccount.toString())
+        options.newProfileId?.let { put(KEY_NEW_PROFILE, it.toString()) }
     }
 
     fun decode(input: Map<String, String>): Triple<DocumentUri, RestoreOptions, Boolean>? {
@@ -26,7 +28,12 @@ internal object BackupRestoreInput {
         val profiles = input[KEY_PROFILES]?.split(',')?.filter(String::isNotEmpty)?.toSet()
         return Triple(
             uri,
-            RestoreOptions.fromBooleanArray(flags, profiles, input[KEY_ROLL_BACK_ACCOUNT].toBoolean()),
+            RestoreOptions.fromBooleanArray(
+                flags,
+                profiles,
+                input[KEY_ROLL_BACK_ACCOUNT].toBoolean(),
+                input[KEY_NEW_PROFILE]?.toLongOrNull(),
+            ),
             input[KEY_SYNC].toBoolean(),
         )
     }

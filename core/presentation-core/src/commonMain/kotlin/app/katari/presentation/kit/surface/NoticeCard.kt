@@ -17,6 +17,7 @@ import app.katari.presentation.kit.button.ButtonSize
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.progress.LinearProgressIndicator
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 
@@ -25,10 +26,11 @@ enum class NoticeTone { Info, Warning }
 
 /**
  * A notice that sits among a screen's or sheet's cards, inset like them, such as an extension no store updates any
- * more or a source paused for library updates. [icon] replaces the tone's own icon. [onClick] makes the whole card the
- * way to resolve it, such as granting a permission; [actionLabel] instead puts one action at its end, such as Resume.
- * [dismissLabel] puts a way to put the notice off before that action, such as Not now on the Library's suggestion to
- * install missing extensions.
+ * more or a source paused for library updates. [icon] replaces the tone's own icon, such as a check mark on Info for
+ * work that finished well. [onClick] makes the whole card the way to resolve it, such as granting a permission;
+ * [actionLabel] instead puts one action at its end, such as Resume. [dismissLabel] puts a way to put the notice off
+ * before that action, such as Not now on the Library's suggestion to install missing extensions. [progress] (0..1)
+ * adds a bar under the text for work the notice follows, such as a restore.
  */
 @Composable
 fun NoticeCard(
@@ -41,6 +43,7 @@ fun NoticeCard(
     onAction: () -> Unit = {},
     dismissLabel: String? = null,
     onDismiss: () -> Unit = {},
+    progress: (() -> Float)? = null,
 ) {
     val spacing = KatariTheme.spacing
     val content: @Composable () -> Unit = {
@@ -55,6 +58,13 @@ fun NoticeCard(
                 Icon(icon ?: tone.icon, contentDescription = null)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = text, modifier = Modifier.padding(end = spacing.m), role = TextRole.Body)
+                    if (progress != null) {
+                        LinearProgressIndicator(
+                            Modifier.fillMaxWidth().padding(top = spacing.s, end = spacing.m),
+                            progress = progress,
+                            onContainer = true,
+                        )
+                    }
                     Row(modifier = Modifier.align(Alignment.End)) {
                         Button(
                             label = dismissLabel,
@@ -87,7 +97,12 @@ fun NoticeCard(
                 verticalAlignment = if (actionLabel != null) Alignment.CenterVertically else Alignment.Top,
             ) {
                 Icon(icon ?: tone.icon, contentDescription = null)
-                Text(text = text, modifier = Modifier.weight(1f), role = TextRole.Body)
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.s)) {
+                    Text(text = text, role = TextRole.Body)
+                    if (progress != null) {
+                        LinearProgressIndicator(Modifier.fillMaxWidth(), progress = progress, onContainer = true)
+                    }
+                }
                 if (actionLabel != null) {
                     Button(label = actionLabel, onClick = onAction, style = ButtonStyle.Text, size = ButtonSize.Small)
                 }
