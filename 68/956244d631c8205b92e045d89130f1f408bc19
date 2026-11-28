@@ -1,0 +1,25 @@
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_0e279b045f255e::t_d6c9e2aad6b469 1657,1714-1729
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/settings/LnReaderSettings.kt
+  s_0e279b045f255e::t_9448f3957a3b53 110
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/ConvertedMihonSettings.kt
+  s_0e279b045f255e::t_0673198997d822 31,45,49-50
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/ForkSettings.kt
+  s_0e279b045f255e::t_90721952fdf0fb 1-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "68956244d631c8205b92e045d89130f1f408bc19",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
