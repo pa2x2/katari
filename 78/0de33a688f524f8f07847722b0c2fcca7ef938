@@ -1,0 +1,16 @@
+CHANGELOG.md
+  h_c1c6febaef16c3 3-38,1437-1438
+desktop/CHANGELOG.md
+  h_c1c6febaef16c3 3-37,548-549
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "780de33a688f524f8f07847722b0c2fcca7ef938",
+  "prompts": {},
+  "humans": {
+    "h_c1c6febaef16c3": {
+      "author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
