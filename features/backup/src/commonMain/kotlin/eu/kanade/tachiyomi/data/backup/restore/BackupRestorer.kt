@@ -63,6 +63,7 @@ import kotlin.concurrent.atomics.incrementAndFetch
 class BackupRestorer(
     @Assisted private val reporter: BackupRestoreReporter,
     @Assisted private val isSync: Boolean,
+    private val status: BackupRestoreStatus,
     private val context: PlatformContext,
     private val workingFiles: BackupWorkingFiles,
     private val database: Database,
@@ -100,7 +101,13 @@ class BackupRestorer(
     suspend fun restore(uri: DocumentUri, options: RestoreOptions) {
         val startTime = System.currentTimeMillis()
 
-        restoreFromFile(uri, options)
+        if (!isSync) status.started()
+        try {
+            restoreFromFile(uri, options)
+        } catch (e: Throwable) {
+            if (!isSync) status.stopped()
+            throw e
+        }
 
         // Invalidate download cache to ensure UI reflects any restored downloads
         if (options.libraryEntries) {
@@ -115,6 +122,7 @@ class BackupRestorer(
 
         val logFile = writeErrorLog()
 
+        if (!isSync) status.restored(errors.size)
         reporter.onRestoreComplete(
             time,
             errors.size,
@@ -123,6 +131,13 @@ class BackupRestorer(
             isSync,
             restoredProfileNames,
         )
+    }
+
+    // The platform's reporter and the status setup shows (D120) hear of the same progress; a library sync's restore
+    // isn't one the user started, so only the platform hears of it.
+    private fun reportProgress(content: String, progress: Int) {
+        if (!isSync) status.progressed(progress, restoreAmount)
+        reporter.onRestoreProgress(content, progress, restoreAmount, isSync)
     }
 
     private suspend fun restoreFromFile(uri: DocumentUri, options: RestoreOptions) {
@@ -281,12 +296,7 @@ class BackupRestorer(
             if (options.categories) {
                 categoriesRestorer(profile.id, profileBackup.categories, profileBackup.defaultCategoryUpdateRules)
                 val progress = restoreProgress.incrementAndFetch()
-                reporter.onRestoreProgress(
-                    "${profile.name}: ${context.stringResource(MR.strings.categories)}",
-                    progress,
-                    restoreAmount,
-                    isSync,
-                )
+                reportProgress("${profile.name}: ${context.stringResource(MR.strings.categories)}", progress)
             }
 
             if (options.appSettings) {
@@ -298,23 +308,13 @@ class BackupRestorer(
                     scheduleJobs = false,
                 )
                 val progress = restoreProgress.incrementAndFetch()
-                reporter.onRestoreProgress(
-                    "${profile.name}: ${context.stringResource(MR.strings.app_settings)}",
-                    progress,
-                    restoreAmount,
-                    isSync,
-                )
+                reportProgress("${profile.name}: ${context.stringResource(MR.strings.app_settings)}", progress)
             }
 
             if (options.sourceSettings) {
                 preferenceRestorer.restoreSource(profile.id, profileBackup.sourcePreferences)
                 val progress = restoreProgress.incrementAndFetch()
-                reporter.onRestoreProgress(
-                    "${profile.name}: ${context.stringResource(MR.strings.source_settings)}",
-                    progress,
-                    restoreAmount,
-                    isSync,
-                )
+                reportProgress("${profile.name}: ${context.stringResource(MR.strings.source_settings)}", progress)
             }
 
             if (options.libraryEntries) {
@@ -335,12 +335,7 @@ class BackupRestorer(
                 scheduleJobs = false,
             )
             val progress = restoreProgress.incrementAndFetch()
-            reporter.onRestoreProgress(
-                context.stringResource(MR.strings.app_settings),
-                progress,
-                restoreAmount,
-                isSync,
-            )
+            reportProgress(context.stringResource(MR.strings.app_settings), progress)
         }
 
         if (options.extensionStores) {
@@ -352,12 +347,7 @@ class BackupRestorer(
                 }
 
                 val progress = restoreProgress.incrementAndFetch()
-                reporter.onRestoreProgress(
-                    context.stringResource(MR.strings.extensionStores),
-                    progress,
-                    restoreAmount,
-                    isSync,
-                )
+                reportProgress(context.stringResource(MR.strings.extensionStores), progress)
             }
             installFileExtensions(backupFileExtensions)
         }
@@ -408,12 +398,7 @@ class BackupRestorer(
         categoriesRestorer(profileId, backupCategories, defaultCategoryUpdateRules)
 
         val progress = restoreProgress.incrementAndFetch()
-        reporter.onRestoreProgress(
-            context.stringResource(MR.strings.categories),
-            progress,
-            restoreAmount,
-            isSync,
-        )
+        reportProgress(context.stringResource(MR.strings.categories), progress)
     }
 
     private fun CoroutineScope.restoreEntries(
@@ -437,7 +422,7 @@ class BackupRestorer(
             },
             onProgress = { lastEntry, restoredCount ->
                 val progress = restoreProgress.addAndFetch(restoredCount)
-                reporter.onRestoreProgress(lastEntry.title, progress, restoreAmount, isSync)
+                reportProgress(lastEntry.title, progress)
             },
         )
         finalization.issues.forEach { issue ->
@@ -463,12 +448,7 @@ class BackupRestorer(
         )
 
         val progress = restoreProgress.incrementAndFetch()
-        reporter.onRestoreProgress(
-            context.stringResource(MR.strings.app_settings),
-            progress,
-            restoreAmount,
-            isSync,
-        )
+        reportProgress(context.stringResource(MR.strings.app_settings), progress)
     }
 
     private fun CoroutineScope.restoreSourcePreferences(
@@ -479,12 +459,7 @@ class BackupRestorer(
         preferenceRestorer.restoreSource(profileId, preferences)
 
         val progress = restoreProgress.incrementAndFetch()
-        reporter.onRestoreProgress(
-            context.stringResource(MR.strings.source_settings),
-            progress,
-            restoreAmount,
-            isSync,
-        )
+        reportProgress(context.stringResource(MR.strings.source_settings), progress)
     }
 
     private fun CoroutineScope.restoreExtensionStores(
@@ -506,12 +481,7 @@ class BackupRestorer(
                         restoreProgress.incrementAndFetch()
                     }
                 }
-                reporter.onRestoreProgress(
-                    context.stringResource(MR.strings.extensionStores),
-                    restoreProgress.load(),
-                    restoreAmount,
-                    isSync,
-                )
+                reportProgress(context.stringResource(MR.strings.extensionStores), restoreProgress.load())
             }
     }
 

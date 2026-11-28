@@ -2,10 +2,8 @@ package eu.kanade.presentation.more.onboarding
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -27,12 +25,11 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
-import kotlinx.coroutines.delay
+import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreStatus
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * The guide's last page: setup is done, with the getting started guide for someone new. A library that needs
@@ -136,11 +133,12 @@ private fun extensionsOffer(startedFromBackup: Boolean): ExtensionsOffer? {
     val extensions by model.installable.collectAsStateWithLifecycle()
     val unchecked by model.unchecked.collectAsStateWithLifecycle()
     val arriving by model.libraryArriving.collectAsStateWithLifecycle()
+    val restore by LocalAppUiGraph.current.backupRestoreStatus.state.collectAsStateWithLifecycle()
+    val restoring = restore is BackupRestoreStatus.State.Running
     val installableTitles = extensions.sumOf { it.titleCount }.toInt()
     val uncheckedTitles = unchecked.sumOf { it.titleCount }.toInt()
     val isUnchecked = installableTitles == 0
     val titles = if (isUnchecked) uncheckedTitles else installableTitles
-    val restoring by rememberRestoreRunning(startedFromBackup)
     return when {
         titles == 0 -> null
         linked -> ExtensionsOffer(titles, LibraryOrigin.Account, libraryArriving = arriving == true, isUnchecked)
@@ -148,20 +146,5 @@ private fun extensionsOffer(startedFromBackup: Boolean): ExtensionsOffer? {
         else -> null
     }
 }
-
-// The restore runs in the background with nothing to observe but whether it still does, so the page asks while it waits
-@Composable
-private fun rememberRestoreRunning(startedFromBackup: Boolean): State<Boolean> {
-    val runner = LocalAppUiGraph.current.backupRestoreRunner
-    return produceState(initialValue = false, runner, startedFromBackup) {
-        while (startedFromBackup) {
-            value = runner.isRunning()
-            if (!value) break
-            delay(RESTORE_CHECK_INTERVAL)
-        }
-    }
-}
-
-private val RESTORE_CHECK_INTERVAL = 1.seconds
 
 const val GETTING_STARTED_URL = "${Constants.URL_DOCS}first-steps/"

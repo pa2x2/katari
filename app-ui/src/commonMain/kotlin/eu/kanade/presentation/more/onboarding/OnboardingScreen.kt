@@ -76,6 +76,7 @@ fun OnboardingScreen(onComplete: () -> Unit) {
         skipText = stringResource(MR.strings.onboarding_action_skip).takeIf { steps[currentStep].canSkip },
         onSkipClick = goNext.takeIf { steps[currentStep].canSkip },
     ) {
+        RestoreStatusLine()
         steps[it].Content()
     }
 }
