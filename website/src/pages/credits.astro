@@ -8,7 +8,7 @@ import credits from "../captures/credits.json";
 const works: Credit[] = credits;
 ---
 
-<Page title="Credits · Katari" description="The openly licensed works shown in Katari's screenshots, and who made them.">
+<Page title="Credits · Katari" description="The openly licensed works shown in Katari's screenshots, who made them, and the projects whose code Katari contains.">
   <main data-pagefind-body data-pagefind-filter="section:Credits">
     <h1>Credits</h1>
     <p>
@@ -37,6 +37,11 @@ const works: Credit[] = credits;
     <p>
       David Ventura's <a href="https://github.com/davidventura/offline-translator" {...leavesSite()}>Offline Translator</a> made the
       translations on the device, with its Japanese to English model.
+    </p>
+    <h2>Code</h2>
+    <p>
+      Katari contains code from <a href="https://github.com/tachiyomiorg" {...leavesSite()}>Tachiyomi</a> and
+      <a href="https://github.com/mihonapp/mihon" {...leavesSite()}>Mihon</a>, used under the Apache License 2.0.
     </p>
   </main>
 </Page>
