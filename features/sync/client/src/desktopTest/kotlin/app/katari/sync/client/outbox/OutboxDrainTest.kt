@@ -1,10 +1,13 @@
 package app.katari.sync.client.outbox
 
 import app.cash.sqldelight.Query
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.sync.client.SyncTestDevice
+import app.katari.sync.client.kind.chapter.ChapterKind
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.record.RecordGroups
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -89,6 +92,33 @@ class OutboxDrainTest {
             heard shouldBe 0
         }
     }
+
+    @Test
+    fun `a chapter read in a profile this device doesn't sync is held back with the entry stored along with it`() =
+        runTest {
+            SyncTestDevice(directory.resolve("device.db")).use { device ->
+                device.syncPreferences.profilesOff.set(setOf("work"))
+                device.startSync(deviceId = 1)
+                // An entry out of the library is recorded only along with its read chapter, in the same drain
+                device.sql(
+                    "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'work', 'Work', 1, 1)",
+                    "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-2, 'aniyomi', 777)",
+                    """
+                    INSERT INTO entries(_id, profile_id, source, url, title, favorite, type)
+                    VALUES (1, 2, -2, '/show', 'Show', 0, 'anime')
+                    """,
+                    """
+                    INSERT INTO chapters(entry_id, url, name, chapter_number, read)
+                    VALUES (1, '/show/1', 'Episode 1', 1, 1)
+                    """,
+                )
+                device.drainAll()
+
+                val heldBack = device.handler.await { sync_recordsQueries.heldBack().awaitAsList() }
+                heldBack.map { it.kind } shouldContainAll listOf(EntryKind.name, ChapterKind.name)
+                device.pending.next(Long.MAX_VALUE) shouldBe emptyList()
+            }
+        }
 
     private suspend fun SyncTestDevice.entryRecord() =
         handler.await { sync_recordsQueries.getByLocalRef(EntryKind.name, "[1]").awaitAsOne() }

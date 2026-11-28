@@ -162,8 +162,13 @@ class OutboxDrain(
         private suspend fun currentKey(kind: SyncedKind<*>, ref: LocalRef): String? =
             (kind.read(reads, ref) as? LocalRead.Found)?.key
 
+        /**
+         * Stores the records drained, those others refer to first ([SyncKinds.rank]). Whether a chapter is in a profile
+         * this device doesn't sync is told by its entry's stored record ([OffParts]): stored before an entry that
+         * [addUnsyncedParents] added, it counted as synced and reached the account.
+         */
         suspend fun store() {
-            records.forEach { (key, record) ->
+            records.entries.sortedBy { SyncKinds.rank(it.value.kind.name) }.forEach { (key, record) ->
                 val present = record.present
                 if (present != null) {
                     database.storePresent(key, present, record.stamps, parts, replacing)
