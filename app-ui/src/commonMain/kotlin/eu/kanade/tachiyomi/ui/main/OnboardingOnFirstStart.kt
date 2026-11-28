@@ -14,7 +14,8 @@ fun OnboardingOnFirstStart() {
     val onboardingPreferences = LocalAppUiGraph.current.onboardingPreferences
 
     LaunchedEffect(Unit) {
-        if (!onboardingPreferences.shownOnboardingFlow.get() && navigator.lastItem !is OnboardingScreen) {
+        // After process death the stack comes back with onboarding under the screens it opened, such as Bring over
+        if (!onboardingPreferences.shownOnboardingFlow.get() && navigator.items.none { it is OnboardingScreen }) {
             navigator.push(OnboardingScreen())
         }
     }
