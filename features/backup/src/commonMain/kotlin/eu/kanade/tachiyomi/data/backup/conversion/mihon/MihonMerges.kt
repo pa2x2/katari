@@ -1,8 +1,9 @@
 package eu.kanade.tachiyomi.data.backup.conversion.mihon
 
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
+import eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppReading
+import eu.kanade.tachiyomi.data.backup.conversion.newer.protobufPart
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
-import eu.kanade.tachiyomi.data.backup.stream.decodeBackup
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -82,13 +83,18 @@ internal class MihonMerges private constructor(
      * Collects the merges among the entries of [type] from their encoded entries, one at a time and in any order;
      * [build] gives the merges once every entry has been added.
      */
-    class Collector(private val parser: ProtoBuf, private val type: EntryType = EntryType.MANGA) {
+    class Collector(
+        private val parser: ProtoBuf,
+        private val reading: NewerAppReading,
+        private val type: EntryType = EntryType.MANGA,
+    ) {
         private val members = mutableMapOf<EntryKey, Member>()
         private val merges = mutableListOf<Merge>()
         private val seen = hashSetOf<String>()
 
+        // An entry that doesn't decode is left behind when the entries are converted
         fun add(entry: ByteArray) {
-            val merged = parser.decodeBackup(MergedEntry.serializer(), entry)
+            val merged = reading.protobufPart(parser, MergedEntry.serializer(), entry) ?: return
             // TachiyomiSY writes each merged entry twice
             if (merged.source != MERGED_SOURCE_ID || !seen.add(merged.url)) return
             merges += merged.plan(members)
@@ -98,6 +104,9 @@ internal class MihonMerges private constructor(
     }
 
     companion object {
+        /** The part of an entry merges are read from, which Anikku's anime hold too. */
+        internal val ENTRY_DESCRIPTOR = MergedEntry.serializer().descriptor
+
         /** TachiyomiSY's merged source (exh.source.SourceIds.MERGED_SOURCE_ID), which Komikku keeps. */
         const val MERGED_SOURCE_ID = 6969L
 

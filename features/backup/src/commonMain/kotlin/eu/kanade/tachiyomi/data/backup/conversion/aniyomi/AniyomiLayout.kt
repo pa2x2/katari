@@ -1,8 +1,9 @@
 package eu.kanade.tachiyomi.data.backup.conversion.aniyomi
 
+import eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppReading
+import eu.kanade.tachiyomi.data.backup.conversion.newer.protobufWhole
 import eu.kanade.tachiyomi.data.backup.stream.ProtoInput
 import eu.kanade.tachiyomi.data.backup.stream.WIRE_TYPE_VARINT
-import eu.kanade.tachiyomi.data.backup.stream.decodeBackup
 import eu.kanade.tachiyomi.data.backup.stream.lengthDelimitedTag
 import kotlinx.serialization.protobuf.ProtoBuf
 import okio.BufferedSource
@@ -14,17 +15,22 @@ import okio.BufferedSource
  */
 internal enum class AniyomiLayout(val animeTag: Long, val extensionApkTag: Long) {
     CURRENT(lengthDelimitedTag(501), lengthDelimitedTag(504)) {
-        override fun decode(parser: ProtoBuf, bytes: ByteArray) =
-            parser.decodeBackup(AniyomiCurrentBackup.serializer(), bytes).toAniyomiBackup()
+        override fun read(reading: NewerAppReading, parser: ProtoBuf, bytes: ByteArray): AniyomiBackup {
+            val serializer = AniyomiCurrentBackup.serializer()
+            // The layout's own mark at 500
+            return reading.protobufWhole(parser, backupShape(serializer, 500), serializer, bytes).toAniyomiBackup()
+        }
     },
     LEGACY(lengthDelimitedTag(3), lengthDelimitedTag(106)) {
-        override fun decode(parser: ProtoBuf, bytes: ByteArray) =
-            parser.decodeBackup(AniyomiLegacyBackup.serializer(), bytes).toAniyomiBackup()
+        override fun read(reading: NewerAppReading, parser: ProtoBuf, bytes: ByteArray): AniyomiBackup {
+            val serializer = AniyomiLegacyBackup.serializer()
+            return reading.protobufWhole(parser, backupShape(serializer), serializer, bytes).toAniyomiBackup()
+        }
     },
     ;
 
-    /** The backup without its entries and extension APKs, as [bytes] hold it. */
-    abstract fun decode(parser: ProtoBuf, bytes: ByteArray): AniyomiBackup
+    /** The backup without its entries and extension APKs, as [bytes] hold it, read as [NewerAppReading.whole] says. */
+    abstract fun read(reading: NewerAppReading, parser: ProtoBuf, bytes: ByteArray): AniyomiBackup
 
     companion object {
         private const val IS_LEGACY_TAG = (500L shl 3) or WIRE_TYPE_VARINT.toLong()

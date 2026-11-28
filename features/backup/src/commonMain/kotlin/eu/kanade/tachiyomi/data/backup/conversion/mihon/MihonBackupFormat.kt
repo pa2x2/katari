@@ -5,11 +5,13 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
+import eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppReading
+import eu.kanade.tachiyomi.data.backup.conversion.newer.protobufEntry
+import eu.kanade.tachiyomi.data.backup.conversion.newer.protobufWhole
 import eu.kanade.tachiyomi.data.backup.conversion.withTachiyomiIdentity
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.stream.ProtoInput
-import eu.kanade.tachiyomi.data.backup.stream.decodeBackup
 import eu.kanade.tachiyomi.data.backup.stream.lengthDelimitedTag
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -32,9 +34,11 @@ class MihonBackupFormat(
 
     override val relatedAppNames = listOf("TachiyomiSY", "Komikku", "TachiyomiJ2K", "Yōkai", "Suwayomi", "Tachiyomi")
 
-    // A field outside the family's means another app wrote the file, such as Aniyomi's anime at 3 or 500 and up
+    // A field the family doesn't know is a newer app's (D123), but Aniyomi's anime fields mean Aniyomi wrote the file
     override fun recognizes(contents: BackupFileContents): Boolean =
-        contents is BackupFileContents.Protobuf && contents.fieldNumbers.all { it in FIELD_NUMBERS }
+        contents is BackupFileContents.Protobuf &&
+            contents.fieldNumbers.any { it in SIGNATURE } &&
+            contents.fieldNumbers.none { it in ANIYOMI_SIGNATURE }
 
     override fun appWriting(contents: BackupFileContents): String =
         (contents as? BackupFileContents.Protobuf)?.let(::mihonFork) ?: appName
@@ -46,8 +50,9 @@ class MihonBackupFormat(
     ): BackupFormat.ConvertedContent {
         // Categories come after the entries that name them, and merged entries can come after their members, which are
         // written with their merge: everything but the entries, and the merges among them, are read first
+        val reading = NewerAppReading(app)
         val rest = Buffer()
-        val mergeCollector = MihonMerges.Collector(parser)
+        val mergeCollector = MihonMerges.Collector(parser, reading)
         open().use { content ->
             val input = ProtoInput(content)
             while (!input.exhausted()) {
@@ -60,7 +65,8 @@ class MihonBackupFormat(
             }
         }
         val merges = mergeCollector.build()
-        val backup = parser.decodeBackup(MihonBackup.serializer(), rest.readByteArray())
+        val backup = reading.protobufWhole(parser, mihonBackupShape(), MihonBackup.serializer(), rest.readByteArray())
+        val entryShape = mihonEntryShape()
         val categories = ConvertedCategories(backup.categories)
         val report = MihonConversionReport(merges)
         open().use { content ->
@@ -71,7 +77,8 @@ class MihonBackupFormat(
                     input.skipField(tag)
                     continue
                 }
-                val manga = parser.decodeBackup(MihonManga.serializer(), input.readByteArray(input.readLength()))
+                val bytes = input.readByteArray(input.readLength())
+                val manga = reading.protobufEntry(parser, entryShape, MihonManga.serializer(), bytes) ?: continue
                 report.add(manga)
                 if (merges.isMergedEntry(manga.source)) continue
                 val entry = manga.toBackupEntry().also(merges::applyTo)
@@ -93,7 +100,11 @@ class MihonBackupFormat(
             backupSourcePreferences = backup.sourcePreferences,
             backupExtensionStores = backup.extensionSources.mapNotNull { it.toBackupExtensionStore() },
         )
-        return BackupFormat.ConvertedContent(metadata, report.build(backup, categories, settings, savedSearches))
+        return BackupFormat.ConvertedContent(
+            metadata,
+            report.build(backup, categories, settings, savedSearches),
+            reading.findings(),
+        )
     }
 
     private companion object {
@@ -102,10 +113,14 @@ class MihonBackupFormat(
         // The family keeps one category list
         const val CATEGORY_LIST = 0
 
+        /** Top-level fields every app of the family writes: entries, categories, sources, settings, stores. */
+        val SIGNATURE = setOf(1, 2, 101, 104, 105, 106)
+
         /**
-         * Every top-level field the family writes: Mihon's 1-106 (100 in old backups), TachiyomiSY's and Komikku's
-         * saved searches and feeds at 600, 601 and 610, and Suwayomi's 9000-9002.
+         * Where Aniyomi keeps its anime: 3, 4 and 103 in its older layout, 500-506 in its newer one. Aniyomi's older
+         * extension fields at 107-109 aren't among them, as they're where Mihon would add fields next; a manga-only
+         * backup of that layout reads as Mihon's, with them as parts Katari doesn't know.
          */
-        val FIELD_NUMBERS = setOf(1, 2, 100, 101, 104, 105, 106, 600, 601, 610, 9000, 9001, 9002)
+        val ANIYOMI_SIGNATURE = setOf(3, 4, 103) + (500..506)
     }
 }

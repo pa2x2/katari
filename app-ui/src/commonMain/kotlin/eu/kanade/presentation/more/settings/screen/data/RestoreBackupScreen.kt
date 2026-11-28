@@ -163,7 +163,7 @@ class RestoreBackupScreen(
                             .reduce { a, b -> stringResource(MR.strings.backup_conversion_or, a, b) }
                         NoticeCard(stringResource(MR.strings.restore_other_app_backup, apps), NoticeTone.Info)
                     }
-                    BackupIdentity.Unsupported -> item {
+                    is BackupIdentity.Unsupported -> item {
                         NoticeCard(stringResource(MR.strings.restore_unknown_backup), NoticeTone.Info)
                     }
                     BackupIdentity.Katari, null -> Unit

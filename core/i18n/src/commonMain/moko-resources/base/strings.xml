@@ -1618,7 +1618,7 @@
     <string name="restore_other_app_backup">This backup is from %1$s. Katari restores its own backups: bringing this one over turns it into a Katari backup and shows what comes over first.</string>
     <string name="restore_unknown_backup">This isn\'t a Katari backup. Bringing it over lets you say which app made it, turns it into a Katari backup and shows what comes over first.</string>
     <string name="backup_conversion_is_katari">This is already a Katari backup, so it restores as it is.</string>
-    <string name="backup_conversion_unsupported">No app Katari reads wrote this file. If you know which app did, pick it with Change.</string>
+    <string name="backup_conversion_unsupported">No app Katari reads wrote this file. If you know which app did, pick it with Change. If Katari should read this app, ask for it on GitHub.</string>
     <string name="backup_conversion_convert">Convert</string>
     <string name="backup_conversion_converting">Converting</string>
     <string name="backup_conversion_reading">Reading the file</string>
@@ -1650,6 +1650,37 @@
     <string name="backup_conversion_kind_installed_extensions">Installed extensions</string>
     <string name="backup_conversion_kind_trackers">Trackers</string>
     <string name="backup_conversion_kind_other">Other data</string>
+    <!-- The report's row for what a newer version of the app wrote that Katari doesn't know: "Parts from a newer Mihon" -->
+    <string name="backup_conversion_kind_newer_parts">Parts from a newer %1$s</string>
+    <!-- "Left behind · 2 parts" -->
+    <string name="backup_conversion_newer_parts_amount">Left behind · %1$s</string>
+    <!-- A part a newer app wrote, by what holds it; the field is a number such as 42, or a key -->
+    <string name="backup_conversion_part_in_backup">A part of the backup (field %1$s)</string>
+    <string name="backup_conversion_part_in_entry">A part of each entry (field %1$s)</string>
+    <string name="backup_conversion_part_in_chapter">A part of each chapter (field %1$s)</string>
+    <string name="backup_conversion_part_in_episode">A part of each episode (field %1$s)</string>
+    <string name="backup_conversion_part_in_category">A part of each category (field %1$s)</string>
+    <!-- "A part of the backup's entry › history (field 4)" -->
+    <string name="backup_conversion_part_in_other">A part of the backup\'s %1$s (field %2$s)</string>
+    <string name="backup_conversion_part_file">A file in the backup: %1$s</string>
+    <string name="backup_conversion_newer_part_once">Found once. Katari doesn\'t know this part yet</string>
+    <string name="backup_conversion_newer_part_times">Found %1$s times. Katari doesn\'t know this part yet</string>
+    <string name="backup_conversion_newer_part_changed">Holds another kind of value than Katari reads</string>
+    <!-- An entry left behind because it couldn't be read: "Made by a newer Mihon than this Katari reads" -->
+    <string name="backup_conversion_newer_entry">Made by a newer %1$s than this Katari reads</string>
+    <!-- An entry whose title couldn't be read either, by its place among the backup's entries -->
+    <string name="backup_conversion_entry_in_backup">Entry %1$s in the backup</string>
+    <string name="backup_conversion_newer_notice">Parts of this backup come from a newer %1$s than this Katari reads, so they stay behind. Reporting it on GitHub helps a later Katari bring them over.</string>
+    <string name="backup_conversion_newer_backup">This backup was made by a newer %1$s than this Katari reads, so nothing could be brought over.</string>
+    <string name="backup_conversion_report">Report</string>
+    <string name="backup_conversion_ask">Ask</string>
+    <string name="backup_conversion_report_title">Report on GitHub</string>
+    <string name="backup_conversion_ask_title">Ask on GitHub</string>
+    <string name="backup_conversion_report_text">Katari saves a file with what it found, then opens GitHub\'s issue form. Attach the file there.</string>
+    <string name="backup_conversion_report_include_backup">Include the backup</string>
+    <string name="backup_conversion_report_include_backup_why">The issue is public: everyone can see the library in it</string>
+    <string name="backup_conversion_report_continue">Save and continue</string>
+    <string name="backup_conversion_report_save_failed">Couldn\'t save the file: %1$s</string>
     <string name="backup_conversion_no_trackers">Katari has no trackers</string>
     <string name="backup_conversion_seasons">Its seasons, merged into one entry</string>
     <string name="backup_conversion_skip_intro_length">Skip intro length. Katari finds intro times online instead</string>

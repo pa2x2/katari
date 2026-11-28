@@ -11,12 +11,16 @@ import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonMerges
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.convertSavedSearches
+import eu.kanade.tachiyomi.data.backup.conversion.mihon.mihonEntryShape
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.toBackupEntry
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.toBackupExtensionStore
+import eu.kanade.tachiyomi.data.backup.conversion.newer.MessageShape
+import eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppReading
+import eu.kanade.tachiyomi.data.backup.conversion.newer.protobufEntry
+import eu.kanade.tachiyomi.data.backup.conversion.newer.protobufPart
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.stream.ProtoInput
-import eu.kanade.tachiyomi.data.backup.stream.decodeBackup
 import eu.kanade.tachiyomi.data.backup.stream.lengthDelimitedTag
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.DeserializationStrategy
@@ -41,11 +45,10 @@ class AniyomiBackupFormat(
 
     override val relatedAppNames = listOf("Animetail", "Anikku", "Animiru")
 
-    // Manga alone is Mihon's layout, so a backup is Aniyomi's by its anime part
+    // Manga alone is Mihon's layout, so a backup is Aniyomi's by its anime part; fields Katari doesn't know besides
+    // it are a newer app's (D123)
     override fun recognizes(contents: BackupFileContents): Boolean =
-        contents is BackupFileContents.Protobuf &&
-            contents.fieldNumbers.all { it in FIELD_NUMBERS } &&
-            contents.fieldNumbers.any { it in ANIME_FIELD_NUMBERS }
+        contents is BackupFileContents.Protobuf && contents.fieldNumbers.any { it in ANIME_FIELD_NUMBERS }
 
     override fun appWriting(contents: BackupFileContents): String =
         (contents as? BackupFileContents.Protobuf)?.let(::aniyomiFork) ?: appName
@@ -56,10 +59,11 @@ class AniyomiBackupFormat(
         writeEntry: (BackupEntry) -> Unit,
     ): BackupFormat.ConvertedContent {
         val layout = open().use(AniyomiLayout::of)
+        val reading = NewerAppReading(app)
         // Entries name sources, categories and parents that come after them, and Anikku's merged anime can come after
         // their members, which are written with their merge: everything else, and the merges, are read first
         val rest = Buffer()
-        val mergeCollector = MihonMerges.Collector(parser, EntryType.ANIME)
+        val mergeCollector = MihonMerges.Collector(parser, reading, EntryType.ANIME)
         val mangaSourceIds = hashSetOf<Long>()
         val seasonInfos = mutableListOf<AniyomiSeasonInfo>()
         var extensionApks = 0
@@ -67,10 +71,12 @@ class AniyomiBackupFormat(
             val input = ProtoInput(content)
             while (!input.exhausted()) {
                 when (val tag = input.readTag()) {
-                    MANGA_TAG -> mangaSourceIds += input.readEntry(AniyomiEntrySource.serializer()).source
+                    // An entry that doesn't decode is left behind when the entries are converted
+                    MANGA_TAG -> input.readPart(reading, AniyomiEntrySource.serializer())
+                        ?.let { mangaSourceIds += it.source }
                     layout.animeTag -> {
                         val anime = input.readByteArray(input.readLength())
-                        seasonInfos += parser.decodeBackup(AniyomiSeasonInfo.serializer(), anime)
+                        reading.protobufPart(parser, AniyomiSeasonInfo.serializer(), anime)?.let { seasonInfos += it }
                         mergeCollector.add(anime)
                     }
                     // Extension APKs are left behind, and holding them would take the whole of each
@@ -83,7 +89,9 @@ class AniyomiBackupFormat(
             }
         }
         val merges = mergeCollector.build()
-        val backup = layout.decode(parser, rest.readByteArray())
+        val backup = layout.read(reading, parser, rest.readByteArray())
+        val mangaShape = mihonEntryShape()
+        val animeShape = aniyomiAnimeShape()
         val mergedCategories = ConvertedCategories(backup.mangaCategories, backup.animeCategories)
         val seasons = AniyomiSeasons(seasonInfos)
         val animeSourceNames = backup.animeSources.associate { it.sourceId to it.name }
@@ -119,7 +127,7 @@ class AniyomiBackupFormat(
             while (!input.exhausted()) {
                 when (val tag = input.readTag()) {
                     MANGA_TAG -> {
-                        val manga = input.readEntry(MihonManga.serializer())
+                        val manga = input.readEntry(reading, mangaShape, MihonManga.serializer()) ?: continue
                         report.add(manga)
                         writeEntry(
                             manga.toBackupEntry().apply {
@@ -128,7 +136,7 @@ class AniyomiBackupFormat(
                         )
                     }
                     layout.animeTag -> {
-                        val anime = input.readEntry(AniyomiAnime.serializer())
+                        val anime = input.readEntry(reading, animeShape, AniyomiAnime.serializer()) ?: continue
                         report.add(anime)
                         if (merges.isMergedEntry(anime.source)) continue
                         val entry = anime.toBackupEntry(
@@ -156,11 +164,18 @@ class AniyomiBackupFormat(
         return BackupFormat.ConvertedContent(
             metadata,
             report.build(backup, mergedCategories, seasons, settings, savedSearches, extensionApks, sourceKeys),
+            reading.findings(),
         )
     }
 
-    private fun <T> ProtoInput.readEntry(deserializer: DeserializationStrategy<T>): T =
-        parser.decodeBackup(deserializer, readByteArray(readLength()))
+    private fun <T> ProtoInput.readEntry(
+        reading: NewerAppReading,
+        shape: MessageShape,
+        deserializer: DeserializationStrategy<T>,
+    ): T? = reading.protobufEntry(parser, shape, deserializer, readByteArray(readLength()))
+
+    private fun <T> ProtoInput.readPart(reading: NewerAppReading, deserializer: DeserializationStrategy<T>): T? =
+        reading.protobufPart(parser, deserializer, readByteArray(readLength()))
 
     private companion object {
         val MANGA_TAG = lengthDelimitedTag(1)
@@ -170,13 +185,9 @@ class AniyomiBackupFormat(
         const val ANIME_LIST = 1
 
         /**
-         * Every top-level field either layout writes: manga at 1, 2, 101, 104 and 105 as Mihon has them, the older
-         * layout's anime at 3, 4 and 103 and its 100 and 102 broken sources and 106-109 extensions and buttons, the newer
-         * layout's 106 and 500-506, and Anikku's saved searches and feeds at 600 and 610.
+         * Where the anime part is in either layout: 3, 4 and 103 in the older one, 500-506 in the newer one. The
+         * older layout's 107-109 are left out, as Mihon would add fields there next (MihonBackupFormat).
          */
-        val FIELD_NUMBERS = setOf(1, 2, 3, 4, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 600, 610) + (500..506)
-
-        /** Fields only the anime part writes, in either layout. */
-        val ANIME_FIELD_NUMBERS = setOf(3, 4, 102, 103, 107, 108, 109) + (500..506)
+        val ANIME_FIELD_NUMBERS = setOf(3, 4, 103) + (500..506)
     }
 }

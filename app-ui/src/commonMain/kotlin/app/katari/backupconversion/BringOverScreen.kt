@@ -10,8 +10,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import app.katari.backupconversion.BringOverViewModel.Conversion
 import app.katari.backupconversion.BringOverViewModel.Finding
+import app.katari.backupconversion.BringOverViewModel.IssueSaved
+import app.katari.backupconversion.issue.BackupIssueDialog
 import app.katari.core.platform.currentPlatformContext
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Description
@@ -83,6 +86,19 @@ class BringOverScreen(private val file: DocumentUri? = null) : Screen() {
                         messages.show(MR.strings.backup_conversion_saved)
                     } else {
                         messages.show(context.stringResource(MR.strings.backup_conversion_save_failed, error))
+                    }
+                }
+            }
+        }
+        val uriHandler = LocalUriHandler.current
+        val saveIssue = rememberDocumentPicker(DocumentPickerRequest.CreateDocument("application/zip")) { pick ->
+            if (pick != null) {
+                scope.launch {
+                    when (val saved = model.saveIssue(pick.uri)) {
+                        is IssueSaved.Saved -> uriHandler.openUri(saved.url)
+                        is IssueSaved.Failed -> messages.show(
+                            context.stringResource(MR.strings.backup_conversion_report_save_failed, saved.message),
+                        )
                     }
                 }
             }
@@ -162,10 +178,28 @@ class BringOverScreen(private val file: DocumentUri? = null) : Screen() {
                         onChooseFile = chooseFile,
                         onChangeApp = { changingApp = true },
                         onPickApp = model::pickApp,
+                        onReport = model::report,
+                        onAsk = model::ask,
                     )
                     (state.conversion as? Conversion.Done)?.let {
+                        val newer = !it.backup.newer.isEmpty || it.backup.report.unknownSettings.isNotEmpty()
+                        if (newer) {
+                            item(key = "newer") {
+                                NoticeCard(
+                                    text = stringResource(
+                                        MR.strings.backup_conversion_newer_notice,
+                                        state.app?.name.orEmpty(),
+                                    ),
+                                    tone = NoticeTone.Info,
+                                    actionLabel = stringResource(MR.strings.backup_conversion_report),
+                                    onAction = model::report,
+                                )
+                            }
+                            item(key = "newer-gap") { RowGroupGap() }
+                        }
                         conversionReportItems(
                             report = it.backup.report,
+                            app = state.app?.name.orEmpty(),
                             stores = state.stores,
                             expanded = state.expanded,
                             onToggle = model::toggle,
@@ -174,6 +208,18 @@ class BringOverScreen(private val file: DocumentUri? = null) : Screen() {
                     }
                 }
             }
+        }
+
+        state.issue?.let { pending ->
+            BackupIssueDialog(
+                asking = pending.asking,
+                includeBackup = pending.includeBackup,
+                onIncludeBackupChange = model::includeBackupInIssue,
+                onContinue = {
+                    if (!saveIssue.launch(pending.issue.fileName)) messages.show(MR.strings.file_picker_error)
+                },
+                onDismissRequest = model::dismissIssue,
+            )
         }
 
         if (changingApp) {
@@ -211,6 +257,8 @@ private fun LazyListScope.fileItems(
     onChooseFile: () -> Unit,
     onChangeApp: () -> Unit,
     onPickApp: (BackupApp) -> Unit,
+    onReport: () -> Unit,
+    onAsk: () -> Unit,
 ) {
     val file = state.file ?: return
     val finding = state.finding
@@ -247,8 +295,13 @@ private fun LazyListScope.fileItems(
         finding == Finding.Katari -> item(key = "katari") {
             NoticeCard(stringResource(MR.strings.backup_conversion_is_katari), NoticeTone.Info)
         }
-        finding == Finding.Unsupported && state.app == null -> item(key = "unsupported") {
-            NoticeCard(stringResource(MR.strings.backup_conversion_unsupported), NoticeTone.Warning)
+        finding is Finding.Unsupported && state.app == null -> item(key = "unsupported") {
+            NoticeCard(
+                text = stringResource(MR.strings.backup_conversion_unsupported),
+                tone = NoticeTone.Warning,
+                actionLabel = stringResource(MR.strings.backup_conversion_ask),
+                onAction = onAsk,
+            )
         }
         finding is Finding.Unreadable -> item(key = "unreadable") {
             NoticeCard(finding.message, NoticeTone.Warning)
@@ -271,7 +324,20 @@ private fun LazyListScope.fileItems(
     }
     when (val conversion = state.conversion) {
         is Conversion.Failed -> item(key = "failed") {
-            NoticeCard(stringResource(MR.strings.backup_conversion_failed, conversion.message), NoticeTone.Warning)
+            NoticeCard(
+                text = stringResource(MR.strings.backup_conversion_failed, conversion.error.message.orEmpty()),
+                tone = NoticeTone.Warning,
+                actionLabel = stringResource(MR.strings.backup_conversion_report),
+                onAction = onReport,
+            )
+        }
+        Conversion.NewerApp -> item(key = "failed") {
+            NoticeCard(
+                text = stringResource(MR.strings.backup_conversion_newer_backup, state.app?.name.orEmpty()),
+                tone = NoticeTone.Warning,
+                actionLabel = stringResource(MR.strings.backup_conversion_report),
+                onAction = onReport,
+            )
         }
         is Conversion.NotAppBackup -> item(key = "failed") {
             NoticeCard(
@@ -329,4 +395,4 @@ private fun WorkingLine(step: String, progress: BackupReadProgress?, entries: Bo
 
 /** Whether the file may be converted as an app the user picks: a file no format reads still may (D008). */
 private val Finding.offersApps: Boolean
-    get() = this is Finding.Fits || this == Finding.Unsupported
+    get() = this is Finding.Fits || this is Finding.Unsupported
