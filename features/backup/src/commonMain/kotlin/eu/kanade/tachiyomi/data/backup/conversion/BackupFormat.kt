@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.conversion
 
+import eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppFindings
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import okio.BufferedSource
@@ -39,10 +40,15 @@ interface BackupFormat {
      * Converts the backup, handing each Katari entry to [writeEntry] as soon as it is complete. [open] reads the backup
      * from its start, gunzipped where the file was gzipped, [fileReads] times, and the format closes what it opens.
      * [app], [appName] or one of [relatedAppNames], is the one the user converts it as, which the report names the
-     * settings left behind in. Throws when the content isn't a backup of this format after all.
+     * settings left behind in. Throws when the content isn't a backup of this format after all, and
+     * [eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppBackupException] when a newer version of the app laid it
+     * out.
      */
     suspend fun convert(open: () -> BufferedSource, app: String, writeEntry: (BackupEntry) -> Unit): ConvertedContent
 
-    /** [metadata] is everything of the Katari backup but its entries. */
-    class ConvertedContent(val metadata: Backup, val report: ConversionReport)
+    /**
+     * [metadata] is everything of the Katari backup but its entries; [newer] is what a newer version of the app wrote
+     * that Katari converted around or left behind.
+     */
+    class ConvertedContent(val metadata: Backup, val report: ConversionReport, val newer: NewerAppFindings)
 }

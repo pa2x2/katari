@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedSavedSearches
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonMerges
+import eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppReading
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -22,7 +23,7 @@ class AniyomiConversionReportTest {
         // manga source's too
         val mangaSource = BackupSource(name = "MangaDex", sourceId = SHARED_ID)
         val animeSource = BackupSource(name = "Movy", sourceId = SHARED_ID)
-        val report = AniyomiConversionReport(MihonMerges.Collector(ProtoBuf).build())
+        val report = AniyomiConversionReport(MihonMerges.Collector(ProtoBuf, NewerAppReading("Aniyomi")).build())
         report.add(MihonManga(source = SHARED_ID, url = "/title/1"))
         report.add(AniyomiAnime(source = SHARED_ID, url = "/tv/1"))
 

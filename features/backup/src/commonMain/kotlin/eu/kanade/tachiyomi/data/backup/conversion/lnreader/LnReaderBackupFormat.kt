@@ -9,12 +9,21 @@ import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
 import eu.kanade.tachiyomi.data.backup.conversion.KatariDefaultCategory
 import eu.kanade.tachiyomi.data.backup.conversion.lnreader.settings.LnReaderStoredSettings
 import eu.kanade.tachiyomi.data.backup.conversion.lnreader.settings.convertLnReaderSettings
+import eu.kanade.tachiyomi.data.backup.conversion.newer.FILE_PART
+import eu.kanade.tachiyomi.data.backup.conversion.newer.IN_BACKUP
+import eu.kanade.tachiyomi.data.backup.conversion.newer.IN_ENTRY
+import eu.kanade.tachiyomi.data.backup.conversion.newer.JsonShape
+import eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppBackupException
+import eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppReading
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import okio.BufferedSource
 import java.time.ZoneId
 import java.util.zip.ZipInputStream
@@ -43,6 +52,7 @@ class LnReaderBackupFormat(private val context: PlatformContext, private val jso
         app: String,
         writeEntry: (BackupEntry) -> Unit,
     ): BackupFormat.ConvertedContent {
+        val reading = NewerAppReading(app)
         var version: LnReaderVersion? = null
         var categoryList = emptyList<LnReaderCategory>()
         var installed = emptyList<LnReaderPlugin>()
@@ -52,16 +62,34 @@ class LnReaderBackupFormat(private val context: PlatformContext, private val jso
         var downloads = false
         open().zipEntries { name, zip ->
             when {
-                name == VERSION -> version = zip.decode(LnReaderVersion.serializer())
-                name == CATEGORIES -> categoryList = zip.decode(ListSerializer(LnReaderCategory.serializer()))
-                name == PLUGINS -> installed = zip.decode(ListSerializer(LnReaderPlugin.serializer()))
+                name == VERSION ->
+                    version =
+                        zip.readWhole(reading, lnReaderVersionShape(), IN_BACKUP, LnReaderVersion.serializer())
+                name == CATEGORIES -> categoryList = zip.readWhole(
+                    reading,
+                    lnReaderCategoriesShape(),
+                    IN_BACKUP + "categories",
+                    ListSerializer(LnReaderCategory.serializer()),
+                )
+                name == PLUGINS -> installed = zip.readWhole(
+                    reading,
+                    lnReaderPluginsShape(),
+                    IN_BACKUP + "plugins",
+                    ListSerializer(LnReaderPlugin.serializer()),
+                )
+                // Settings are free-form; a key Katari doesn't know is listed with them (D118)
                 name == SETTINGS -> settings = zip.decode(JsonObject.serializer())
                 name == PLUGIN_CODE -> pluginCode = true
                 name == DOWNLOADS -> downloads = true
                 name.startsWith(COVER_PREFIX) -> covers = true
+                name.startsWith(NOVEL_PREFIX) -> Unit
+                else -> reading.unknown(IN_BACKUP, name, FILE_PART)
             }
         }
-        requireNotNull(version?.formatVersion) { "Not an LNReader backup of format 2" }
+        val formatVersion = requireNotNull(version?.formatVersion) { "Not an LNReader backup of format 2" }
+        reading.formatVersion = formatVersion
+        reading.appVersion = version.appVersion
+        if (formatVersion > FORMAT_VERSION) throw NewerAppBackupException(app)
 
         val stored = LnReaderStoredSettings(settings, json)
         val categories = LnReaderCategories(KatariDefaultCategory.of(context, app), categoryList)
@@ -69,9 +97,10 @@ class LnReaderBackupFormat(private val context: PlatformContext, private val jso
         val zone = ZoneId.systemDefault()
         val report = LnReaderConversionReport()
         val pluginIds = linkedSetOf<String>()
+        val novelShape = lnReaderNovelShape()
         open().zipEntries { name, zip ->
             if (!name.startsWith(NOVEL_PREFIX)) return@zipEntries
-            val novel = zip.decode(LnReaderNovel.serializer())
+            val novel = zip.readEntry(reading, novelShape) ?: return@zipEntries
             val chapterList = stored.chapterList(novel)
             // LNReader backs up every novel it has opened; outside the library Katari keeps those with progress (D025)
             if (!novel.inLibrary && !novel.hasProgress) return@zipEntries
@@ -107,13 +136,48 @@ class LnReaderBackupFormat(private val context: PlatformContext, private val jso
                 LnReaderFiles(covers, pluginCode, downloads),
                 convertedSettings,
             ),
+            reading.findings(),
         )
     }
 
     private fun <T> ZipInputStream.decode(deserializer: DeserializationStrategy<T>): T =
         json.decodeFromString(deserializer, readBytes().decodeToString())
 
+    // Text that isn't JSON fails while checking, as a damaged file; JSON that doesn't decode is a newer LNReader's
+    private fun <T> ZipInputStream.readWhole(
+        reading: NewerAppReading,
+        shape: JsonShape,
+        where: List<String>,
+        deserializer: DeserializationStrategy<T>,
+    ): T {
+        val text = readBytes().decodeToString()
+        lateinit var element: JsonElement
+        return reading.whole(
+            check = {
+                element = json.parseToJsonElement(text)
+                shape.check(element, where, reading)
+            },
+            decode = { json.decodeFromJsonElement(deserializer, element) },
+        )
+    }
+
+    private fun ZipInputStream.readEntry(reading: NewerAppReading, shape: JsonShape): LnReaderNovel? {
+        val text = readBytes().decodeToString()
+        lateinit var element: JsonElement
+        return reading.entry(
+            title = { (element as? JsonObject)?.get("name")?.jsonPrimitive?.contentOrNull },
+            check = {
+                element = json.parseToJsonElement(text)
+                shape.check(element, IN_ENTRY, reading)
+            },
+            decode = { json.decodeFromJsonElement(LnReaderNovel.serializer(), element) },
+        )
+    }
+
     private companion object {
+        /** The newest format Katari reads; LNReader 2.1 writes it. */
+        const val FORMAT_VERSION = 2
+
         const val VERSION = "Version.json"
         const val CATEGORIES = "Category.json"
         const val PLUGINS = "Plugins.json"

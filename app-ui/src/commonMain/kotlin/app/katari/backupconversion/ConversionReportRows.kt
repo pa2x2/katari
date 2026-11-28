@@ -18,6 +18,9 @@ import dev.icerock.moko.resources.PluralsResource
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Kind
+import eu.kanade.tachiyomi.data.backup.conversion.newer.BACKUP_PLACE
+import eu.kanade.tachiyomi.data.backup.conversion.newer.ENTRY_PLACE
+import eu.kanade.tachiyomi.data.backup.conversion.newer.FILE_PART
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -30,6 +33,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  */
 internal fun LazyListScope.conversionReportItems(
     report: ConversionReport,
+    app: String,
     stores: StoreCheck?,
     expanded: Set<Kind>,
     onToggle: (Kind) -> Unit,
@@ -49,7 +53,11 @@ internal fun LazyListScope.conversionReportItems(
         val notedWhole = row.leftBehind.isEmpty() && row.carried.any { it.note != null }
         val opens = row.leftBehind.isNotEmpty() || notedWhole || row.kind in KINDS_OF_MIXED_THINGS
         CoverageRow(
-            title = stringResource(row.kind.title),
+            title = if (row.kind == Kind.NEWER_PARTS) {
+                stringResource(MR.strings.backup_conversion_kind_newer_parts, app)
+            } else {
+                stringResource(row.kind.title)
+            },
             amount = row.amount(),
             carried = carried,
             total = total,
@@ -163,6 +171,11 @@ private fun ConversionReport.Row.amount(): String {
     val carriedCount = carried.thingCount()
     val leftBehindCount = leftBehind.thingCount()
     return when {
+        // Each part has its own note, how often it was found
+        kind == Kind.NEWER_PARTS -> stringResource(
+            MR.strings.backup_conversion_newer_parts_amount,
+            pluralStringResource(kind.count, leftBehindCount, leftBehindCount),
+        )
         leftBehindCount == 0 -> stringResource(
             MR.strings.backup_conversion_amount_all,
             pluralStringResource(kind.count, carriedCount, carriedCount),
@@ -191,9 +204,33 @@ internal fun ConversionReport.Name.label(): String = when (this) {
     is ConversionReport.Name.Text -> text
     is ConversionReport.Name.Setting -> katariSettingNames[key]?.let { stringResource(it.title) } ?: key
     is ConversionReport.Name.OtherAppSetting -> stringResource(label)
-    is ConversionReport.Name.Part -> stringResource(label)
+    is ConversionReport.Name.Part -> stringResource(label, *args.toTypedArray())
     is ConversionReport.Name.Source -> text ?: stringResource(MR.strings.backup_source_unnamed)
+    is ConversionReport.Name.NewerPart -> newerPartLabel()
 }
+
+/**
+ * A part a newer app wrote, by what holds it: the backup, each entry, chapter, episode or category, or the message
+ * named by its path; a file in a zip backup by its name.
+ */
+@Composable
+private fun ConversionReport.Name.NewerPart.newerPartLabel(): String {
+    if (kind == FILE_PART) return stringResource(MR.strings.backup_conversion_part_file, field)
+    val inner = where.drop(1)
+    val inBackup = where.first() == BACKUP_PLACE
+    val label = when {
+        inner.isEmpty() && where.first() == ENTRY_PLACE -> MR.strings.backup_conversion_part_in_entry
+        inner.isEmpty() -> MR.strings.backup_conversion_part_in_backup
+        inner == listOf("chapters") -> MR.strings.backup_conversion_part_in_chapter
+        inner == listOf("episodes") -> MR.strings.backup_conversion_part_in_episode
+        inBackup && inner.single() in CATEGORY_LISTS -> MR.strings.backup_conversion_part_in_category
+        else -> return stringResource(MR.strings.backup_conversion_part_in_other, where.joinToString(" › "), field)
+    }
+    return stringResource(label, field)
+}
+
+// How the formats name their category lists
+private val CATEGORY_LISTS = setOf("categories", "mangaCategories", "animeCategories")
 
 /**
  * Where a setting is: in Katari for one that comes over, in the other app for one left behind (D053); an unnamed
@@ -205,7 +242,7 @@ private fun ConversionReport.Name.place(): String? = when (this) {
     is ConversionReport.Name.OtherAppSetting -> listOf(app) + place.map { stringResource(it) }
     // An unnamed source by its number, so two of them can be told apart (D114)
     is ConversionReport.Name.Source -> listOf(identity.externalId.toString()).takeIf { text == null }
-    is ConversionReport.Name.Text, is ConversionReport.Name.Part -> null
+    is ConversionReport.Name.Text, is ConversionReport.Name.Part, is ConversionReport.Name.NewerPart -> null
 }?.reduceOrNull { outer, inner -> stringResource(MR.strings.backup_conversion_place, outer, inner) }
 
 private val Kind.title: StringResource
@@ -221,6 +258,7 @@ private val Kind.title: StringResource
         Kind.INSTALLED_EXTENSIONS -> MR.strings.backup_conversion_kind_installed_extensions
         Kind.TRACKERS -> MR.strings.backup_conversion_kind_trackers
         Kind.APP_SPECIFIC -> MR.strings.backup_conversion_kind_other
+        Kind.NEWER_PARTS -> MR.strings.backup_conversion_kind_newer_parts
     }
 
 /** How the kind's things are counted: "All 312 entries". */
@@ -234,4 +272,5 @@ private val Kind.count: PluralsResource
         Kind.EXTENSION_STORES -> MR.plurals.backup_conversion_count_stores
         Kind.INSTALLED_EXTENSIONS -> MR.plurals.backup_conversion_count_extensions
         Kind.CUSTOM_INFO, Kind.APP_SPECIFIC -> MR.plurals.backup_conversion_count_items
+        Kind.NEWER_PARTS -> MR.plurals.backup_conversion_count_parts
     }

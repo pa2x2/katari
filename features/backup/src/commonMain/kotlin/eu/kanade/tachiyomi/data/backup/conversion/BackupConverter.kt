@@ -2,6 +2,9 @@ package eu.kanade.tachiyomi.data.backup.conversion
 
 import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
+import eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppBackupException
+import eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppFindings
+import eu.kanade.tachiyomi.data.backup.conversion.newer.withNewerApp
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocument
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocuments
 import eu.kanade.tachiyomi.data.backup.storage.BackupReadCounter
@@ -25,6 +28,8 @@ import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 import java.io.File
 import java.io.IOException
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 /**
  * Turns other apps' backups into Katari backups, which restore as any Katari backup does. Each [BackupFormat] knows one
@@ -73,7 +78,7 @@ class BackupConverter(
         if (isKatari) return@withContext BackupIdentity.Katari
         val fitting = formats.filter { it.recognizes(contents) }
         if (fitting.isEmpty()) {
-            BackupIdentity.Unsupported
+            BackupIdentity.Unsupported(contents)
         } else {
             BackupIdentity.Foreign(fitting.map { BackupApp(it.appWriting(contents), it) })
         }
@@ -112,12 +117,34 @@ class BackupConverter(
                 writer.writeMetadata(content.metadata.copy(convertedFrom = app.name))
                 content
             }
-            ConvertedBackup(DocumentUri(file.toURI().toString()), content.report)
+            ConvertedBackup(
+                DocumentUri(file.toURI().toString()),
+                content.report.withNewerApp(content.newer, app.name),
+                content.newer,
+            )
         } catch (e: Throwable) {
             file.delete()
             throw e
         }
     }
+
+    /**
+     * Saves the file an issue about a backup asks to attach (D132) at [to]: [findings] as `findings.txt` and, when given,
+     * the backup at [backup] beside it under its own [backupName].
+     */
+    suspend fun saveIssueFile(to: DocumentUri, findings: String, backup: DocumentUri?, backupName: String) =
+        withContext(Dispatchers.IO) {
+            ZipOutputStream(documents.write(to).buffer().outputStream()).use { zip ->
+                zip.putNextEntry(ZipEntry(ISSUE_FINDINGS))
+                zip.write(findings.encodeToByteArray())
+                zip.closeEntry()
+                if (backup != null) {
+                    zip.putNextEntry(ZipEntry(backupName))
+                    documents.read(backup).buffer().use { it.inputStream().copyTo(zip) }
+                    zip.closeEntry()
+                }
+            }
+        }
 
     /** Copies [converted] to [to], a file the user picked to keep it in, gzipped as every Katari backup is. */
     suspend fun save(converted: ConvertedBackup, to: DocumentUri) = withContext(Dispatchers.IO) {
@@ -129,6 +156,7 @@ class BackupConverter(
     // A format fails in whatever way the file gives way under it: a file it doesn't recognize wasn't written by the app
     // (D110); one it does, or one that can't be read again, is damaged
     private fun convertingFailure(uri: DocumentUri, app: BackupApp, failure: Exception): Exception {
+        if (failure is NewerAppBackupException) return failure
         val recognized = runCatching {
             documents.read(uri).buffer().use(::readBackupFileContents).let(app.format::recognizes)
         }.getOrNull()
@@ -169,6 +197,7 @@ class BackupConverter(
 
     private companion object {
         const val CONVERTED_FOLDER = "converted-backups"
+        const val ISSUE_FINDINGS = "findings.txt"
     }
 }
 
@@ -182,12 +211,15 @@ sealed interface BackupIdentity {
      */
     data class Foreign(val apps: List<BackupApp>) : BackupIdentity
 
-    /** No format the tool knows wrote it. */
-    data object Unsupported : BackupIdentity
+    /** No format the tool knows wrote it; [contents] are what an issue asking for its app says of it (D134). */
+    data class Unsupported(val contents: BackupFileContents) : BackupIdentity
 }
 
 /** The file converted as [app]'s isn't a backup that app wrote. */
 class NotAppBackupException(val app: BackupApp, cause: Throwable) : IOException(cause)
 
-/** A Katari backup converted from another app's, at [uri] in the app's cache, and what came over into it. */
-class ConvertedBackup(val uri: DocumentUri, val report: ConversionReport)
+/**
+ * A Katari backup converted from another app's, at [uri] in the app's cache, what came over into it, and what a newer
+ * version of the app wrote that Katari doesn't know.
+ */
+class ConvertedBackup(val uri: DocumentUri, val report: ConversionReport, val newer: NewerAppFindings)

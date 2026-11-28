@@ -3,6 +3,10 @@ package app.katari.backupconversion
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.backupconversion.issue.BackupIssue
+import app.katari.backupconversion.issue.BackupIssues
+import app.katari.backupconversion.issue.FileFacts
+import app.katari.backupconversion.issue.ReportedResult
 import app.katari.missingextensions.model.CantInstall
 import app.katari.missingextensions.restore.BackupMissingExtensions
 import app.katari.ui.di.AppUiScope
@@ -15,10 +19,12 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.conversion.BackupApp
 import eu.kanade.tachiyomi.data.backup.conversion.BackupConverter
+import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
 import eu.kanade.tachiyomi.data.backup.conversion.BackupIdentity
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport
 import eu.kanade.tachiyomi.data.backup.conversion.ConvertedBackup
 import eu.kanade.tachiyomi.data.backup.conversion.NotAppBackupException
+import eu.kanade.tachiyomi.data.backup.conversion.newer.NewerAppBackupException
 import eu.kanade.tachiyomi.data.backup.create.BackupFileNames
 import eu.kanade.tachiyomi.data.backup.storage.BackupReadProgress
 import kotlinx.coroutines.CancellationException
@@ -43,6 +49,7 @@ internal class BringOverViewModel(
     private val fileNames: BackupFileNames,
     private val validator: BackupFileValidator,
     private val missingExtensions: BackupMissingExtensions,
+    private val issues: BackupIssues,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -79,7 +86,7 @@ internal class BringOverViewModel(
                         validator.validate(uri, onProgress)
                         Finding.Katari
                     }
-                    BackupIdentity.Unsupported -> Finding.Unsupported
+                    is BackupIdentity.Unsupported -> Finding.Unsupported(identity.contents)
                     is BackupIdentity.Foreign -> Finding.Fits(identity.apps)
                 }
             } catch (e: CancellationException) {
@@ -123,8 +130,10 @@ internal class BringOverViewModel(
                 throw e
             } catch (e: NotAppBackupException) {
                 Conversion.NotAppBackup(e.app)
+            } catch (_: NewerAppBackupException) {
+                Conversion.NewerApp
             } catch (e: Exception) {
-                Conversion.Failed(e.message.orEmpty())
+                Conversion.Failed(e)
             }
             state.update { it.copy(conversion = conversion, progress = null) }
             if (conversion is Conversion.Done) checkStores(conversion.backup)
@@ -166,6 +175,59 @@ internal class BringOverViewModel(
         state.update { it.copy(expanded = if (kind in it.expanded) it.expanded - kind else it.expanded + kind) }
     }
 
+    /** Opens the dialog before Report's form (D132), for what the conversion came to. */
+    fun report() {
+        val current = state.value
+        val app = current.app ?: return
+        val file = current.file ?: return
+        val result = when (val conversion = current.conversion) {
+            is Conversion.Done -> ReportedResult.Converted(conversion.backup.newer, conversion.backup.report)
+            Conversion.NewerApp -> ReportedResult.NewerLayout
+            is Conversion.Failed -> ReportedResult.Failed(conversion.error)
+            else -> return
+        }
+        val issue = issues.report(app.name, current.appDetected, FileFacts(file.name, file.size), result)
+        state.update { it.copy(issue = PendingIssue(issue, asking = false)) }
+    }
+
+    /** Opens the dialog before Ask's form (D134), for a file no app Katari reads wrote. */
+    fun ask() {
+        val current = state.value
+        val file = current.file ?: return
+        val finding = current.finding as? Finding.Unsupported ?: return
+        val issue = issues.ask(FileFacts(file.name, file.size), finding.contents)
+        state.update { it.copy(issue = PendingIssue(issue, asking = true)) }
+    }
+
+    fun includeBackupInIssue(include: Boolean) {
+        state.update { it.copy(issue = it.issue?.copy(includeBackup = include)) }
+    }
+
+    fun dismissIssue() {
+        state.update { it.copy(issue = null) }
+    }
+
+    /** Saves the issue's file at [to], then closes the dialog; the form's link, or the error's message when it fails. */
+    suspend fun saveIssue(to: DocumentUri): IssueSaved {
+        val current = state.value
+        val pending = current.issue ?: return IssueSaved.Failed("")
+        val file = current.file ?: return IssueSaved.Failed("")
+        return try {
+            converter.saveIssueFile(
+                to = to,
+                findings = pending.issue.findings,
+                backup = file.uri.takeIf { pending.includeBackup },
+                backupName = file.name ?: BACKUP_NAME,
+            )
+            state.update { it.copy(issue = null) }
+            IssueSaved.Saved(pending.issue.url)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            IssueSaved.Failed(e.message.orEmpty())
+        }
+    }
+
     /** The name offered when saving the converted backup. */
     fun savedFileName(): String = fileNames.convertedFileName(state.value.app?.name.orEmpty())
 
@@ -203,7 +265,20 @@ internal class BringOverViewModel(
         val progress: BackupReadProgress? = null,
         /** What the stores say about the extensions the converted backup needs; null before asking or if it failed. */
         val stores: StoreCheck? = null,
+        /** The issue Report or Ask is about to open, while its dialog shows. */
+        val issue: PendingIssue? = null,
     )
+
+    /** An issue whose dialog shows, and whether the person chose to put the backup in its file. */
+    @Immutable
+    data class PendingIssue(val issue: BackupIssue, val asking: Boolean, val includeBackup: Boolean = false)
+
+    sealed interface IssueSaved {
+        /** The file is saved; [url] opens the form it is attached to. */
+        data class Saved(val url: String) : IssueSaved
+
+        data class Failed(val message: String) : IssueSaved
+    }
 
     sealed interface StoreCheck {
         data object Checking : StoreCheck
@@ -233,8 +308,8 @@ internal class BringOverViewModel(
         /** A Katari backup, which restores as it is. */
         data object Katari : Finding
 
-        /** No app the tool reads wrote it, though the user may still pick one. */
-        data object Unsupported : Finding
+        /** No app the tool reads wrote it, though the user may still pick one; [contents] are what Ask says of it. */
+        data class Unsupported(val contents: BackupFileContents) : Finding
 
         /** The file can't be read as a backup at all, as [message] says. */
         data class Unreadable(val message: String) : Finding
@@ -247,9 +322,17 @@ internal class BringOverViewModel(
 
         data class Done(val backup: ConvertedBackup) : Conversion
 
-        data class Failed(val message: String) : Conversion
+        data class Failed(val error: Throwable) : Conversion
+
+        /** A newer version of the app laid the file out as Katari doesn't read (D129). */
+        data object NewerApp : Conversion
 
         /** The file isn't a backup [app] wrote, so the user may pick another app (D110). */
         data class NotAppBackup(val app: BackupApp) : Conversion
+    }
+
+    private companion object {
+        // The name a backup goes into the issue's file under when its storage doesn't name it
+        const val BACKUP_NAME = "backup"
     }
 }

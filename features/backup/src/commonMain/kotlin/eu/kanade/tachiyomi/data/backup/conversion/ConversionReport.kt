@@ -12,6 +12,13 @@ import tachiyomi.i18n.*
  * backup holds none of has no row.
  */
 data class ConversionReport(val rows: List<Row>) {
+    /** The keys of the app's settings no table knows, which a newer version of the app may have added (D129). */
+    val unknownSettings: List<String>
+        get() = rows.filter { it.kind == Kind.APP_SETTINGS }
+            .flatMap { it.leftBehind }
+            .filter { it.note?.text == MR.strings.backup_conversion_unknown_setting }
+            .mapNotNull { (it.name as? Name.Text)?.text }
+
     data class Row(val kind: Kind, val carried: List<Item>, val leftBehind: List<Item>) {
         companion object {
             /** The row, or null when the backup holds none of [kind]. */
@@ -46,8 +53,17 @@ data class ConversionReport(val rows: List<Row>) {
          */
         data class OtherAppSetting(val app: String, val place: List<StringResource>, val label: StringResource) : Name
 
-        /** A part of the backup that has no name of its own, such as a server's settings. */
-        data class Part(val label: StringResource) : Name
+        /**
+         * A part of the backup that has no name of its own, such as a server's settings, or an entry that couldn't be
+         * read by its place in the backup; [label] is filled in with [args].
+         */
+        data class Part(val label: StringResource, val args: List<String> = emptyList()) : Name
+
+        /**
+         * A part a newer version of the app wrote that Katari doesn't know (D127): [field], a field's number or key or a
+         * file's name, as [kind] says, in the message or file at [where], from the backup or an entry inward.
+         */
+        data class NewerPart(val where: List<String>, val field: String, val kind: String) : Name
 
         /**
          * A source the backup's entries come from, by its name, null where the backup has none (D114), and the
@@ -70,6 +86,9 @@ data class ConversionReport(val rows: List<Row>) {
 
         /** What only the other app has, such as saved searches or player buttons. */
         APP_SPECIFIC,
+
+        /** What a newer version of the app wrote that Katari doesn't know (D127). */
+        NEWER_PARTS,
     }
 }
 

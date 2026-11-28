@@ -11,7 +11,7 @@ import kotlinx.serialization.json.JsonElement
 
 /** `Version.json`. Backups before format 2 have no `formatVersion`. */
 @Serializable
-internal class LnReaderVersion(val formatVersion: Int? = null)
+internal class LnReaderVersion(val formatVersion: Int? = null, val appVersion: String? = null)
 
 /** An entry of `Category.json`; [novelIds] are LNReader's own novel ids. */
 @Serializable
