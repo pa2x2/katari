@@ -1,0 +1,23 @@
+.agents/skills/android-release-notes/SKILL.md
+  s_50e2aca596cfbb::t_6ebbb6edef18ff 21-23
+README.md
+  s_50e2aca596cfbb::t_b89001c66e6955 59-60
+website/src/pages/credits.astro
+  s_50e2aca596cfbb::t_08250b654f2d01 11,41-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1b0b0fb7f367599af946517d9c4ed43a9c8948ea",
+  "prompts": {},
+  "sessions": {
+    "s_50e2aca596cfbb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3800ac15-9c85-4228-b88c-74beaef4b4cb",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
