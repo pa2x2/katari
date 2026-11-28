@@ -1,0 +1,19 @@
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/navigation/ScreenActions.kt
+  s_00dbc4814728ce::t_2907086f6f1934 5,85-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "85747547fa6c6a6fa5517b00dc4cc467eb8611df",
+  "prompts": {},
+  "sessions": {
+    "s_00dbc4814728ce": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "543b33bb-f40f-469f-8c71-5f13ca6a76e4",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
