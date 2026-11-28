@@ -1,9 +1,11 @@
 package app.katari.backupconversion
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import app.katari.presentation.kit.dialog.Dialog
 import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.dialog.DialogScrollEdges
+import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.ChoiceRow
 import eu.kanade.tachiyomi.data.backup.conversion.BackupApp
 import tachiyomi.i18n.*
@@ -24,14 +26,19 @@ internal fun BackupAppDialog(
         confirm = null,
         dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
     ) {
-        Column {
-            apps.forEach { app ->
-                ChoiceRow(
-                    title = app.name,
-                    subtitle = stringResource(MR.strings.backup_conversion_detected).takeIf { app == detected },
-                    selected = app == selected,
-                    onClick = { onPick(app) },
-                )
+        val state = rememberLazyListState()
+        DialogScrollEdges(state) {
+            RowList(state = state) {
+                apps.forEach { app ->
+                    item {
+                        ChoiceRow(
+                            title = app.name,
+                            subtitle = stringResource(MR.strings.backup_conversion_detected).takeIf { app == detected },
+                            selected = app == selected,
+                            onClick = { onPick(app) },
+                        )
+                    }
+                }
             }
         }
     }
