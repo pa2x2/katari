@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.backup.conversion.aniyomi
 
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport
 import eu.kanade.tachiyomi.data.backup.conversion.ConvertedSettings
+import eu.kanade.tachiyomi.data.backup.conversion.KatariDefaultCategory
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedSavedSearches
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
@@ -38,7 +39,11 @@ class AniyomiConversionReportTest {
                 feeds = emptyList(),
                 customButtons = emptyList(),
             ),
-            categories = ConvertedCategories(emptyList(), emptyList()),
+            categories = ConvertedCategories(
+                KatariDefaultCategory(name = "Default", renamed = "Default (Aniyomi)"),
+                emptyList(),
+                emptyList(),
+            ),
             seasons = AniyomiSeasons(emptyList()),
             settings = ConvertedSettings(emptyList(), emptyList(), emptyList()),
             savedSearches = ConvertedSavedSearches(emptyList(), emptyList()),

@@ -1,13 +1,15 @@
 package eu.kanade.tachiyomi.data.backup.conversion.aniyomi
 
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
-import eu.kanade.tachiyomi.data.backup.conversion.isKept
+import eu.kanade.tachiyomi.data.backup.conversion.KatariDefaultCategory
 import eu.kanade.tachiyomi.data.backup.conversion.aniyomi.settings.animeSourceIdsInSettings
 import eu.kanade.tachiyomi.data.backup.conversion.aniyomi.settings.convertAniyomiSettings
+import eu.kanade.tachiyomi.data.backup.conversion.isKept
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonMerges
@@ -34,6 +36,7 @@ import okio.BufferedSource
 @Inject
 @ContributesIntoSet(AppScope::class)
 class AniyomiBackupFormat(
+    private val context: PlatformContext,
     private val parser: ProtoBuf,
     private val json: Json,
 ) : BackupFormat {
@@ -86,7 +89,8 @@ class AniyomiBackupFormat(
         }
         val merges = mergeCollector.build()
         val backup = layout.decode(parser, rest.readByteArray())
-        val mergedCategories = ConvertedCategories(backup.mangaCategories, backup.animeCategories)
+        val mergedCategories =
+            ConvertedCategories(KatariDefaultCategory.of(context, app), backup.mangaCategories, backup.animeCategories)
         val seasons = AniyomiSeasons(seasonInfos)
         val animeSourceNames = backup.animeSources.associate { it.sourceId to it.name }
         // Anikku is anime-only, so its saved searches and feeds name anime sources

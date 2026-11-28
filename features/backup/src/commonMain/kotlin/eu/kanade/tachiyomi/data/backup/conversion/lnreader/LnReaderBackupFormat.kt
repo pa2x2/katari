@@ -1,10 +1,12 @@
 package eu.kanade.tachiyomi.data.backup.conversion.lnreader
 
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
+import eu.kanade.tachiyomi.data.backup.conversion.KatariDefaultCategory
 import eu.kanade.tachiyomi.data.backup.conversion.lnreader.settings.LnReaderStoredSettings
 import eu.kanade.tachiyomi.data.backup.conversion.lnreader.settings.convertLnReaderSettings
 import eu.kanade.tachiyomi.data.backup.models.Backup
@@ -24,7 +26,7 @@ import java.util.zip.ZipInputStream
  */
 @Inject
 @ContributesIntoSet(AppScope::class)
-class LnReaderBackupFormat(private val json: Json) : BackupFormat {
+class LnReaderBackupFormat(private val context: PlatformContext, private val json: Json) : BackupFormat {
     override val appName = "LNReader"
 
     override val fileReads = 2
@@ -62,7 +64,7 @@ class LnReaderBackupFormat(private val json: Json) : BackupFormat {
         requireNotNull(version?.formatVersion) { "Not an LNReader backup of format 2" }
 
         val stored = LnReaderStoredSettings(settings, json)
-        val categories = LnReaderCategories(categoryList)
+        val categories = LnReaderCategories(KatariDefaultCategory.of(context, app), categoryList)
         val plugins = LnReaderPlugins(installed, stored.availablePluginUrls)
         val zone = ZoneId.systemDefault()
         val report = LnReaderConversionReport()
