@@ -38,6 +38,7 @@ class LnReaderBackupFormat(private val json: Json) : BackupFormat {
 
     override suspend fun convert(
         open: () -> BufferedSource,
+        app: String,
         writeEntry: (BackupEntry) -> Unit,
     ): BackupFormat.ConvertedContent {
         var version: LnReaderVersion? = null
@@ -82,7 +83,7 @@ class LnReaderBackupFormat(private val json: Json) : BackupFormat {
         val sources = plugins.backupSources(pluginIds)
         val convertedSettings = convertLnReaderSettings(
             stored,
-            appName,
+            app,
             categoryIds = categories.backupCategories.mapTo(hashSetOf()) { it.id },
             sources = sources,
             sourceKey = plugins::sourceKey,

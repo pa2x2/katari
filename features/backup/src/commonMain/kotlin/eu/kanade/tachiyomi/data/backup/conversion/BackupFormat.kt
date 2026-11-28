@@ -38,9 +38,10 @@ interface BackupFormat {
     /**
      * Converts the backup, handing each Katari entry to [writeEntry] as soon as it is complete. [open] reads the backup
      * from its start, gunzipped where the file was gzipped, [fileReads] times, and the format closes what it opens.
-     * Throws when the content isn't a backup of this format after all.
+     * [app], [appName] or one of [relatedAppNames], is the one the user converts it as, which the report names the
+     * settings left behind in. Throws when the content isn't a backup of this format after all.
      */
-    suspend fun convert(open: () -> BufferedSource, writeEntry: (BackupEntry) -> Unit): ConvertedContent
+    suspend fun convert(open: () -> BufferedSource, app: String, writeEntry: (BackupEntry) -> Unit): ConvertedContent
 
     /** [metadata] is everything of the Katari backup but its entries. */
     class ConvertedContent(val metadata: Backup, val report: ConversionReport)

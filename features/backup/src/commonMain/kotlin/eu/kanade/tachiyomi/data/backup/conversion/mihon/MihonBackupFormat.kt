@@ -41,6 +41,7 @@ class MihonBackupFormat(
 
     override suspend fun convert(
         open: () -> BufferedSource,
+        app: String,
         writeEntry: (BackupEntry) -> Unit,
     ): BackupFormat.ConvertedContent {
         // Categories come after the entries that name them, and merged entries can come after their members, which are
@@ -78,7 +79,7 @@ class MihonBackupFormat(
                 writeEntry(entry)
             }
         }
-        val settings = convertMihonSettings(backup.preferences, appName)
+        val settings = convertMihonSettings(backup.preferences, app)
         val sourceNames = backup.sources.associate { it.sourceId to it.name }
         val savedSearches =
             convertSavedSearches(backup.savedSearches, backup.syFeeds + backup.komikkuFeeds, sourceNames, json)

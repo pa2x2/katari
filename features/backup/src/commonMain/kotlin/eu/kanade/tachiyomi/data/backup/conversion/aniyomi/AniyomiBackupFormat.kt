@@ -52,6 +52,7 @@ class AniyomiBackupFormat(
 
     override suspend fun convert(
         open: () -> BufferedSource,
+        app: String,
         writeEntry: (BackupEntry) -> Unit,
     ): BackupFormat.ConvertedContent {
         val layout = open().use(AniyomiLayout::of)
@@ -101,7 +102,7 @@ class AniyomiBackupFormat(
         )
         val settings = convertAniyomiSettings(
             backup.preferences,
-            appName,
+            app,
             animeCategoryId = { mergedCategories.idOf(ANIME_LIST, it) },
             animeSourceKey = sourceKeys::animeKey,
         )

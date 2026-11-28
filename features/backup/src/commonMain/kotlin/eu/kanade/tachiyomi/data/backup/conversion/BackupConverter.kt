@@ -100,7 +100,7 @@ class BackupConverter(
                         .let { source -> BackupContainer.of(source).protobuf(source) }
                 }
                 val content = try {
-                    format.convert(open) { entry ->
+                    format.convert(open, app.name) { entry ->
                         writer.writeEntry(entry)
                         counter.countEntry()
                     }
