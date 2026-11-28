@@ -14,7 +14,8 @@ import kotlinx.serialization.protobuf.ProtoNumber
  * @property entrySources the source key of every entry.
  * @property entrySourceKeys every source key an entry refers to: its source, and the source of the entry it is merged
  * into.
- * @property librarySourceCounts how many library entries come from each source, by source key.
+ * @property librarySourceCounts how many library entries come from each source, by source key. An entry the backup
+ * holds more than once counts once, as restoring combines its copies.
  * @property newestEntryTime the newest time any entry records: when it was added to the library or last favourited,
  * last read, or last updated, in epoch milliseconds; 0 when none records one.
  */
@@ -41,8 +42,8 @@ internal class BackupSummaryBuilder {
     private val profileEntryCounts = mutableMapOf<Int, Int>()
     private val entrySources = hashSetOf<Long>()
     private val entrySourceKeys = hashSetOf<Long>()
-    private val topLevelLibrarySourceCounts = hashMapOf<Long, Int>()
-    private val profileLibrarySourceCounts = hashMapOf<Long, Int>()
+    private val topLevelLibraryEntries = hashMapOf<Long, MutableSet<String>>()
+    private val profileLibraryEntries = hashMapOf<Long, MutableSet<Pair<Int, String>>>()
     private var newestEntryTime = 0L
 
     fun add(entry: EncodedBackupEntry) {
@@ -58,8 +59,11 @@ internal class BackupSummaryBuilder {
         entrySources += summary.source
         entrySourceKeys += summary.source
         if (summary.favorite) {
-            val counts = if (profileIndex == null) topLevelLibrarySourceCounts else profileLibrarySourceCounts
-            counts[summary.source] = (counts[summary.source] ?: 0) + 1
+            if (profileIndex == null) {
+                topLevelLibraryEntries.getOrPut(summary.source, ::hashSetOf) += summary.url
+            } else {
+                profileLibraryEntries.getOrPut(summary.source, ::hashSetOf) += profileIndex to summary.url
+            }
         }
         summary.mergeTargetSource?.let(entrySourceKeys::add)
     }
@@ -78,9 +82,9 @@ internal class BackupSummaryBuilder {
         entrySourceKeys = entrySourceKeys,
         // Restore reads only the profiles when there are any, and older backups repeat a profile's entries at the top
         librarySourceCounts = if (metadata.backupProfiles.isEmpty()) {
-            topLevelLibrarySourceCounts
+            topLevelLibraryEntries.mapValues { it.value.size }
         } else {
-            profileLibrarySourceCounts
+            profileLibraryEntries.mapValues { it.value.size }
         },
         newestEntryTime = newestEntryTime,
     )
@@ -96,6 +100,7 @@ private class HistorySummary(@ProtoNumber(2) val lastRead: Long = 0)
 @Serializable
 private class EntrySummary(
     @ProtoNumber(1) val source: Long,
+    @ProtoNumber(2) val url: String,
     @ProtoNumber(10) val dateAdded: Long = 0,
     @ProtoNumber(14) val favorite: Boolean = true,
     @ProtoNumber(17) val history: List<HistorySummary> = emptyList(),
