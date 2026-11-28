@@ -5,16 +5,18 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 /**
- * How the last restore the user started is going, for screens such as setup's to show while it runs and after (D120).
+ * How the last restore the user started is going, for setup and the Library to show while it runs and after (D120,
+ * D142).
  * [BackupRestorer] keeps it beside the platform's [BackupRestoreReporter]; a library sync's restore isn't one the user
  * started, so it isn't shown here.
  */
 @Inject
 @SingleIn(AppScope::class)
 class BackupRestoreStatus {
-    /** Null until a restore starts while the app runs. */
+    /** Null until a restore starts while the app runs, and again once the person puts its end away. */
     val state: StateFlow<State?>
         field = MutableStateFlow<State?>(null)
 
@@ -26,6 +28,11 @@ class BackupRestoreStatus {
 
         /** It failed or was cancelled before it finished. */
         data object Stopped : State
+    }
+
+    /** Puts away how the last restore ended; one that still runs stays. */
+    fun dismiss() {
+        state.update { if (it is State.Running) it else null }
     }
 
     internal fun started() {

@@ -10,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.katari.icons.materialsymbols.MaterialSymbols
-import app.katari.icons.materialsymbols.rounded.CheckCircle
 import app.katari.icons.materialsymbols.rounded.Info
 import app.katari.icons.materialsymbols.rounded.Warning
 import app.katari.presentation.kit.button.Button
@@ -22,16 +21,16 @@ import app.katari.presentation.kit.progress.LinearProgressIndicator
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 
-/** What a [NoticeCard] tells: something worth knowing, something that may go wrong, or work that finished well. */
-enum class NoticeTone { Info, Warning, Success }
+/** What a [NoticeCard] tells: something worth knowing, or something that may go wrong. */
+enum class NoticeTone { Info, Warning }
 
 /**
  * A notice that sits among a screen's or sheet's cards, inset like them, such as an extension no store updates any
- * more or a source paused for library updates. [icon] replaces the tone's own icon. [onClick] makes the whole card the
- * way to resolve it, such as granting a permission; [actionLabel] instead puts one action at its end, such as Resume.
- * [dismissLabel] puts a way to put the notice off before that action, such as Not now on the Library's suggestion to
- * install missing extensions. [progress] (0..1) adds a bar under the text for work the notice follows, such as the
- * restore setup started.
+ * more or a source paused for library updates. [icon] replaces the tone's own icon, such as a check mark on Info for
+ * work that finished well. [onClick] makes the whole card the way to resolve it, such as granting a permission;
+ * [actionLabel] instead puts one action at its end, such as Resume. [dismissLabel] puts a way to put the notice off
+ * before that action, such as Not now on the Library's suggestion to install missing extensions. [progress] (0..1)
+ * adds a bar under the text for work the notice follows, such as a restore.
  */
 @Composable
 fun NoticeCard(
@@ -114,7 +113,6 @@ fun NoticeCard(
     val container = when (tone) {
         NoticeTone.Info -> SurfaceContainer.SecondaryContainer
         NoticeTone.Warning -> SurfaceContainer.WarningContainer
-        NoticeTone.Success -> SurfaceContainer.SuccessContainer
     }
     if (onClick != null) {
         Surface(
@@ -133,5 +131,4 @@ private val NoticeTone.icon: ImageVector
     get() = when (this) {
         NoticeTone.Info -> MaterialSymbols.Rounded.Info
         NoticeTone.Warning -> MaterialSymbols.Rounded.Warning
-        NoticeTone.Success -> MaterialSymbols.Rounded.CheckCircle
     }

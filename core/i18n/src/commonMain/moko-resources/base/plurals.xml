@@ -579,7 +579,7 @@
         <item quantity="one">%d title from your backup needs an extension you can install here.</item>
         <item quantity="other">%d titles from your backup need extensions you can install here.</item>
     </plurals>
-    <plurals name="onboarding_restore_done_errors">
+    <plurals name="restore_status_done_errors">
         <item quantity="one">Your library is restored, with %d error</item>
         <item quantity="other">Your library is restored, with %d errors</item>
     </plurals>
