@@ -1,0 +1,19 @@
+app-ui/src/commonMain/kotlin/app/katari/backupconversion/BringOverViewModel.kt
+  s_6fe593bebbf462::t_a25927d6bca5cc 204
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4f98a1d98ca86ce6bc568642ddc3c7a044ee7810",
+  "prompts": {},
+  "sessions": {
+    "s_6fe593bebbf462": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "969d43c3-b240-4424-b2ba-ca94e31a35f7",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
