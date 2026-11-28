@@ -1,0 +1,33 @@
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/onboarding/FinishStep.kt
+  s_0e279b045f255e::t_c24260a5e6b942 28,136-137
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/onboarding/OnboardingScreen.kt
+  s_0e279b045f255e::t_d228434a6bef16 79
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/onboarding/RestoreStatusLine.kt
+  s_0e279b045f255e::t_d15147dbbe1ed5 1-41
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/data/DataSettingsGraph.kt
+  s_0e279b045f255e::t_0348e3b1b737cb 6,21
+core/i18n/src/commonMain/moko-resources/base/plurals.xml
+  s_0e279b045f255e::t_7518bcea89d32c 582-585
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_0e279b045f255e::t_11b07724c1ff60 1275-1277
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/restore/BackupRestoreStatus.kt
+  s_0e279b045f255e::t_4c75299d8fc001 1-46
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/restore/BackupRestorer.kt
+  s_0e279b045f255e::t_55f027c0dea4d5 66,104-110,125,136-142,299,311,317,338,350,401,425,451,462,484
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f11fce3e91a2793fb3677e88f89eef6011c8d455",
+  "prompts": {},
+  "sessions": {
+    "s_0e279b045f255e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eef675a9-a6f8-4505-a11c-85949a46b3dd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
