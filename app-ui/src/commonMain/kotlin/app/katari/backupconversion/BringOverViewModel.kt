@@ -144,7 +144,7 @@ internal class BringOverViewModel(
         val checked = try {
             val results = validator.validate(backup.uri)
             if (results.missingSources.isEmpty()) {
-                null
+                StoreCheck.Checked(cantInstall = emptyMap(), names = emptyMap())
             } else {
                 val check = missingExtensions.check(results.missingSources, results.extensionStores)
                 StoreCheck.Checked(
@@ -201,7 +201,7 @@ internal class BringOverViewModel(
         val expanded: Set<ConversionReport.Kind> = emptySet(),
         /** How far reading or converting the file has got; null before the first count or when it isn't known. */
         val progress: BackupReadProgress? = null,
-        /** What the stores say about the extensions the converted backup needs; null when there is nothing to ask. */
+        /** What the stores say about the extensions the converted backup needs; null before asking or if it failed. */
         val stores: StoreCheck? = null,
     )
 
@@ -210,7 +210,8 @@ internal class BringOverViewModel(
 
         /**
          * Why each source's extension can't be installed after restoring, null where it can, and what each is called,
-         * null where nothing names it (D114).
+         * null where nothing names it (D114). A source the backup's entries need that [cantInstall] doesn't hold is
+         * installed already.
          */
         data class Checked(
             val cantInstall: Map<SourceIdentity, CantInstall?>,
