@@ -73,7 +73,12 @@ internal class BringOverViewModel(
                     state.update { if (it.finding == Finding.Reading) it.copy(progress = progress) else it }
                 }
                 when (val identity = converter.identify(uri, onProgress)) {
-                    BackupIdentity.Katari -> Finding.Katari
+                    // Identifying tells a Katari backup from its first field, so the file is read whole, as restoring
+                    // it would, before the tool says it restores as it is
+                    BackupIdentity.Katari -> {
+                        validator.validate(uri, onProgress)
+                        Finding.Katari
+                    }
                     BackupIdentity.Unsupported -> Finding.Unsupported
                     is BackupIdentity.Foreign -> Finding.Fits(identity.apps)
                 }
