@@ -1,0 +1,29 @@
+name: 📦 Backup from another app
+description: Katari couldn't fully read a backup from another app. Start it from Report in Bring over from another app, which fills this in.
+labels: [bug]
+body:
+  - type: input
+    id: app-version
+    attributes:
+      label: Version of the app that made the backup
+      description: Find it in that app's About screen. Backups don't say which version made them.
+      placeholder: 'Example: "Mihon 0.22.0"'
+    validations:
+      required: true
+
+  - type: textarea
+    id: found
+    attributes:
+      label: What Katari found
+      description: Filled in by Katari. It holds nothing from your library.
+    validations:
+      required: true
+
+  - type: textarea
+    id: file
+    attributes:
+      label: The file Katari saved
+      description: Attach the .zip file Katari saved when you pressed Report. It has everything Katari found, and your backup if you chose to include it. The issue is public.
+      placeholder: Drop the file here, or click to attach it.
+    validations:
+      required: true
