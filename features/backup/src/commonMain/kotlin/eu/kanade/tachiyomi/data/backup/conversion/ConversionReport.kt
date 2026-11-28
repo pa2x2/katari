@@ -2,6 +2,8 @@ package eu.kanade.tachiyomi.data.backup.conversion
 
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
+import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
+import eu.kanade.tachiyomi.data.backup.sourcekeys.backupSourceKey
 import tachiyomi.domain.source.identity.SourceIdentity
 import tachiyomi.i18n.*
 
@@ -84,3 +86,17 @@ internal val BackupSource.extensionItem: ConversionReport.Item
         ConversionReport.Name.Source(name.ifEmpty { null }, identity),
         MR.strings.backup_conversion_install_from_store,
     )
+
+/**
+ * The extension settings row: one item per source with settings, named from [sourceNames] by the backup's source ID.
+ * Yōkai writes a record for every source it has, settings or not.
+ */
+internal fun extensionSettingsRow(
+    preferences: List<BackupSourcePreferences>,
+    sourceNames: Map<Long, String>,
+): ConversionReport.Row? = ConversionReport.Row.of(
+    ConversionReport.Kind.EXTENSION_SETTINGS,
+    carried = preferences.filter { it.prefs.isNotEmpty() }.map { source ->
+        ConversionReport.Item(source.backupSourceKey?.let(sourceNames::get) ?: source.sourceKey)
+    },
+)

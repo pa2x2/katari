@@ -8,8 +8,8 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
 import eu.kanade.tachiyomi.data.backup.conversion.ConvertedSettings
 import eu.kanade.tachiyomi.data.backup.conversion.CustomInfoReport
 import eu.kanade.tachiyomi.data.backup.conversion.extensionItem
+import eu.kanade.tachiyomi.data.backup.conversion.extensionSettingsRow
 import eu.kanade.tachiyomi.data.backup.conversion.reportName
-import eu.kanade.tachiyomi.data.backup.sourcekeys.backupSourceKey
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
 
@@ -79,12 +79,7 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
                     carried = settings.carried,
                     leftBehind = settings.leftBehind + backup.suwayomiSettingsLeftBehind(),
                 ),
-                Row.of(
-                    Kind.EXTENSION_SETTINGS,
-                    carried = backup.sourcePreferences.map { preferences ->
-                        Item(preferences.backupSourceKey?.let(sourceNames::get) ?: preferences.sourceKey)
-                    },
-                ),
+                extensionSettingsRow(backup.sourcePreferences, sourceNames),
                 Row.of(
                     Kind.EXTENSION_STORES,
                     carried = stores.map { Item(it.name) },

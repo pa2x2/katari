@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Row
 import eu.kanade.tachiyomi.data.backup.conversion.ConvertedSettings
 import eu.kanade.tachiyomi.data.backup.conversion.CustomInfoReport
 import eu.kanade.tachiyomi.data.backup.conversion.extensionItem
+import eu.kanade.tachiyomi.data.backup.conversion.extensionSettingsRow
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedSavedSearches
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
@@ -16,7 +17,6 @@ import eu.kanade.tachiyomi.data.backup.conversion.mihon.hasHistoryWithoutChapter
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.hasProgress
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.isStore
 import eu.kanade.tachiyomi.data.backup.conversion.reportName
-import eu.kanade.tachiyomi.data.backup.sourcekeys.backupSourceKey
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
@@ -110,12 +110,7 @@ internal class AniyomiConversionReport(private val merges: MihonMerges) {
                 ),
                 customInfo.row(),
                 Row.of(Kind.APP_SETTINGS, carried = settings.carried, leftBehind = settings.leftBehind),
-                Row.of(
-                    Kind.EXTENSION_SETTINGS,
-                    carried = backup.sourcePreferences.map { preferences ->
-                        Item(preferences.backupSourceKey?.let(sourceNames::get) ?: preferences.sourceKey)
-                    },
-                ),
+                extensionSettingsRow(backup.sourcePreferences, sourceNames),
                 Row.of(
                     Kind.EXTENSION_STORES,
                     carried = stores.map { Item(it.name) },
