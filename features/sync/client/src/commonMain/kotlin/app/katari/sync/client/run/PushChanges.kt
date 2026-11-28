@@ -13,9 +13,9 @@ import dev.zacsweers.metro.Inject
 
 /**
  * Pushes every change waiting to be sent, a kind at a time with parents first ([PendingChanges.kinds]), in chunks of
- * [CHUNK] in key order. A change keeps its id until the server acknowledges it, and only an acknowledgement marks it
- * sent, so a push retried after its answer was lost is recognised by the server as the one it took (D022) and nothing
- * is stored twice.
+ * [CHUNK] in the order they were stored. A change keeps its id until the server acknowledges it, and only an
+ * acknowledgement marks it sent, so a push retried after its answer was lost is recognised by the server as the one it
+ * took (D022) and nothing is stored twice.
  *
  * Records naming custom covers or fonts go after the rest of their chunk, once the server has their files
  * ([FileUploads]); a record whose file waits for Wi-Fi stays unsent with it, holding back nothing else.
@@ -53,9 +53,10 @@ class PushChanges(
     ): Boolean {
         var stale = false
         pending.kinds().forEach { kind ->
-            var after = ""
+            var after = 0L
             while (true) {
-                val chunk = pending.after(kind, after, CHUNK).withinBytes()
+                val page = pending.after(kind, after, CHUNK)
+                val chunk = page.map { it.envelope }.withinBytes()
                 if (chunk.isEmpty()) break
                 val (plain, naming) = chunk.partition { it.files.isEmpty() }
                 if (push(client, plain, afterPull, onTaken)) stale = true
@@ -70,7 +71,7 @@ class PushChanges(
                         stale = true
                     }
                 }
-                after = chunk.last().key
+                after = page[chunk.lastIndex].row
             }
         }
         return stale

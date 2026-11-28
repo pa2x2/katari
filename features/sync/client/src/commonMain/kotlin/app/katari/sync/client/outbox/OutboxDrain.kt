@@ -162,8 +162,13 @@ class OutboxDrain(
         private suspend fun currentKey(kind: SyncedKind<*>, ref: LocalRef): String? =
             (kind.read(reads, ref) as? LocalRead.Found)?.key
 
+        /**
+         * Stores the records drained, those others refer to first ([SyncKinds.rank]). Whether a chapter is in a profile
+         * this device doesn't sync is told by its entry's stored record ([OffParts]): stored before an entry that
+         * [addUnsyncedParents] added, it counted as synced and reached the account.
+         */
         suspend fun store() {
-            records.forEach { (key, record) ->
+            records.entries.sortedBy { SyncKinds.rank(it.value.kind.name) }.forEach { (key, record) ->
                 val present = record.present
                 if (present != null) {
                     database.storePresent(key, present, record.stamps, parts, replacing)
@@ -177,9 +182,10 @@ class OutboxDrain(
     }
 
     private companion object {
-        // A drain's records land all over sync_records' indexes, and its commit rewrites every page it touched, so
-        // larger batches write each page once for more records; a first sync drains a whole library. Each still holds
-        // the database's writer for only a moment.
+        // A drain's records land all over the index of record keys, which are hashes, and its commit rewrites every
+        // page it touched, so larger batches write each page once for more records; a first sync drains a whole
+        // library. Each still holds the database's writer for only a moment: reading and building a record takes far
+        // longer than writing it, so 10,000 held it for seconds on an emulator.
         const val BATCH = 2000L
     }
 }

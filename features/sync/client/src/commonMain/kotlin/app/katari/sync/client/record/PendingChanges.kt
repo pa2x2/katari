@@ -14,7 +14,7 @@ import tachiyomi.data.DatabaseHandler
 class PendingChanges(private val handler: DatabaseHandler) {
     /** Up to [limit] changes, in the order a push sends them. */
     suspend fun next(limit: Long): List<RecordEnvelope> = buildList {
-        kinds().forEach { kind -> addAll(after(kind, afterKey = "", limit - size)) }
+        kinds().forEach { kind -> addAll(after(kind, afterRow = 0, limit - size).map { it.envelope }) }
     }
 
     /**
@@ -24,27 +24,36 @@ class PendingChanges(private val handler: DatabaseHandler) {
     suspend fun kinds(): List<String> = handler.awaitList { sync_recordsQueries.pendingKinds() }
         .sortedWith(compareBy({ SyncKinds.rank(it) }, { it }))
 
-    /** The next [limit] changes of [kind] after [afterKey] in key order, for a push to go through them in chunks. */
-    suspend fun after(kind: String, afterKey: String, limit: Long): List<RecordEnvelope> = handler.await {
+    /**
+     * The next [limit] changes of [kind] after the one stored at [afterRow], in the order they were stored, for a push
+     * to go through them in chunks.
+     */
+    suspend fun after(kind: String, afterRow: Long, limit: Long): List<Pending> = handler.await {
         if (limit <= 0) return@await emptyList()
         val device = sync_stateQueries.get().awaitAsOne().device_id?.let(::DeviceId) ?: return@await emptyList()
-        sync_recordsQueries.pendingOfKindAfter(kind, afterKey, limit).awaitAsList().map { record ->
-            RecordEnvelope(
-                key = record.record_key,
-                kind = record.kind,
-                kindVersion = record.kind_version.toInt(),
-                basedOn = record.based_on,
-                changeId = checkNotNull(record.change_id),
-                device = device,
-                deleted = record.deleted,
-                payload = record.payload,
-                files = RecordFiles.of(record.kind, record.deleted, record.payload),
-                // Stored with the payload; computed only for a record stored before groups were kept
-                group = record.record_group
-                    ?: RecordGroups.of(record.kind, record.record_key, record.deleted, record.payload),
+        sync_recordsQueries.pendingOfKindAfter(kind, afterRow, limit).awaitAsList().map { record ->
+            Pending(
+                record.row,
+                RecordEnvelope(
+                    key = record.record_key,
+                    kind = record.kind,
+                    kindVersion = record.kind_version.toInt(),
+                    basedOn = record.based_on,
+                    changeId = checkNotNull(record.change_id),
+                    device = device,
+                    deleted = record.deleted,
+                    payload = record.payload,
+                    files = RecordFiles.of(record.kind, record.deleted, record.payload),
+                    // Stored with the payload; computed only for a record stored before groups were kept
+                    group = record.record_group
+                        ?: RecordGroups.of(record.kind, record.record_key, record.deleted, record.payload),
+                ),
             )
         }
     }
+
+    /** A change as [after] reads it, with the row it is stored at, which the next page starts after. */
+    class Pending(val row: Long, val envelope: RecordEnvelope)
 
     suspend fun count(): Long = handler.awaitOne { sync_recordsQueries.pendingCount() }
 

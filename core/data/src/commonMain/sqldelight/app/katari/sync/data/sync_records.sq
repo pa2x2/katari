@@ -30,11 +30,17 @@ CREATE TABLE sync_records(
 );
 
 CREATE UNIQUE INDEX idx_sync_records_local ON sync_records(kind, local_ref) WHERE local_ref IS NOT NULL;
--- The changes waiting to be pushed, a kind at a time in the key order a push pages through them, which every run reads.
-CREATE INDEX idx_sync_records_pending ON sync_records(kind, record_key) WHERE change_id IS NOT NULL;
+-- Indexed by kind alone, each kind's entries stay in rowid order, so a record stored joins the end of its kind's run.
+-- Record keys are hashes: indexed by key, every record stored rewrote a page of its own in each such index, which made a
+-- first sync write about 20 KB for every record it stored.
+-- The changes waiting to be pushed, a kind at a time in the order a push pages through them, which every run reads.
+-- Held-back changes are left out, so the count of what waits, which the status reruns after every commit, reads only
+-- this index. Read from the table, it outlasted a first sync's commits, and a read open at every commit kept SQLite's
+-- checkpoints from finishing, so the WAL grew until the storage was full.
+CREATE INDEX idx_sync_records_pending ON sync_records(kind) WHERE change_id IS NOT NULL AND held_back = 0;
 CREATE INDEX idx_sync_records_group ON sync_records(record_group, kind, record_key);
--- The records of a kind in key order, such as the open questions the status shows.
-CREATE INDEX idx_sync_records_kind ON sync_records(kind, record_key);
+-- The records of a kind, such as the open questions the status shows.
+CREATE INDEX idx_sync_records_kind ON sync_records(kind);
 -- The newest server copy held, which every page pulled and every push checks the server against.
 CREATE INDEX idx_sync_records_based_on ON sync_records(based_on);
 
@@ -92,30 +98,39 @@ ON CONFLICT(record_key) DO UPDATE SET
 pendingKinds:
 SELECT DISTINCT kind
 FROM sync_records
-WHERE change_id IS NOT NULL;
+WHERE change_id IS NOT NULL AND held_back = 0;
 
 -- A record whose newest server copy this app can't read is not pushed: the server would take this app's older
 -- format over the newer one. It waits in sync_pending until an update can read it. So does one that failed to apply,
--- whose copy here may lack what the server's holds. Changes of :kind come a page at a time in key order, so a push
--- reaches every one even when the first are refused.
+-- whose copy here may lack what the server's holds. Changes of :kind come a page at a time in the order they were
+-- stored, after the row :afterRow, so a push reaches every one even when the first are refused. The index is named:
+-- SQLite can't tell it from idx_sync_records_kind, over which a page reads every held-back record of the kind first.
 pendingOfKindAfter:
-SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
-    record_group, held_back
-FROM sync_records
+SELECT CAST(rowid AS INTEGER) AS row, record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced,
+    change_id, base_payload, record_group, held_back
+FROM sync_records INDEXED BY idx_sync_records_pending
 WHERE change_id IS NOT NULL
 AND kind = :kind
 AND held_back = 0
-AND record_key > :afterKey
+AND rowid > :afterRow
 AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason IN ('unreadable', 'failed'))
-ORDER BY record_key
+ORDER BY rowid
 LIMIT :limit;
 
+-- The changes pendingOfKindAfter pages through, counted from idx_sync_records_pending alone, less the few that wait in
+-- sync_pending.
 pendingCount:
-SELECT count(*)
+SELECT count(*) - (
+    SELECT count(*)
+    FROM sync_pending P
+    WHERE P.reason IN ('unreadable', 'failed')
+    AND EXISTS (
+        SELECT 1 FROM sync_records R WHERE R.record_key = P.record_key AND R.change_id IS NOT NULL AND R.held_back = 0
+    )
+)
 FROM sync_records
 WHERE change_id IS NOT NULL
-AND held_back = 0
-AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason IN ('unreadable', 'failed'));
+AND held_back = 0;
 
 -- The server took the change as :sequence. A change made since keeps its own id and stays pending.
 markPushed:
@@ -157,12 +172,12 @@ WHERE (record_group IS NULL OR record_group = '' OR record_group IS :profilesGro
 ORDER BY record_key
 LIMIT :limit;
 
--- A page of the records of :kind, in key order after :afterKey.
+-- A page of the records of :kind, in the order they were stored, after the row :afterRow.
 kindPageAfter:
-SELECT record_key, deleted, payload
+SELECT CAST(rowid AS INTEGER) AS row, record_key, deleted, payload
 FROM sync_records
-WHERE kind = :kind AND record_key > :afterKey
-ORDER BY record_key
+WHERE kind = :kind AND rowid > :afterRow
+ORDER BY rowid
 LIMIT :limit;
 
 -- The records in :recordGroup, such as a title with its chapters, progress and history.
