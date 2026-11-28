@@ -31,7 +31,10 @@ CREATE TABLE sync_records(
 
 CREATE UNIQUE INDEX idx_sync_records_local ON sync_records(kind, local_ref) WHERE local_ref IS NOT NULL;
 -- The changes waiting to be pushed, a kind at a time in the key order a push pages through them, which every run reads.
-CREATE INDEX idx_sync_records_pending ON sync_records(kind, record_key) WHERE change_id IS NOT NULL;
+-- Held-back changes are left out, so the count of what waits, which the status reruns after every commit, reads only
+-- this index. Read from the table, it outlasted a first sync's commits, and a read open at every commit kept SQLite's
+-- checkpoints from finishing, so the WAL grew until the storage was full.
+CREATE INDEX idx_sync_records_pending ON sync_records(kind, record_key) WHERE change_id IS NOT NULL AND held_back = 0;
 CREATE INDEX idx_sync_records_group ON sync_records(record_group, kind, record_key);
 -- The records of a kind in key order, such as the open questions the status shows.
 CREATE INDEX idx_sync_records_kind ON sync_records(kind, record_key);
@@ -92,7 +95,7 @@ ON CONFLICT(record_key) DO UPDATE SET
 pendingKinds:
 SELECT DISTINCT kind
 FROM sync_records
-WHERE change_id IS NOT NULL;
+WHERE change_id IS NOT NULL AND held_back = 0;
 
 -- A record whose newest server copy this app can't read is not pushed: the server would take this app's older
 -- format over the newer one. It waits in sync_pending until an update can read it. So does one that failed to apply,
