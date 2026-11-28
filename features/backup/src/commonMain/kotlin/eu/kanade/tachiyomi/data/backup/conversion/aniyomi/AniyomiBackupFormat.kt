@@ -5,12 +5,14 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
+import eu.kanade.tachiyomi.data.backup.conversion.isKept
 import eu.kanade.tachiyomi.data.backup.conversion.aniyomi.settings.animeSourceIdsInSettings
 import eu.kanade.tachiyomi.data.backup.conversion.aniyomi.settings.convertAniyomiSettings
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonMerges
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.convertSavedSearches
+import eu.kanade.tachiyomi.data.backup.conversion.mihon.hasProgress
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.toBackupEntry
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.toBackupExtensionStore
 import eu.kanade.tachiyomi.data.backup.models.Backup
@@ -120,17 +122,21 @@ class AniyomiBackupFormat(
                 when (val tag = input.readTag()) {
                     MANGA_TAG -> {
                         val manga = input.readEntry(MihonManga.serializer())
+                        val entry = manga.toBackupEntry()
+                        if (!entry.isKept(manga.hasProgress)) {
+                            report.addNotKept(manga)
+                            continue
+                        }
                         report.add(manga)
-                        writeEntry(
-                            manga.toBackupEntry().apply {
-                                categories = mergedCategories.of(MANGA_LIST, manga.categories)
-                            },
-                        )
+                        entry.categories = mergedCategories.of(MANGA_LIST, manga.categories)
+                        writeEntry(entry)
                     }
                     layout.animeTag -> {
                         val anime = input.readEntry(AniyomiAnime.serializer())
-                        report.add(anime)
-                        if (merges.isMergedEntry(anime.source)) continue
+                        if (merges.isMergedEntry(anime.source)) {
+                            report.add(anime)
+                            continue
+                        }
                         val entry = anime.toBackupEntry(
                             source = sourceKeys.animeKey(anime.source),
                             categories = seasons.categoriesOf(anime),
@@ -138,6 +144,11 @@ class AniyomiBackupFormat(
                         seasons.applyTo(entry, anime.source, anime.url, sourceKeys::animeKey)
                         // A merge's members take the merged entry's categories, which are orders in the list too
                         merges.applyTo(entry, anime.source, sourceKeys::animeKey)
+                        if (!entry.isKept(anime.hasProgress)) {
+                            report.addNotKept(anime)
+                            continue
+                        }
+                        report.add(anime)
                         entry.categories = mergedCategories.of(ANIME_LIST, entry.categories)
                         writeEntry(entry)
                     }

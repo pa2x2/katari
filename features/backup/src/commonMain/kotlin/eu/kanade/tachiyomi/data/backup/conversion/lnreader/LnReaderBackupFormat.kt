@@ -71,6 +71,8 @@ class LnReaderBackupFormat(private val json: Json) : BackupFormat {
             if (!name.startsWith(NOVEL_PREFIX)) return@zipEntries
             val novel = zip.decode(LnReaderNovel.serializer())
             val chapterList = stored.chapterList(novel)
+            // LNReader backs up every novel it has opened; outside the library Katari keeps those with progress (D025)
+            if (!novel.inLibrary && !novel.hasProgress) return@zipEntries
             report.add(novel, chapterList, tracked = novel.id in stored.trackedNovelIds)
             // D078
             if (novel.isLocal) return@zipEntries

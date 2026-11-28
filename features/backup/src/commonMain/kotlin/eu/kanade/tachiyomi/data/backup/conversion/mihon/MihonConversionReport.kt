@@ -20,6 +20,7 @@ import tachiyomi.i18n.*
 internal class MihonConversionReport(private val merges: MihonMerges) {
     private val library = linkedMapOf<EntryKey, String>()
     private val progress = linkedMapOf<EntryKey, String>()
+    private val historyWithoutChapters = linkedMapOf<EntryKey, String>()
     private val tracked = linkedMapOf<EntryKey, String>()
     private val customInfo = CustomInfoReport<EntryKey>()
     private val searchMetadata = linkedMapOf<EntryKey, String>()
@@ -32,11 +33,19 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
         // A merge's members are its titles in the library, which the merged entry stands for
         if (manga.favorite && !merges.isMember(manga.source, manga.url)) library[key] = title
         if (manga.hasProgress) progress[key] = title
+        if (manga.hasHistoryWithoutChapters) historyWithoutChapters[key] = title
         if (manga.tracking.isNotEmpty()) tracked[key] = title
         customInfo.add(key, title, manga.customInfo)
         if (manga.flatMetadata != null) searchMetadata[key] = title
         if (manga.hasSuwayomiMeta) clientData[key] = title
         if (!merges.isMergedEntry(manga.source)) entrySources += manga.source
+    }
+
+    /** Adds [manga], an entry the converted backup doesn't keep, for its history, none of it on a chapter it holds. */
+    fun addNotKept(manga: MihonManga) {
+        if (manga.history.isNotEmpty()) {
+            historyWithoutChapters[EntryKey(manga.source, manga.url)] = manga.customTitle ?: manga.title
+        }
     }
 
     fun build(
@@ -52,7 +61,13 @@ internal class MihonConversionReport(private val merges: MihonMerges) {
             listOfNotNull(
                 Row.of(Kind.LIBRARY, carried = library.values.map { Item(it) }),
                 Row.of(Kind.CATEGORIES, carried = categories.reportItems),
-                Row.of(Kind.PROGRESS_AND_HISTORY, carried = progress.values.map { Item(it) }),
+                Row.of(
+                    Kind.PROGRESS_AND_HISTORY,
+                    carried = progress.values.map { Item(it) },
+                    leftBehind = historyWithoutChapters.values.map {
+                        Item(it, MR.strings.backup_conversion_history_without_chapters)
+                    },
+                ),
                 Row.of(
                     Kind.MERGED_ENTRIES,
                     carried = merges.reportItems,

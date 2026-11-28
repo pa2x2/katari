@@ -64,9 +64,19 @@ internal val AniyomiAnime.customInfo: CustomInfo
         cover = customThumbnailUrl,
     )
 
-/** Whether the anime holds watching state worth carrying even outside the library. */
+/**
+ * Whether the anime holds watching state worth carrying even outside the library. Restoring puts history on its
+ * episode, so history counts only where the backup holds that episode.
+ */
 internal val AniyomiAnime.hasProgress: Boolean
-    get() = history.isNotEmpty() || episodes.any { it.seen || it.bookmark || it.lastSecondSeen > 0 }
+    get() = episodes.any { it.seen || it.bookmark || it.lastSecondSeen > 0 } || history.any { it.url in episodeUrls }
+
+/** Whether some of the anime's history is for episodes the backup doesn't hold, as in a backup made without them. */
+internal val AniyomiAnime.hasHistoryWithoutEpisodes: Boolean
+    get() = history.any { it.url !in episodeUrls }
+
+private val AniyomiAnime.episodeUrls: Set<String>
+    get() = episodes.mapTo(hashSetOf()) { it.url }
 
 /** Whether the person set how far the skip-intro button jumps for this anime, which Katari has no setting for (D057). */
 internal val AniyomiAnime.hasSkipIntroLength: Boolean

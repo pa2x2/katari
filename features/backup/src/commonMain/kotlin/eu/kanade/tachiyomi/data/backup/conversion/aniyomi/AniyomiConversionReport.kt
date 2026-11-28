@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedCategories
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.ConvertedSavedSearches
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonManga
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.MihonMerges
+import eu.kanade.tachiyomi.data.backup.conversion.mihon.hasHistoryWithoutChapters
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.hasProgress
 import eu.kanade.tachiyomi.data.backup.conversion.mihon.isStore
 import eu.kanade.tachiyomi.data.backup.conversion.reportName
@@ -27,6 +28,7 @@ import tachiyomi.i18n.*
 internal class AniyomiConversionReport(private val merges: MihonMerges) {
     private val library = linkedMapOf<EntryKey, String>()
     private val progress = linkedMapOf<EntryKey, String>()
+    private val historyWithoutChapters = linkedMapOf<EntryKey, Item>()
     private val tracked = linkedMapOf<EntryKey, String>()
     private val skipIntroLengths = linkedMapOf<EntryKey, String>()
     private val audioLanguages = linkedMapOf<EntryKey, Item>()
@@ -38,6 +40,7 @@ internal class AniyomiConversionReport(private val merges: MihonMerges) {
         val key = EntryKey(EntryType.MANGA, manga.source, manga.url)
         if (manga.favorite) library[key] = manga.title
         if (manga.hasProgress) progress[key] = manga.title
+        if (manga.hasHistoryWithoutChapters) historyWithoutChapters[key] = manga.historyLeftBehind
         if (manga.tracking.isNotEmpty()) tracked[key] = manga.title
         mangaSources += manga.source
     }
@@ -48,12 +51,33 @@ internal class AniyomiConversionReport(private val merges: MihonMerges) {
         // A merge's members are its titles in the library, which the merged entry stands for
         if (anime.favorite && !merges.isMember(anime.source, anime.url)) library[key] = title
         if (anime.hasProgress) progress[key] = title
+        if (anime.hasHistoryWithoutEpisodes) historyWithoutChapters[key] = anime.historyLeftBehind
         if (anime.tracking.isNotEmpty()) tracked[key] = title
         if (anime.hasSkipIntroLength) skipIntroLengths[key] = title
         customInfo.add(key, title, anime.customInfo)
         anime.audioLanguageItem(title)?.let { audioLanguages[key] = it }
         if (!merges.isMergedEntry(anime.source)) animeSources += anime.source
     }
+
+    /** Adds [manga], an entry the converted backup doesn't keep, for its history, none of it on a chapter it holds. */
+    fun addNotKept(manga: MihonManga) {
+        if (manga.history.isNotEmpty()) {
+            historyWithoutChapters[EntryKey(EntryType.MANGA, manga.source, manga.url)] = manga.historyLeftBehind
+        }
+    }
+
+    /** Adds [anime], an entry the converted backup doesn't keep, for its history, none of it on an episode it holds. */
+    fun addNotKept(anime: AniyomiAnime) {
+        if (anime.history.isNotEmpty()) {
+            historyWithoutChapters[EntryKey(EntryType.ANIME, anime.source, anime.url)] = anime.historyLeftBehind
+        }
+    }
+
+    private val MihonManga.historyLeftBehind: Item
+        get() = Item(title, MR.strings.backup_conversion_history_without_chapters)
+
+    private val AniyomiAnime.historyLeftBehind: Item
+        get() = Item(customInfo.displayName ?: title, MR.strings.backup_conversion_history_without_episodes)
 
     fun build(
         backup: AniyomiBackup,
@@ -73,7 +97,11 @@ internal class AniyomiConversionReport(private val merges: MihonMerges) {
             listOfNotNull(
                 Row.of(Kind.LIBRARY, carried = library.values.map { Item(it) }),
                 Row.of(Kind.CATEGORIES, carried = categories.reportItems),
-                Row.of(Kind.PROGRESS_AND_HISTORY, carried = progress.values.map { Item(it) }),
+                Row.of(
+                    Kind.PROGRESS_AND_HISTORY,
+                    carried = progress.values.map { Item(it) },
+                    leftBehind = historyWithoutChapters.values.toList(),
+                ),
                 Row.of(
                     Kind.MERGED_ENTRIES,
                     carried = seasons.parentTitles.map { Item(it, MR.strings.backup_conversion_seasons) } +

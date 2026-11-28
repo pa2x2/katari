@@ -5,6 +5,7 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
+import eu.kanade.tachiyomi.data.backup.conversion.isKept
 import eu.kanade.tachiyomi.data.backup.conversion.withTachiyomiIdentity
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
@@ -72,9 +73,16 @@ class MihonBackupFormat(
                     continue
                 }
                 val manga = parser.decodeBackup(MihonManga.serializer(), input.readByteArray(input.readLength()))
-                report.add(manga)
-                if (merges.isMergedEntry(manga.source)) continue
+                if (merges.isMergedEntry(manga.source)) {
+                    report.add(manga)
+                    continue
+                }
                 val entry = manga.toBackupEntry().also(merges::applyTo)
+                if (!entry.isKept(manga.hasProgress)) {
+                    report.addNotKept(manga)
+                    continue
+                }
+                report.add(manga)
                 entry.categories = categories.of(CATEGORY_LIST, entry.categories)
                 writeEntry(entry)
             }

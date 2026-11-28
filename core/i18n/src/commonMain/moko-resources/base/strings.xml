@@ -1962,6 +1962,8 @@
     <string name="backup_conversion_extension_files">Extension files saved in the backup</string>
     <string name="backup_conversion_custom_button">A custom player button. Katari\'s player has none</string>
     <string name="backup_conversion_imported_book">An imported book. Import its file in Katari</string>
+    <string name="backup_conversion_history_without_chapters">Its chapters weren\'t backed up</string>
+    <string name="backup_conversion_history_without_episodes">Its episodes weren\'t backed up</string>
     <string name="backup_conversion_built_in_category">The other app\'s own category. Its entries are in Katari\'s Default</string>
     <string name="backup_conversion_store_from_addresses">Worked out from the extensions\' addresses, as the backup doesn\'t list its stores</string>
     <string name="backup_conversion_saved_covers">Covers saved in the backup</string>
