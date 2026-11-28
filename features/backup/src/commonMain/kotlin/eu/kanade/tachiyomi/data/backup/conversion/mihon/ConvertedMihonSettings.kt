@@ -28,6 +28,7 @@ internal fun convertMihonSettings(backedUp: List<BackupPreference>, app: String)
         // A private setting has the same meaning as the one of the same name
         val name = Preference.stripPrivateKey(key)
         val tracker = MihonSettings.trackerSetting(key, name)
+        val noCounterpart = MihonSettings.NO_COUNTERPART[name] ?: ForkSettings.NO_COUNTERPART[name]
         when {
             Preference.isAppState(key) || key in MihonSettings.IGNORED -> Unit
             key in MihonSettings.CONSENT ->
@@ -41,16 +42,12 @@ internal fun convertMihonSettings(backedUp: List<BackupPreference>, app: String)
                 carried += Item(Name.Setting(name))
             }
             name in MihonSettings.CARRIED_UNLISTED -> preferences += preference
-            name in MihonSettings.NO_COUNTERPART ->
-                leaveBehind(
-                    MihonSettings.NO_COUNTERPART.getValue(name).nameIn(app),
-                    MR.strings.backup_conversion_no_counterpart,
-                )
+            noCounterpart != null -> leaveBehind(noCounterpart.nameIn(app), MR.strings.backup_conversion_no_counterpart)
             else -> {
                 val renamed = MihonSettings.renamed(preference)
                 if (renamed == null) {
-                    // A key outside Mihon's own is a fork's setting, which the report names by its key (D048)
-                    leaveBehind(Name.Text(key), MR.strings.backup_conversion_app_own_setting)
+                    // A key no table knows, named by its key (D048, D118)
+                    leaveBehind(Name.Text(key), MR.strings.backup_conversion_unknown_setting)
                 } else {
                     preferences += renamed
                     val note = preference.tabletUiModeNote()

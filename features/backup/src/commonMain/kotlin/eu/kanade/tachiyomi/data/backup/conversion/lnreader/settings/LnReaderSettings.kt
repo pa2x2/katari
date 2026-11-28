@@ -107,7 +107,7 @@ internal class LnReaderSettings(val stored: LnReaderStoredSettings, private val 
                     LnReaderSettingLabels.NO_COUNTERPART.getValue(key),
                 )
                 // A key of a version the table doesn't know, which the report names by its key (D048)
-                else -> leftBehind += Item(Name.Text(key), MR.strings.backup_conversion_app_own_setting)
+                else -> leftBehind += Item(Name.Text(key), MR.strings.backup_conversion_unknown_setting)
             }
         }
         return ConvertedSettings(preferences, carried, leftBehind)
