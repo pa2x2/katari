@@ -1,0 +1,14 @@
+app/build.gradle.kts
+  h_c1c6febaef16c3 67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ebcc89afb7be16d51d8e8512435852a3b4870761",
+  "prompts": {},
+  "humans": {
+    "h_c1c6febaef16c3": {
+      "author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
