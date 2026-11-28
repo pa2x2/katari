@@ -73,7 +73,12 @@ internal class BringOverViewModel(
                     state.update { if (it.finding == Finding.Reading) it.copy(progress = progress) else it }
                 }
                 when (val identity = converter.identify(uri, onProgress)) {
-                    BackupIdentity.Katari -> Finding.Katari
+                    // Identifying tells a Katari backup from its first field, so the file is read whole, as restoring
+                    // it would, before the tool says it restores as it is
+                    BackupIdentity.Katari -> {
+                        validator.validate(uri, onProgress)
+                        Finding.Katari
+                    }
                     BackupIdentity.Unsupported -> Finding.Unsupported
                     is BackupIdentity.Foreign -> Finding.Fits(identity.apps)
                 }
@@ -139,7 +144,7 @@ internal class BringOverViewModel(
         val checked = try {
             val results = validator.validate(backup.uri)
             if (results.missingSources.isEmpty()) {
-                null
+                StoreCheck.Checked(cantInstall = emptyMap(), names = emptyMap())
             } else {
                 val check = missingExtensions.check(results.missingSources, results.extensionStores)
                 StoreCheck.Checked(
@@ -196,7 +201,7 @@ internal class BringOverViewModel(
         val expanded: Set<ConversionReport.Kind> = emptySet(),
         /** How far reading or converting the file has got; null before the first count or when it isn't known. */
         val progress: BackupReadProgress? = null,
-        /** What the stores say about the extensions the converted backup needs; null when there is nothing to ask. */
+        /** What the stores say about the extensions the converted backup needs; null before asking or if it failed. */
         val stores: StoreCheck? = null,
     )
 
@@ -205,7 +210,8 @@ internal class BringOverViewModel(
 
         /**
          * Why each source's extension can't be installed after restoring, null where it can, and what each is called,
-         * null where nothing names it (D114).
+         * null where nothing names it (D114). A source the backup's entries need that [cantInstall] doesn't hold is
+         * installed already.
          */
         data class Checked(
             val cantInstall: Map<SourceIdentity, CantInstall?>,

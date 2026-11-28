@@ -1,10 +1,13 @@
 package eu.kanade.tachiyomi.data.backup.conversion.mihon
 
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFileContents
 import eu.kanade.tachiyomi.data.backup.conversion.BackupFormat
+import eu.kanade.tachiyomi.data.backup.conversion.KatariDefaultCategory
+import eu.kanade.tachiyomi.data.backup.conversion.isKept
 import eu.kanade.tachiyomi.data.backup.conversion.withTachiyomiIdentity
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
@@ -23,6 +26,7 @@ import okio.BufferedSource
 @Inject
 @ContributesIntoSet(AppScope::class)
 class MihonBackupFormat(
+    private val context: PlatformContext,
     private val parser: ProtoBuf,
     private val json: Json,
 ) : BackupFormat {
@@ -61,7 +65,7 @@ class MihonBackupFormat(
         }
         val merges = mergeCollector.build()
         val backup = parser.decodeBackup(MihonBackup.serializer(), rest.readByteArray())
-        val categories = ConvertedCategories(backup.categories)
+        val categories = ConvertedCategories(KatariDefaultCategory.of(context, app), backup.categories)
         val report = MihonConversionReport(merges)
         open().use { content ->
             val input = ProtoInput(content)
@@ -72,9 +76,16 @@ class MihonBackupFormat(
                     continue
                 }
                 val manga = parser.decodeBackup(MihonManga.serializer(), input.readByteArray(input.readLength()))
-                report.add(manga)
-                if (merges.isMergedEntry(manga.source)) continue
+                if (merges.isMergedEntry(manga.source)) {
+                    report.add(manga)
+                    continue
+                }
                 val entry = manga.toBackupEntry().also(merges::applyTo)
+                if (!entry.isKept(manga.hasProgress)) {
+                    report.addNotKept(manga)
+                    continue
+                }
+                report.add(manga)
                 entry.categories = categories.of(CATEGORY_LIST, entry.categories)
                 writeEntry(entry)
             }

@@ -1,22 +1,24 @@
 package eu.kanade.tachiyomi.data.backup.conversion.lnreader
 
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
+import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
+import eu.kanade.tachiyomi.data.backup.conversion.KatariDefaultCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import tachiyomi.i18n.*
 
 /**
  * LNReader's categories as Katari's. Its built-in Default and Local aren't carried: their novels are in no category,
  * which Katari shows as its own Default (D093). The rest keep their names and ids and are ordered as LNReader sorts
- * them; two can share a sort, and then the older one comes first.
+ * them; two can share a sort, and then the older one comes first. One named as [katariDefault] is renamed (D135).
  */
-internal class LnReaderCategories(categories: List<LnReaderCategory>) {
+internal class LnReaderCategories(katariDefault: KatariDefaultCategory, categories: List<LnReaderCategory>) {
     private val builtIn = categories.filter { it.id in BUILT_IN_IDS }
 
-    private val own = categories - builtIn.toSet()
+    private val own = (categories - builtIn.toSet()).sortedWith(compareBy({ it.sort }, { it.id }))
 
-    val backupCategories: List<BackupCategory> = own.sortedWith(compareBy({ it.sort }, { it.id }))
+    val backupCategories: List<BackupCategory> = own
         .mapIndexed { index, category ->
-            BackupCategory(name = category.name, order = index.toLong(), id = category.id)
+            BackupCategory(name = katariDefault.carried(category.name), order = index.toLong(), id = category.id)
         }
 
     private val orderByNovel: Map<Long, List<Long>> = buildMap<Long, MutableList<Long>> {
@@ -26,7 +28,7 @@ internal class LnReaderCategories(categories: List<LnReaderCategory>) {
         }
     }
 
-    val reportItems: List<Item> = backupCategories.map { Item(it.name) } +
+    val reportItems: List<Item> = own.map { Item(Name.Text(it.name), katariDefault.note(it.name)) } +
         builtIn.map { Item(it.name, MR.strings.backup_conversion_built_in_category) }
 
     /** The orders of the categories LNReader's novel [novelId] is in, as Katari's entries name them. */

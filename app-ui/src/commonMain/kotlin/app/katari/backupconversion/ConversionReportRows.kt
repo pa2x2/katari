@@ -95,16 +95,17 @@ private fun ConversionReport.Row.sources() =
 
 /**
  * The row with its sources' notes saying what the stores have for them, once they have been asked (D106), and the
- * sources named as the stores and Katari name them (D114).
+ * sources named as the stores and Katari name them (D114). A source the check doesn't list as missing is installed
+ * here already, so it comes over instead of being left to install.
  */
 private fun ConversionReport.Row.withStores(stores: StoreCheck?): ConversionReport.Row {
     if (stores == null) return this
-    fun List<ConversionReport.Item>.checked() = map { item ->
-        val source = item.name as? ConversionReport.Name.Source ?: return@map item
+    fun ConversionReport.Item.checked(): ConversionReport.Item {
+        val source = name as? ConversionReport.Name.Source ?: return this
         val note = when (stores) {
             StoreCheck.Checking -> ConversionReport.Note(MR.strings.backup_conversion_checking_stores)
             is StoreCheck.Checked -> when (stores.cantInstall[source.identity]) {
-                null -> item.note
+                null -> this.note
                 CantInstall.NOT_LISTED -> ConversionReport.Note(MR.strings.backup_conversion_no_store)
                 CantInstall.STORES_UNREADABLE -> ConversionReport.Note(MR.strings.backup_conversion_stores_unreadable)
                 CantInstall.TORRENT -> ConversionReport.Note(MR.strings.backup_conversion_torrent_extension)
@@ -115,9 +116,17 @@ private fun ConversionReport.Row.withStores(stores: StoreCheck?): ConversionRepo
             ?.takeIf { source.identity in it }
             ?.let { names -> source.copy(text = names[source.identity]) }
             ?: source
-        item.copy(name = name, note = note)
+        return copy(name = name, note = note)
     }
-    return copy(carried = carried.checked(), leftBehind = leftBehind.checked())
+    val (installed, toInstall) = leftBehind.partition { item ->
+        val source = item.name as? ConversionReport.Name.Source
+        stores is StoreCheck.Checked && source != null && source.identity !in stores.cantInstall
+    }
+    return copy(
+        carried = carried.map { it.checked() } +
+            installed.map { it.copy(note = ConversionReport.Note(MR.strings.ext_installed)) },
+        leftBehind = toInstall.map { it.checked() },
+    )
 }
 
 /**

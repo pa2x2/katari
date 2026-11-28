@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.conversion.mihon
 
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
+import eu.kanade.tachiyomi.data.backup.conversion.KatariDefaultCategory
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import tachiyomi.i18n.*
@@ -11,6 +12,7 @@ class ConvertedCategoriesTest {
     fun `an order two categories share puts its entries in both and the report names them`() {
         // As TachiyomiSY wrote it after restoring into a library that had categories
         val categories = ConvertedCategories(
+            KATARI_DEFAULT,
             listOf(
                 MihonCategory("Reading", order = 0, id = 3),
                 MihonCategory("Action", order = 1, id = 1),
@@ -33,6 +35,7 @@ class ConvertedCategoriesTest {
     fun `a later list's category id in settings names the same category once ids are merged`() {
         // Aniyomi's anime categories number their ids apart from its manga ones
         val categories = ConvertedCategories(
+            KATARI_DEFAULT,
             listOf(MihonCategory("Reading", order = 0, id = 1), MihonCategory("Favorites", order = 1, id = 2)),
             listOf(MihonCategory("Favorites", order = 0, id = 1), MihonCategory("Watching", order = 1, id = 2)),
         )
@@ -41,5 +44,9 @@ class ConvertedCategoriesTest {
         categories.idOf(1, 1)?.let(nameOf::get) shouldBe "Favorites"
         categories.idOf(1, 2)?.let(nameOf::get) shouldBe "Watching"
         categories.idOf(1, 9) shouldBe null
+    }
+
+    private companion object {
+        val KATARI_DEFAULT = KatariDefaultCategory(name = "Default", renamed = "Default (Mihon)")
     }
 }

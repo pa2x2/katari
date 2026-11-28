@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.backup.conversion.mihon
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Item
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Name
 import eu.kanade.tachiyomi.data.backup.conversion.ConversionReport.Note
+import eu.kanade.tachiyomi.data.backup.conversion.KatariDefaultCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.i18n.*
@@ -12,9 +13,9 @@ import tachiyomi.i18n.*
  * name stands for one category, which keeps the first list's id, sort and flags (D028), and the merged list gets fresh
  * orders. Entries name their categories by order within their own list; two categories of a list can share an order
  * (TachiyomiSY writes that after restoring into a library that had categories), and since the backup can't tell which
- * of them an entry was in, the order stands for both (D060).
+ * of them an entry was in, the order stands for both (D060). One named as [katariDefault] is renamed (D135).
  */
-internal class ConvertedCategories(vararg lists: List<MihonCategory>) {
+internal class ConvertedCategories(katariDefault: KatariDefaultCategory, vararg lists: List<MihonCategory>) {
     private val orders: List<Map<Long, List<Long>>>
 
     private val ids: List<Map<Long, Long>>
@@ -31,13 +32,13 @@ internal class ConvertedCategories(vararg lists: List<MihonCategory>) {
         val laterOnly = merged.toSet() - lists.first().toSet()
         var nextId = merged.maxOfOrNull { it.id }?.plus(1) ?: 0
         backupCategories = merged.mapIndexed { index, category ->
-            category.toBackupCategory(order = index.toLong()).apply {
+            category.toBackupCategory(name = katariDefault.carried(category.name), order = index.toLong()).apply {
                 // Ids name categories in settings, so a later list's category can't take an id of the first's
                 if (category in laterOnly && id in firstIds) id = nextId++
             }
         }
-        val orderByName = backupCategories.associate { it.name to it.order }
-        val idByName = backupCategories.associate { it.name to it.id }
+        val orderByName = merged.zip(backupCategories).associate { (category, backup) -> category.name to backup.order }
+        val idByName = merged.zip(backupCategories).associate { (category, backup) -> category.name to backup.id }
         ids = lists.map { list -> list.associate { it.id to idByName.getValue(it.name) } }
         orders = lists.map { list ->
             list.groupBy({ it.order }, { orderByName.getValue(it.name) }).mapValues { (_, merged) -> merged.distinct() }
@@ -53,7 +54,9 @@ internal class ConvertedCategories(vararg lists: List<MihonCategory>) {
                 }
             }
         }
-        reportItems = merged.map { it.reportItem(sharesWith = sharers[it.name].orEmpty()) }
+        reportItems = merged.map {
+            it.reportItem(sharesWith = sharers[it.name].orEmpty(), renamed = katariDefault.note(it.name))
+        }
     }
 
     /** The merged list's orders for an entry of the [list]-th list that names [entryOrders]. */
@@ -64,7 +67,7 @@ internal class ConvertedCategories(vararg lists: List<MihonCategory>) {
     fun idOf(list: Int, id: Long): Long? = ids[list][id]
 }
 
-private fun MihonCategory.toBackupCategory(order: Long): BackupCategory = BackupCategory(
+private fun MihonCategory.toBackupCategory(name: String, order: Long): BackupCategory = BackupCategory(
     name = name,
     order = order,
     id = id,
@@ -72,10 +75,12 @@ private fun MihonCategory.toBackupCategory(order: Long): BackupCategory = Backup
 )
 
 /**
- * The report's line for the category: entries placed in it and the categories [sharesWith] for sharing its order (D060,
- * D116), a Komikku hidden one shown in Katari (D031), a sort Katari lacks noted.
+ * The report's line for the category: [renamed] when it comes over under another name (D135), entries placed in it and
+ * the categories [sharesWith] for sharing its order (D060, D116), a Komikku hidden one shown in Katari (D031), a sort
+ * Katari lacks noted.
  */
-private fun MihonCategory.reportItem(sharesWith: Set<String>): Item = when {
+private fun MihonCategory.reportItem(sharesWith: Set<String>, renamed: Note?): Item = when {
+    renamed != null -> Item(Name.Text(name), renamed)
     sharesWith.isNotEmpty() -> Item(
         Name.Text(name),
         Note(MR.strings.backup_conversion_category_shared_order, listOf(sharesWith.joinToString())),

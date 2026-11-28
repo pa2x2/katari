@@ -31,7 +31,7 @@ class BackupFileValidator(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            throw IllegalStateException(e)
+            throw IllegalStateException(e.message, e)
         }
         val backup = summary.metadata
 
