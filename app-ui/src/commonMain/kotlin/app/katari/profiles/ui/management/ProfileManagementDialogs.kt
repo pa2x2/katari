@@ -37,7 +37,7 @@ fun ProfileManagementDialogs(
         ProfileManagementDialog.Create -> {
             ProfileNameDialog(
                 title = stringResource(MR.strings.profiles_add_profile),
-                initialValue = "",
+                suggestion = "",
                 existingProfiles = profiles,
                 onDismissRequest = onDismissRequest,
                 onConfirm = { name ->
@@ -50,7 +50,7 @@ fun ProfileManagementDialogs(
         is ProfileManagementDialog.Rename -> {
             ProfileNameDialog(
                 title = stringResource(MR.strings.profiles_rename_profile),
-                initialValue = dialog.profile.name,
+                suggestion = dialog.profile.name,
                 existingProfiles = profiles,
                 originalProfileId = dialog.profile.id,
                 onDismissRequest = onDismissRequest,

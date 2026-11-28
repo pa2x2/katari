@@ -82,7 +82,7 @@ internal fun RestoreIntoDialog(
     if (naming) {
         ProfileNameDialog(
             title = stringResource(MR.strings.restore_into_name_title),
-            initialValue = into.newProfileName,
+            suggestion = into.newProfileName,
             existingProfiles = profiles,
             onDismissRequest = { naming = false },
             onConfirm = {
