@@ -1,0 +1,79 @@
+.github/ISSUE_TEMPLATE/4_backup_from_another_app.yml
+  s_00dbc4814728ce::t_a02ccc3e8c38b8 1-29
+.github/ISSUE_TEMPLATE/5_bring_over_another_app.yml
+  s_00dbc4814728ce::t_84b54b30fff6a6 1-34
+app-ui/src/commonMain/kotlin/app/katari/backupconversion/BringOverScreen.kt
+  s_00dbc4814728ce::t_48a33a7a7fab4a 13,16-17,93-105,181-182,185-199,202,213-224,260-261,298-304,327-340,398
+app-ui/src/commonMain/kotlin/app/katari/backupconversion/BringOverViewModel.kt
+  s_00dbc4814728ce::t_fc308554a2b259 6-9,22,27,52,89,133-134,136,178-230,268-269,272-282,311-312,325-328,333-337
+app-ui/src/commonMain/kotlin/app/katari/backupconversion/ConversionReportRows.kt
+  s_00dbc4814728ce::t_bff42e1e87c5ae 21-23,36,56-60,174-178,207,209-229,232-234,245,261,275
+app-ui/src/commonMain/kotlin/app/katari/backupconversion/issue/BackupIssueDialog.kt
+  s_00dbc4814728ce::t_3bcd07b2652f9a 1-45
+app-ui/src/commonMain/kotlin/app/katari/backupconversion/issue/BackupIssues.kt
+  s_00dbc4814728ce::t_13c5fdda014394 1-163
+app-ui/src/commonMain/kotlin/eu/kanade/presentation/more/settings/screen/data/RestoreBackupScreen.kt
+  s_00dbc4814728ce::t_faa2160ed8feb9 166
+core/i18n/src/commonMain/moko-resources/base/plurals.xml
+  s_00dbc4814728ce::t_06cf95d0c4721d 646-649
+core/i18n/src/commonMain/moko-resources/base/strings.xml
+  s_00dbc4814728ce::t_943ae261f13eef 1621,1653-1683
+core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/dialog/DialogActions.kt
+  s_00dbc4814728ce::t_7a122cd15d6d9e 7-8,16-20,32,40-43,61-63,65-82,86-93
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/BackupConverter.kt
+  s_00dbc4814728ce::t_e653953c8db8fe 5-7,31-32,81,120-124,131-148,159,200,214-215,221-225
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/BackupFormat.kt
+  s_00dbc4814728ce::t_de5b69de35cf06 3,43-45,49-53
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/ConversionReport.kt
+  s_00dbc4814728ce::t_9692947d4653a8 15-21,56-66,89-91
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiBackupFormat.kt
+  s_00dbc4814728ce::t_40841890e905b1 18,21-24,53-54,56,67,71,79-81,84,97-99,136,147,182,186-193,203-204,206
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiLayout.kt
+  s_00dbc4814728ce::t_166eeb38a74d70 3-4,18-22,25-28,32-33
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiShapes.kt
+  s_00dbc4814728ce::t_4a83866e0553d9 1-40
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderBackupFormat.kt
+  s_00dbc4814728ce::t_f962a20905e2c6 12-17,23,25-26,55,65-80,85-86,89-92,100,103,139,146-176,178-180
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderBackupModels.kt
+  s_00dbc4814728ce::t_ea8d996c5abb0b 14
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/lnreader/LnReaderShapes.kt
+  s_00dbc4814728ce::t_8473383664c7b4 1-41
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonBackupFormat.kt
+  s_00dbc4814728ce::t_4d5fa5b2ff36f7 11-13,41,43-45,57,59,72-73,84-85,114-118,127-129,131-133,135
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonMerges.kt
+  s_00dbc4814728ce::t_63ca882795f98b 4-5,86-90,95,97,107-109
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/mihon/MihonShapes.kt
+  s_00dbc4814728ce::t_1155b72cb7caf0 1-33
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/newer/JsonShape.kt
+  s_00dbc4814728ce::t_c82fea2e9ceb59 1-69
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/newer/MessageShape.kt
+  s_00dbc4814728ce::t_e2b260c489f1f6 1-138
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/newer/NewerAppFindings.kt
+  s_00dbc4814728ce::t_ae17084cb7fa08 1-57
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/newer/NewerAppReading.kt
+  s_00dbc4814728ce::t_a6765c50e0e125 1-80
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/newer/NewerAppReport.kt
+  s_00dbc4814728ce::t_04c7203c8e1521 1-39
+features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/conversion/newer/ProtobufReading.kt
+  s_00dbc4814728ce::t_56869a311c1767 1-50
+features/backup/src/commonTest/kotlin/eu/kanade/tachiyomi/data/backup/conversion/aniyomi/AniyomiConversionReportTest.kt
+  s_00dbc4814728ce::t_26d3bc81de4ec7 10,26
+features/backup/src/commonTest/kotlin/eu/kanade/tachiyomi/data/backup/conversion/newer/NewerAppReadingTest.kt
+  s_00dbc4814728ce::t_8db3801ff9ca1b 1-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "584ede1f5db10dfd0d1a6d809c71594a165eae75",
+  "prompts": {},
+  "sessions": {
+    "s_00dbc4814728ce": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "543b33bb-f40f-469f-8c71-5f13ca6a76e4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
