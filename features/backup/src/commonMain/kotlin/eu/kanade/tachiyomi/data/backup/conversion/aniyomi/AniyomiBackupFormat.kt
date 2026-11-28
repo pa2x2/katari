@@ -155,7 +155,7 @@ class AniyomiBackupFormat(
         )
         return BackupFormat.ConvertedContent(
             metadata,
-            report.build(backup, mergedCategories, seasons, settings, savedSearches, extensionApks),
+            report.build(backup, mergedCategories, seasons, settings, savedSearches, extensionApks, sourceKeys),
         )
     }
 

@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.identity.SourceIdentity
 import tachiyomi.domain.storage.DocumentUri
 
@@ -149,6 +151,7 @@ internal class BringOverViewModel(
             throw e
         } catch (e: Exception) {
             // The report keeps saying where to install them from, as before the stores were asked
+            logcat(LogPriority.ERROR, e) { "Couldn't check the stores for the converted backup" }
             null
         }
         state.update { it.copy(stores = checked) }

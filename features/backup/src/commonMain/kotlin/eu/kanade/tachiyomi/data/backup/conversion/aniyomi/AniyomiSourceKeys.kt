@@ -54,6 +54,11 @@ internal class AniyomiSourceKeys(
 
     fun animeKey(id: Long): Long = animeKeys.getValue(id)
 
+    /** The sources of [mangaIds] and [animeIds], ids as the backup gives them, as the Katari backup lists them. */
+    fun sourcesOf(mangaIds: Set<Long>, animeIds: Set<Long>): List<BackupSource> = backupSources.filter {
+        if (it.idScheme == SourceIdScheme.ANIYOMI.key) it.externalId in animeIds else it.sourceId in mangaIds
+    }
+
     /**
      * Extension settings with each anime source's key. Aniyomi names both kinds' settings `source_<id>` and lists the
      * anime sources' first, so of an id both kinds have, the first is the anime source's. A source no entry or setting

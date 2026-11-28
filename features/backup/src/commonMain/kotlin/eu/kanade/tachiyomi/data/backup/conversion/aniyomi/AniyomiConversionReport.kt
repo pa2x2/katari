@@ -62,10 +62,11 @@ internal class AniyomiConversionReport(private val merges: MihonMerges) {
         settings: ConvertedSettings,
         savedSearches: ConvertedSavedSearches,
         extensionApks: Int,
+        sourceKeys: AniyomiSourceKeys,
     ): ConversionReport {
         val (stores, repos) = backup.extensionSources.partition { it.isStore }
-        val extensions = backup.mangaSources.filter { it.sourceId in mangaSources } +
-            backup.animeSources.filter { it.sourceId in animeSources }
+        // With the identities the stores list them under, an anime source's Aniyomi's own
+        val extensions = sourceKeys.sourcesOf(mangaSources, animeSources)
         // Where both kinds have an id, the anime source's name is used
         val sourceNames = (backup.mangaSources + backup.animeSources).associate { it.sourceId to it.reportName }
         return ConversionReport(
