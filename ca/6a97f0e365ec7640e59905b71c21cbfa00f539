@@ -1,0 +1,19 @@
+tools/showcase/desktop-capture/src/main/kotlin/app/katari/showcase/desktop/driver/Desktop.kt
+  s_89c88c0848e67b::t_4dc883327abaa5 131-134,139,143,145-158,162
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ca6a97f0e365ec7640e59905b71c21cbfa00f539",
+  "prompts": {},
+  "sessions": {
+    "s_89c88c0848e67b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0e2d1128-095a-4071-bd92-910cad919aa2",
+        "model": "unknown"
+      },
+      "human_author": "Kiryl Kvit <kiryl.kvit@gmail.com>"
+    }
+  }
+}
