@@ -55,6 +55,9 @@ import kotlin.math.roundToInt
  *
  * [expanded] marks a row that opens rows under it in its card, such as the changes behind a setting another device
  * changed, with an arrow after its controls that says whether they are open; [onClick] opens and closes them.
+ *
+ * [below] sits under the title and subtitle, as wide as they are; [belowUnderTrailing] runs it on under the controls to
+ * the row's end, such as a bar that rows with and without an arrow line up by.
  */
 @Composable
 fun SettingsRow(
@@ -77,6 +80,7 @@ fun SettingsRow(
     below: (@Composable () -> Unit)? = null,
     nested: Boolean = false,
     expanded: Boolean? = null,
+    belowUnderTrailing: Boolean = false,
 ) {
     val mark = rememberRowSettingMark(setting, title, LocalRowDensity.current.titleRole, titleSuffix)
     RowFrame(
@@ -143,6 +147,7 @@ fun SettingsRow(
             leadingGap = KatariTheme.spacing.l,
             trailingGap = KatariTheme.spacing.l,
             below = { below?.invoke() },
+            belowUnderTrailing = belowUnderTrailing,
         )
     }
 }
